@@ -83,6 +83,7 @@ grant select on public.profiles, public.trackers, public.tracker_members,
 grant update (
   last_login_at,
   display_name,
+  display_name_requires_update,
   use_generation_sprites,
   use_sprites_in_team_table,
   wiki_id,

@@ -141,20 +141,31 @@ security definer
 set search_path = pg_catalog
 as $$
 declare
+  caller_id uuid := auth.uid();
   target_role public.tracker_role;
 begin
-  if not private.is_tracker_owner(p_tracker_id, auth.uid()) then
+  if caller_id is null then
+    raise exception using errcode = '42501', message = 'authentication_required';
+  end if;
+
+  if caller_id <> p_user_id
+    and not private.is_tracker_owner(p_tracker_id, caller_id)
+  then
     raise exception using errcode = '42501', message = 'tracker_owner_required';
   end if;
+
   select role into target_role
   from public.tracker_members
   where tracker_id = p_tracker_id and user_id = p_user_id;
+
   if target_role is null then
     raise exception using errcode = 'P0002', message = 'tracker_member_not_found';
   end if;
+
   if target_role = 'owner' then
     raise exception using errcode = '22023', message = 'tracker_owner_cannot_be_removed';
   end if;
+
   delete from public.tracker_members
   where tracker_id = p_tracker_id and user_id = p_user_id;
 end;
@@ -239,6 +250,7 @@ create or replace function public.list_tracker_members(p_tracker_id uuid)
 returns table (
   user_id uuid,
   display_name text,
+  email text,
   role public.tracker_role,
   added_at timestamptz
 )
@@ -246,15 +258,26 @@ language plpgsql
 security definer
 set search_path = pg_catalog
 as $$
+declare
+  caller_id uuid := auth.uid();
+  caller_is_owner boolean;
 begin
-  if not private.is_tracker_reader(p_tracker_id, auth.uid()) then
+  if not private.is_tracker_reader(p_tracker_id, caller_id) then
     raise exception using errcode = '42501', message = 'tracker_read_access_required';
   end if;
 
+  caller_is_owner := private.is_tracker_owner(p_tracker_id, caller_id);
+
   return query
-  select member.user_id, profile.display_name, member.role, member.added_at
+  select
+    member.user_id,
+    profile.display_name,
+    case when caller_is_owner then auth_user.email::text else null end,
+    member.role,
+    member.added_at
   from public.tracker_members as member
   join public.profiles as profile on profile.id = member.user_id
+  join auth.users as auth_user on auth_user.id = member.user_id
   where member.tracker_id = p_tracker_id
   order by member.added_at;
 end;

@@ -10,6 +10,7 @@ create table public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
   firebase_uid text unique,
   display_name text not null,
+  display_name_requires_update boolean not null default false,
   created_at timestamptz not null default now(),
   last_login_at timestamptz not null default now(),
   use_generation_sprites boolean not null default false,

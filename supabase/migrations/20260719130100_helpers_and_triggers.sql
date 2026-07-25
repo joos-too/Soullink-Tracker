@@ -23,14 +23,34 @@ language plpgsql
 security definer
 set search_path = pg_catalog
 as $$
+declare
+  requested_display_name text;
+  resolved_display_name text;
 begin
-  insert into public.profiles (id, display_name, created_at, last_login_at)
+  requested_display_name := nullif(
+    btrim(coalesce(new.raw_user_meta_data ->> 'display_name', '')),
+    ''
+  );
+  resolved_display_name := left(
+    coalesce(
+      requested_display_name,
+      nullif(btrim(split_part(coalesce(new.email, ''), '@', 1)), ''),
+      'Trainer'
+    ),
+    50
+  );
+
+  insert into public.profiles (
+    id,
+    display_name,
+    display_name_requires_update,
+    created_at,
+    last_login_at
+  )
   values (
     new.id,
-    left(
-      coalesce(nullif(btrim(split_part(coalesce(new.email, ''), '@', 1)), ''), 'Trainer'),
-      50
-    ),
+    resolved_display_name,
+    requested_display_name is null,
     coalesce(new.created_at, now()),
     coalesce(new.last_sign_in_at, new.created_at, now())
   )
