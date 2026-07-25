@@ -126,6 +126,79 @@ npm run supabase:db:push -- --db-url "<database-url>"
 
 Never put database URLs, service-role keys, Firebase exports, or migration reports containing user data in this repository. Do not add `--include-seed` when pushing to staging or production.
 
+### Automated hosted deployments
+
+Hosted releases use two independent branch workflows:
+
+| Branch    | Workflow                | Image tag | Target environment |
+| --------- | ----------------------- | --------- | ------------------ |
+| `staging` | `deploy-staging.yml`    | `staging` | staging            |
+| `master`  | `deploy-production.yml` | `latest`  | production         |
+
+Both workflows run on a push to their branch and through `workflow_dispatch`.
+A manual run fails when the selected ref is not the workflow's matching branch.
+Each release builds the frontend and runs the complete Supabase E2E workflow,
+then applies pending database migrations, and only then deploys the frontend.
+Migration and frontend deployment run in one environment-bound release job.
+The production release job uses the protected `production` GitHub environment
+as its approval gate and records the complete release in GitHub's deployment
+history.
+
+Configure both GitHub environments, `staging` and `production`, with:
+
+- Secret `SSH_HOST`
+- Secret `SSH_USERNAME`
+- Secret `SSH_PRIVATE_KEY`
+- Secret `SSH_KNOWN_HOSTS`, containing a host-key entry verified out of band
+- Secret `SUPABASE_MIGRATION_DB_URL`, using an RFC 3986-encoded password and
+  `postgresql://<user>:<password>@127.0.0.1:55432/postgres`
+- Variable `SUPABASE_DB_REMOTE_PORT`, containing that stack's server-local
+  Supavisor session port
+- Variable `DEPLOY_PATH`, containing the environment's separate frontend
+  deployment directory
+- Variable `APP_URL`, containing the public frontend URL shown in GitHub's
+  deployment history
+
+The runner opens an SSH tunnel to the configured remote port. PostgreSQL must
+remain bound to the server's loopback interface; port `55432` exists only on
+the ephemeral GitHub runner. Keeping SSH and database credentials on the
+GitHub Environments prevents the release job from accessing them before its
+protection rules have passed. Remove repository-level copies after both
+environments have been configured.
+
+Configure these repository variables for frontend builds:
+
+- Staging: `STAGING_VITE_SUPABASE_URL` and
+  `STAGING_VITE_SUPABASE_ANON_KEY`
+- Production: `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`
+
+The environment-bound release job uses the local
+`deploy-docker-compose` action rather than an external reusable deployment
+workflow. This keeps migration, registry access, Compose deployment, approval,
+environment URL, and deployment status inside one GitHub Environment
+deployment. The action verifies the SSH host key and preserves the server-side
+`.env` file beside the copied Compose file. It refuses to deploy if that file
+is missing or its Compose project, image tag, or application port differs from
+the environment's expected values.
+
+Before the first deployment, mark each database through an administrative
+connection:
+
+```sql
+alter database postgres set app.environment = 'staging';
+alter database postgres set app.environment = 'production';
+```
+
+Run only the matching statement against each database, then reconnect. The
+pipeline refuses to migrate a database whose marker does not match its target.
+It also rejects migration-history divergence and verifies exact history after
+`supabase db push`. Seeds are never applied to hosted environments.
+
+Promote releases through a `staging` to `master` pull request. Once a migration
+has been applied to either hosted database, do not edit, rename, reorder, or
+delete its SQL file; add a new forward migration instead. A production
+environment approval confirms that a recent restorable backup exists.
+
 The separate hosted environment, safety marker, SSH tunnel, preflight, import
 order, and evidence checklist are documented in
 [`Staging_Rehearsal.md`](Staging_Rehearsal.md). Run its read-only preflight with

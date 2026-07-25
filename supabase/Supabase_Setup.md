@@ -121,6 +121,49 @@ Ports shown by `docker ps` without a host mapping, such as `5000/tcp` or
 `3000/tcp`, are container-internal. Only mappings in the form
 `IP:host-port->container-port` are published on the server.
 
+### Prepare branch-specific frontend deployments
+
+The staging and production workflows deploy the same parameterized
+`docker-compose.yml` into separate server directories. Create a persistent
+`.env` beside the copied Compose file in each directory. The deployment
+workflow updates only `docker-compose.yml` and leaves these files in place.
+
+Staging:
+
+```dotenv
+COMPOSE_PROJECT_NAME=soullink-tracker-staging
+IMAGE_TAG=staging
+APP_PORT=8068
+```
+
+Production:
+
+```dotenv
+COMPOSE_PROJECT_NAME=soullink-tracker-production
+IMAGE_TAG=latest
+APP_PORT=8067
+```
+
+Set the `DEPLOY_PATH` variable in the GitHub `staging` and `production`
+environments to the respective directory. Also set each environment's
+`APP_URL` variable to its public frontend URL. The distinct Compose project
+names, image tags, directories, and host ports prevent either deployment from
+replacing the other.
+
+Create the matching database safety marker once through an administrative
+connection:
+
+```sql
+-- Run only on the staging database:
+alter database postgres set app.environment = 'staging';
+
+-- Run only on the production database:
+alter database postgres set app.environment = 'production';
+```
+
+Reconnect after setting the marker. The deployment pipeline checks it before
+running any migration.
+
 ### Nginx virtual host
 
 Create an Nginx config for the Supabase subdomain, you can also integrate the Frontend in here as well (without subdomain):

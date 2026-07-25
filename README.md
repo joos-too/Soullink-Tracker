@@ -19,17 +19,17 @@ TEST
 
 ## Deploy on a web server
 
-**Prerequisites:** [Node.js + npm](https://nodejs.org/en/download/) and [git](https://git-scm.com/downloads) installed
+Hosted releases use branch-specific GitHub Actions workflows:
 
-1. Clone the repository at the desired release tag:
-   `git clone --branch v1.2.0 https://github.com/joos-too/pokemon-soullink-tracker.git`
-2. Configure the environment as described below.
-3. Install dependencies:
-   `npm install`
-4. Build the app:
-   `npm run build`
-5. (When not on the server: zip the `dist` folder and upload it to your web server. Unzip it in a new directory.)
-6. Make the `index.html` available via a web server e.g. nginx
+- Pushes to `staging` migrate the staging database and deploy the staging
+  frontend.
+- Pushes to `master` migrate the production database and deploy the production
+  frontend after approval.
+- Both workflows can be started manually from their matching branch.
+
+Promote a tested release by merging `staging` into `master`. Server directories,
+GitHub secrets and variables, database safety markers, and migration safeguards
+are documented in [`supabase/README.md`](supabase/README.md).
 
 ## Environment & Firebase Setup
 

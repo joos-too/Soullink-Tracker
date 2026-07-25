@@ -1,0 +1,87 @@
+name: Deploy production
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  validate-ref:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Require master branch
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF" != "refs/heads/master" ]]; then
+            echo "The production deployment workflow must run from the master branch." >&2
+            exit 1
+          fi
+
+  build:
+    needs: validate-ref
+    permissions:
+      contents: read
+      packages: write
+    uses: FreakMediaLP/Workflows/.github/workflows/build-docker.yml@v3
+    with:
+      version: latest
+      cleanup: true
+      keep-versions: 3
+      build-args: |
+        VITE_BACKEND=supabase
+        VITE_SUPABASE_URL=${{ vars.VITE_SUPABASE_URL }}
+        VITE_SUPABASE_ANON_KEY=${{ vars.VITE_SUPABASE_ANON_KEY }}
+
+  test:
+    needs: validate-ref
+    permissions:
+      contents: read
+    uses: ./.github/workflows/test-pipeline.yml
+
+  release:
+    needs: [build, test]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: production
+      url: ${{ vars.APP_URL }}
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v5
+
+      - name: Deploy production database migrations
+        uses: ./.github/actions/deploy-supabase-migrations
+        with:
+          environment: production
+          ssh-host: ${{ secrets.SSH_HOST }}
+          ssh-username: ${{ secrets.SSH_USERNAME }}
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          ssh-known-hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
+          remote-db-port: ${{ vars.SUPABASE_DB_REMOTE_PORT }}
+          database-url: ${{ secrets.SUPABASE_MIGRATION_DB_URL }}
+          github-token: ${{ github.token }}
+
+      - name: Deploy production frontend
+        uses: ./.github/actions/deploy-docker-compose
+        with:
+          ssh-host: ${{ secrets.SSH_HOST }}
+          ssh-username: ${{ secrets.SSH_USERNAME }}
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          ssh-known-hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
+          remote-path: ${{ vars.DEPLOY_PATH }}
+          expected-compose-project: soullink-tracker-production
+          expected-image-tag: latest
+          expected-app-port: "8067"
+          registry-username: ${{ github.actor }}
+          registry-password: ${{ github.token }}
+          cleanup: "true"

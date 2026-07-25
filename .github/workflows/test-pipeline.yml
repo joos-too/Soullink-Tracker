@@ -1,16 +1,17 @@
 name: Supabase E2E Tests
 
 on:
-  push:
-    branches:
-      - master
   pull_request:
+    branches:
+      - staging
+      - master
     types: [opened, synchronize, reopened, ready_for_review]
   workflow_dispatch:
+  workflow_call:
 
 jobs:
   e2e:
-    if: github.event.pull_request.draft == false
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
