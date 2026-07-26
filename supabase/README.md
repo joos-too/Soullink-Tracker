@@ -152,19 +152,20 @@ Configure both GitHub environments, `staging` and `production`, with:
 - Secret `SSH_KNOWN_HOSTS`, containing a host-key entry verified out of band
 - Secret `SUPABASE_MIGRATION_DB_URL`, using an RFC 3986-encoded password. For
   Supavisor session mode use
-  `postgresql://postgres.<POOLER_TENANT_ID>:<password>@127.0.0.1:55432/postgres?sslmode=disable&options=reference%3D<POOLER_TENANT_ID>`.
+  `postgresql://postgres:<ENCODED_PASSWORD>@127.0.0.1:55432/postgres?sslmode=disable&options=reference%3D<TENANT>`.
+  Keep the database username as `postgres` and set `TENANT` to the exact
+  `POOLER_TENANT_ID` from the target stack.
   Disabling database TLS is allowed here only because the workflow carries the
   connection through its encrypted SSH tunnel.
 - Variable `SUPABASE_DB_REMOTE_PORT`, containing that stack's server-local
   Supavisor session port
 - Variable `DEPLOY_PATH`, containing the environment's separate frontend
   deployment directory
+- Variable `APP_PORT`, containing the server-local frontend port published by
+  Docker Compose
 - Variable `APP_URL`, containing the public frontend URL shown in GitHub's
   deployment history
-- In the `staging` environment, variables `STAGING_VITE_SUPABASE_URL` and
-  `STAGING_VITE_SUPABASE_ANON_KEY`, containing the public frontend build
-  configuration
-- In the `production` environment, variables `VITE_SUPABASE_URL` and
+- In both environments, variables `VITE_SUPABASE_URL` and
   `VITE_SUPABASE_ANON_KEY`, containing the public frontend build configuration
 
 The runner opens an SSH tunnel to the configured remote port. PostgreSQL must
@@ -182,10 +183,9 @@ The environment-bound release job uses the local
 `deploy-docker-compose` action rather than an external reusable deployment
 workflow. This keeps migration, registry access, Compose deployment, approval,
 environment URL, and deployment status inside one GitHub Environment
-deployment. The action verifies the SSH host key and preserves the server-side
-`.env` file beside the copied Compose file. It refuses to deploy if that file
-is missing or its Compose project, image tag, or application port differs from
-the environment's expected values.
+deployment. The action verifies the SSH host key and passes the Compose project,
+image tag, and environment-specific `APP_PORT` directly to Docker Compose. The
+frontend deployment directories do not need `.env` files.
 
 Before the first deployment, mark each database through an administrative
 connection:

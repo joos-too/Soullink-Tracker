@@ -245,31 +245,16 @@ Ports shown by `docker ps` without a host mapping, such as `5000/tcp` or
 ### Prepare branch-specific frontend deployments
 
 The staging and production workflows deploy the same parameterized
-`docker-compose.yml` into separate server directories. Create a persistent
-`.env` beside the copied Compose file in each directory. The deployment
-workflow updates only `docker-compose.yml` and leaves these files in place.
-
-Staging:
-
-```dotenv
-COMPOSE_PROJECT_NAME=soullink-tracker-staging
-IMAGE_TAG=staging
-APP_PORT=8068
-```
-
-Production:
-
-```dotenv
-COMPOSE_PROJECT_NAME=soullink-tracker-production
-IMAGE_TAG=latest
-APP_PORT=8067
-```
+`docker-compose.yml` into separate server directories. No `.env` file is
+required in either frontend deployment directory. The workflows pass the fixed
+Compose project name and image tag directly to Docker Compose.
 
 Set the `DEPLOY_PATH` variable in the GitHub `staging` and `production`
-environments to the respective directory. Also set each environment's
-`APP_URL` variable to its public frontend URL. The distinct Compose project
-names, image tags, directories, and host ports prevent either deployment from
-replacing the other.
+environments to the respective directory. Set `APP_PORT` to the server-local
+frontend port (`8068` for staging and `8067` for production), and set `APP_URL`
+to the public frontend URL. The distinct Compose project names, image tags,
+directories, and host ports prevent either deployment from replacing the
+other.
 
 Create the matching database safety marker once through the internal
 `supabase_admin` role. The regular `postgres` role is intentionally not a
