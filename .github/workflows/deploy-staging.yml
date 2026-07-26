@@ -40,17 +40,17 @@ jobs:
         id: values
         shell: bash
         env:
-          SUPABASE_URL: ${{ vars.STAGING_VITE_SUPABASE_URL }}
-          SUPABASE_ANON_KEY: ${{ vars.STAGING_VITE_SUPABASE_ANON_KEY }}
+          SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
         run: |
           set -Eeuo pipefail
 
           if [[ "$SUPABASE_URL" != https://* ]]; then
-            echo "STAGING_VITE_SUPABASE_URL must be a non-empty HTTPS URL." >&2
+            echo "VITE_SUPABASE_URL must be a non-empty HTTPS URL." >&2
             exit 1
           fi
           if [[ -z "$SUPABASE_ANON_KEY" ]]; then
-            echo "STAGING_VITE_SUPABASE_ANON_KEY must not be empty." >&2
+            echo "VITE_SUPABASE_ANON_KEY must not be empty." >&2
             exit 1
           fi
 
