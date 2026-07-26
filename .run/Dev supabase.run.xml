@@ -1,0 +1,7 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="dev supabase" type="CompoundRunConfigurationType">
+    <toRun name="dev" type="js.build_tools.npm" />
+    <toRun name="supabase:start" type="js.build_tools.npm" />
+    <method v="2" />
+  </configuration>
+</component>

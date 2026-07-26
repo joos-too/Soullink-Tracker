@@ -29,6 +29,7 @@ import { GAME_VERSIONS } from "@/src/data/game-versions.ts";
 import { formatBestLabel } from "@/src/utils/bestRun.ts";
 import { useTranslation } from "react-i18next";
 import { getLocalizedGameName } from "@/src/services/gameLocalization.ts";
+import MigrationDisplayNameModal from "@/src/components/modals/MigrationDisplayNameModal.tsx";
 
 type SortOption = "date" | "name" | "version";
 type VisibilityFilter = "all" | "public" | "private";
@@ -44,6 +45,9 @@ interface HomePageProps {
   activeTrackerId: string | null;
   userEmail?: string | null;
   currentUserId?: string | null;
+  displayName: string;
+  displayNameRequiresUpdate: boolean;
+  onDisplayNameChange: (displayName: string) => Promise<void>;
   trackerSummaries: Record<string, TrackerSummary | undefined>;
 }
 
@@ -56,11 +60,16 @@ const HomePage: React.FC<HomePageProps> = ({
   onOpenRulesetEditor,
   trackerSummaries,
   currentUserId,
+  displayName,
+  displayNameRequiresUpdate,
+  onDisplayNameChange,
 }) => {
   const { t, i18n } = useTranslation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isDark, setIsDark] = useState(getDarkMode());
   const [filterOpen, setFilterOpen] = useState(false);
+  const [displayNamePromptDismissed, setDisplayNamePromptDismissed] =
+    useState(false);
   const [sortBy, setSortBy] = useState<SortOption>("date");
   const [visibilityFilter, setVisibilityFilter] =
     useState<VisibilityFilter>("all");
@@ -174,6 +183,15 @@ const HomePage: React.FC<HomePageProps> = ({
 
   return (
     <div className="min-h-screen bg-[#f0f0f0] dark:bg-gray-900 text-gray-800 dark:text-gray-100 px-3 py-6 sm:py-10">
+      <MigrationDisplayNameModal
+        isOpen={displayNameRequiresUpdate && !displayNamePromptDismissed}
+        initialDisplayName={displayName}
+        onClose={() => setDisplayNamePromptDismissed(true)}
+        onSave={async (nextDisplayName) => {
+          await onDisplayNameChange(nextDisplayName);
+          setDisplayNamePromptDismissed(true);
+        }}
+      />
       <div className="max-w-5xl mx-auto space-y-6">
         <header className="relative bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-5 sm:px-6 shadow-[6px_6px_0_0_rgba(31,41,55,0.25)]">
           <div className="flex flex-wrap items-center justify-between gap-4">

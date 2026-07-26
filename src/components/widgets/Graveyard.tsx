@@ -7,8 +7,8 @@ import { FiEdit, FiTrash } from "react-icons/fi";
 import AddLostPokemonModal from "@/src/components/modals/AddLostPokemonModal.tsx";
 import EditPairModal from "@/src/components/modals/EditPairModal.tsx";
 import { getWikiUrlById, type WikiId } from "@/src/utils/wiki.ts";
-import { resolvePokemonDisplay } from "@/src/services/pokemonDisplay.ts";
-import { resolvePokemonLocationDisplay } from "@/src/services/locationSearch.ts";
+import { resolvePokemonDisplay } from "@/src/services/pokemons/pokemonDisplay.ts";
+import { resolvePokemonLocationDisplay } from "@/src/services/search/locationSearch.ts";
 import { normalizeLanguage } from "@/src/utils/language.ts";
 
 interface GraveyardProps {

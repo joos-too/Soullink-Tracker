@@ -1,4 +1,4 @@
-import { findPokemonIdByName } from "@/src/services/pokemonSearch";
+import { findPokemonIdByName } from "@/src/services/search/pokemonSearch.ts";
 import type { SupportedLanguage } from "@/src/utils/language";
 
 // Map game version IDs to PokeAPI sprite generation paths

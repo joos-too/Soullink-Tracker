@@ -1,0 +1,56 @@
+{
+  "users": {
+    "fixture-owner": {
+      "uid": "fixture-owner",
+      "email": "owner@example.com",
+      "createdAt": 1700000000000,
+      "lastLoginAt": 1700000100000
+    }
+  },
+  "userEmails": {
+    "owner@example_com": {
+      "uid": "fixture-owner"
+    }
+  },
+  "userTrackers": {
+    "fixture-owner": {
+      "fixture-tracker": true
+    }
+  },
+  "trackers": {
+    "fixture-tracker": {
+      "meta": {
+        "id": "fixture-tracker",
+        "title": "Migration fixture",
+        "playerNames": ["Red", "Blue"],
+        "createdBy": "fixture-owner",
+        "createdAt": 1700000000000,
+        "gameVersionId": "gen1_rb",
+        "members": {
+          "fixture-owner": {
+            "uid": "fixture-owner",
+            "role": "owner",
+            "addedAt": 1700000000000
+          }
+        },
+        "rulesetId": "standard"
+      },
+      "state": {
+        "playerNames": ["Red", "Blue"],
+        "rulesetId": "standard",
+        "team": [],
+        "box": [],
+        "graveyard": [],
+        "rules": ["First encounter only."],
+        "levelCaps": [],
+        "rivalCaps": [],
+        "stats": {
+          "runs": 1,
+          "deaths": [0, 0]
+        },
+        "rivalCensorEnabled": true
+      }
+    }
+  },
+  "rulesets": {}
+}

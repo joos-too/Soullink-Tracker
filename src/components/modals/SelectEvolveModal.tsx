@@ -3,15 +3,15 @@ import {
   getOfficialArtworkUrlById,
   getSpriteUrlById,
 } from "@/src/services/sprites.ts";
-import { getPokemonNameById } from "@/src/services/pokemonSearch.ts";
+import { getPokemonNameById } from "@/src/services/search/pokemonSearch.ts";
 import type { PokemonLink } from "@/types.ts";
 import { useTranslation } from "react-i18next";
 import { normalizeLanguage } from "@/src/utils/language.ts";
 import { focusRingClasses } from "@/src/styles/focusRing.ts";
 import { useFocusTrap } from "@/src/hooks/useFocusTrap.ts";
-import { getPokemonTypeSlugsById } from "@/src/services/pokemonTypes.ts";
+import { getPokemonTypeSlugsById } from "@/src/services/pokemons/pokemonTypes.ts";
 import TypeBadge from "@/src/components/badges/TypeBadge.tsx";
-import { getFilteredEvolutionEntriesForPokemon } from "@/src/services/evolutionMethodFilter.ts";
+import { getFilteredEvolutionEntriesForPokemon } from "@/src/services/filter/evolutionMethodFilter.ts";
 
 interface SelectEvolveModalProps {
   isOpen: boolean;

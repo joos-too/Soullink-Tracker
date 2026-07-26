@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import type { Stats } from "@/types.ts";
 import { LegendaryImage } from "@/src/components/other/GameImages.tsx";
-import { getLegendariesUpToGeneration } from "@/src/services/legendaryFilter.ts";
+import { getLegendariesUpToGeneration } from "@/src/services/filter/legendaryFilter.ts";
 import { useTranslation } from "react-i18next";
 
 interface LegendaryTrackerProps {

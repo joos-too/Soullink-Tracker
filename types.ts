@@ -119,7 +119,9 @@ export interface UserSettings {
 
 export interface TrackerMember {
   uid: string;
-  email: string;
+  displayName: string;
+  /** Available to tracker owners; omitted for all other Supabase readers. */
+  email?: string;
   role: TrackerRole;
   addedAt: number;
 }

@@ -11,10 +11,13 @@ import {
   focusRingCardClasses,
   focusRingClasses,
 } from "@/src/styles/focusRing.ts";
-import { getItemSpriteUrl, getItemName } from "@/src/services/itemSearch";
+import {
+  getItemSpriteUrl,
+  getItemName,
+} from "@/src/services/search/itemSearch.ts";
 import { getSpriteUrlById } from "@/src/services/sprites";
 import { normalizeLanguage } from "@/src/utils/language";
-import { findLocationByName } from "@/src/services/locationSearch";
+import { findLocationByName } from "@/src/services/search/locationSearch.ts";
 
 interface AddItemModalProps {
   isOpen: boolean;
