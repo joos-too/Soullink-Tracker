@@ -15,20 +15,20 @@ inputs:
     description: Verified known_hosts entry for the SSH server
     required: true
   remote-path:
-    description: Absolute server directory containing the persistent .env file
+    description: Absolute server deployment directory
     required: true
   compose-file:
     description: Repository-relative Compose file to deploy
     required: false
     default: docker-compose.yml
-  expected-compose-project:
-    description: Required COMPOSE_PROJECT_NAME in the persistent server .env
+  compose-project:
+    description: Docker Compose project name
     required: true
-  expected-image-tag:
-    description: Required IMAGE_TAG in the persistent server .env
+  image-tag:
+    description: Container image tag
     required: true
-  expected-app-port:
-    description: Required APP_PORT in the persistent server .env
+  app-port:
+    description: Host port published for the application
     required: true
   registry-host:
     description: Container registry hostname
@@ -57,9 +57,9 @@ runs:
         SSH_KNOWN_HOSTS: ${{ inputs.ssh-known-hosts }}
         REMOTE_PATH: ${{ inputs.remote-path }}
         COMPOSE_FILE: ${{ inputs.compose-file }}
-        EXPECTED_COMPOSE_PROJECT: ${{ inputs.expected-compose-project }}
-        EXPECTED_IMAGE_TAG: ${{ inputs.expected-image-tag }}
-        EXPECTED_APP_PORT: ${{ inputs.expected-app-port }}
+        COMPOSE_PROJECT: ${{ inputs.compose-project }}
+        IMAGE_TAG: ${{ inputs.image-tag }}
+        APP_PORT: ${{ inputs.app-port }}
         REGISTRY_HOST: ${{ inputs.registry-host }}
         REGISTRY_USERNAME: ${{ inputs.registry-username }}
         REGISTRY_PASSWORD: ${{ inputs.registry-password }}
@@ -75,16 +75,16 @@ runs:
           echo "DEPLOY_PATH must be a safe absolute server path." >&2
           exit 1
         fi
-        if [[ ! "$EXPECTED_COMPOSE_PROJECT" =~ ^[A-Za-z0-9._-]+$ ]]; then
-          echo "Expected Compose project name is invalid." >&2
+        if [[ ! "$COMPOSE_PROJECT" =~ ^[A-Za-z0-9._-]+$ ]]; then
+          echo "Compose project name is invalid." >&2
           exit 1
         fi
-        if [[ ! "$EXPECTED_IMAGE_TAG" =~ ^[A-Za-z0-9._-]+$ ]]; then
-          echo "Expected image tag is invalid." >&2
+        if [[ ! "$IMAGE_TAG" =~ ^[A-Za-z0-9._-]+$ ]]; then
+          echo "Image tag is invalid." >&2
           exit 1
         fi
-        if [[ ! "$EXPECTED_APP_PORT" =~ ^[0-9]+$ ]] || (( EXPECTED_APP_PORT < 1 || EXPECTED_APP_PORT > 65535 )); then
-          echo "Expected application port must be a valid TCP port." >&2
+        if [[ ! "$APP_PORT" =~ ^[0-9]+$ ]] || (( APP_PORT < 1 || APP_PORT > 65535 )); then
+          echo "Application port must be a valid TCP port." >&2
           exit 1
         fi
         if [[ ! "$REGISTRY_HOST" =~ ^[A-Za-z0-9.-]+(:[0-9]+)?$ ]]; then
@@ -106,9 +106,9 @@ runs:
         printf -v quoted_remote_path '%q' "$REMOTE_PATH"
         printf -v quoted_registry_host '%q' "$REGISTRY_HOST"
         printf -v quoted_registry_username '%q' "$REGISTRY_USERNAME"
-        printf -v quoted_project_setting '%q' "COMPOSE_PROJECT_NAME=$EXPECTED_COMPOSE_PROJECT"
-        printf -v quoted_tag_setting '%q' "IMAGE_TAG=$EXPECTED_IMAGE_TAG"
-        printf -v quoted_port_setting '%q' "APP_PORT=$EXPECTED_APP_PORT"
+        printf -v quoted_compose_project '%q' "$COMPOSE_PROJECT"
+        printf -v quoted_image_tag '%q' "$IMAGE_TAG"
+        printf -v quoted_app_port '%q' "$APP_PORT"
 
         ssh_command=(
           ssh
@@ -135,15 +135,6 @@ runs:
         "${ssh_command[@]}" "$target" \
           "mkdir -p -- $quoted_remote_path"
 
-        "${ssh_command[@]}" "$target" \
-          "test -f $quoted_remote_path/.env &&
-           grep -Fqx -- $quoted_project_setting $quoted_remote_path/.env &&
-           grep -Fqx -- $quoted_tag_setting $quoted_remote_path/.env &&
-           grep -Fqx -- $quoted_port_setting $quoted_remote_path/.env" || {
-          echo "The persistent server .env is missing or does not match the target environment." >&2
-          exit 1
-        }
-
         rsync \
           --archive \
           --compress \
@@ -158,7 +149,10 @@ runs:
         registry_login_complete="true"
 
         "${ssh_command[@]}" "$target" \
-          "cd $quoted_remote_path && docker compose config --quiet && docker compose pull && docker compose up -d"
+          "cd $quoted_remote_path &&
+           IMAGE_TAG=$quoted_image_tag APP_PORT=$quoted_app_port docker compose --env-file /dev/null --project-name $quoted_compose_project config --quiet &&
+           IMAGE_TAG=$quoted_image_tag APP_PORT=$quoted_app_port docker compose --env-file /dev/null --project-name $quoted_compose_project pull &&
+           IMAGE_TAG=$quoted_image_tag APP_PORT=$quoted_app_port docker compose --env-file /dev/null --project-name $quoted_compose_project up -d"
 
         "${ssh_command[@]}" "$target" \
           "docker logout $quoted_registry_host"

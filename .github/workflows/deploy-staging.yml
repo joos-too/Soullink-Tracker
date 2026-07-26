@@ -106,9 +106,9 @@ jobs:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
           ssh-known-hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
           remote-path: ${{ vars.DEPLOY_PATH }}
-          expected-compose-project: soullink-tracker-staging
-          expected-image-tag: staging
-          expected-app-port: "8068"
+          compose-project: soullink-tracker-staging
+          image-tag: staging
+          app-port: ${{ vars.APP_PORT }}
           registry-username: ${{ github.actor }}
           registry-password: ${{ github.token }}
           cleanup: "true"
