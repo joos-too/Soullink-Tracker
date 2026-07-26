@@ -95,15 +95,20 @@ Test-NetConnection 127.0.0.1 -Port 55432
 In a second PowerShell window, set the variables listed in
 [`staging.env.example`](staging.env.example). Never save real values in the
 repository or shell history. When the SSH target is Supavisor, the database URL
-username must be `postgres.<POOLER_TENANT_ID>` using the exact staging value;
-plain `postgres` fails because Supavisor cannot identify the tenant. The
-server-local Supavisor listener does not provide TLS, so the URL must also end
-in `?sslmode=disable`. Also add
-`&options=reference%3D<POOLER_TENANT_ID>` so clients that do not expose the
-username suffix to Supavisor still send the tenant explicitly. This is
-acceptable only because the database traffic is inside the encrypted SSH
-tunnel; never disable TLS for a direct remote database connection. Then run the
-read-only checks:
+username must remain `postgres`, and the password must be URL-encoded. Add
+`&options=reference%3D<TENANT>` using the exact `POOLER_TENANT_ID` from the
+staging stack; appending the tenant to the username can fail with
+`(EAUTHQUERY) user not found in the database` in this self-hosted configuration.
+The server-local Supavisor listener does not provide TLS, so the URL must also
+include `?sslmode=disable`. This is acceptable only because the database traffic
+is inside the encrypted SSH tunnel; never disable TLS for a direct remote
+database connection. The complete URL is:
+
+```text
+postgresql://postgres:<ENCODED_PASSWORD>@127.0.0.1:55432/postgres?sslmode=disable&options=reference%3D<TENANT>
+```
+
+Then run the read-only checks:
 
 ```powershell
 npm run supabase:staging:preflight
