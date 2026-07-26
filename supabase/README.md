@@ -152,7 +152,9 @@ Configure both GitHub environments, `staging` and `production`, with:
 - Secret `SSH_KNOWN_HOSTS`, containing a host-key entry verified out of band
 - Secret `SUPABASE_MIGRATION_DB_URL`, using an RFC 3986-encoded password. For
   Supavisor session mode use
-  `postgresql://postgres.<POOLER_TENANT_ID>:<password>@127.0.0.1:55432/postgres?sslmode=disable&options=reference%3D<POOLER_TENANT_ID>`.
+  `postgresql://postgres:<ENCODED_PASSWORD>@127.0.0.1:55432/postgres?sslmode=disable&options=reference%3D<TENANT>`.
+  Keep the database username as `postgres` and set `TENANT` to the exact
+  `POOLER_TENANT_ID` from the target stack.
   Disabling database TLS is allowed here only because the workflow carries the
   connection through its encrypted SSH tunnel.
 - Variable `SUPABASE_DB_REMOTE_PORT`, containing that stack's server-local
