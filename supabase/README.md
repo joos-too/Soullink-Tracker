@@ -150,14 +150,22 @@ Configure both GitHub environments, `staging` and `production`, with:
 - Secret `SSH_USERNAME`
 - Secret `SSH_PRIVATE_KEY`
 - Secret `SSH_KNOWN_HOSTS`, containing a host-key entry verified out of band
-- Secret `SUPABASE_MIGRATION_DB_URL`, using an RFC 3986-encoded password and
-  `postgresql://<user>:<password>@127.0.0.1:55432/postgres`
+- Secret `SUPABASE_MIGRATION_DB_URL`, using an RFC 3986-encoded password. For
+  Supavisor session mode use
+  `postgresql://postgres.<POOLER_TENANT_ID>:<password>@127.0.0.1:55432/postgres?sslmode=disable&options=reference%3D<POOLER_TENANT_ID>`.
+  Disabling database TLS is allowed here only because the workflow carries the
+  connection through its encrypted SSH tunnel.
 - Variable `SUPABASE_DB_REMOTE_PORT`, containing that stack's server-local
   Supavisor session port
 - Variable `DEPLOY_PATH`, containing the environment's separate frontend
   deployment directory
 - Variable `APP_URL`, containing the public frontend URL shown in GitHub's
   deployment history
+- In the `staging` environment, variables `STAGING_VITE_SUPABASE_URL` and
+  `STAGING_VITE_SUPABASE_ANON_KEY`, containing the public frontend build
+  configuration
+- In the `production` environment, variables `VITE_SUPABASE_URL` and
+  `VITE_SUPABASE_ANON_KEY`, containing the public frontend build configuration
 
 The runner opens an SSH tunnel to the configured remote port. PostgreSQL must
 remain bound to the server's loopback interface; port `55432` exists only on
@@ -166,11 +174,9 @@ GitHub Environments prevents the release job from accessing them before its
 protection rules have passed. Remove repository-level copies after both
 environments have been configured.
 
-Configure these repository variables for frontend builds:
-
-- Staging: `STAGING_VITE_SUPABASE_URL` and
-  `STAGING_VITE_SUPABASE_ANON_KEY`
-- Production: `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`
+Both deployment workflows read their frontend variables through an
+environment-bound configuration job before invoking the reusable build
+workflow. Repository-level copies are not required.
 
 The environment-bound release job uses the local
 `deploy-docker-compose` action rather than an external reusable deployment

@@ -43,15 +43,35 @@ Add the exact staging reset URL to the Auth redirect allowlist. Configure SMTP
 so staging cannot mail arbitrary production users during early rehearsals (use
 a sink or provider sandbox first). Enable Logs & Analytics if the production
 stack will use them, because the rehearsal should include their resource cost.
+For the repository's Mailpit setup, follow
+[`Supabase_Setup.md`](Supabase_Setup.md#staging-smtp-sink). Verify that the
+inbox UI is loopback-only, the SMTP port is not published, and the sink has no
+external relay configured. If operators access it through Nginx, require HTTPS
+and Basic Auth at server scope so the inbox, API, and WebSocket endpoint are
+all protected. Use a unique password and do not expose Docker ports `8025` or
+`1025` on a public interface.
 
-Create a persistent safety marker once on the staging database and reconnect:
+Create the persistent safety marker from the staging Supabase Compose
+directory. Use the internal administrative role: the regular `postgres` role
+can be denied permission to set a database-level custom parameter.
 
-```sql
-alter database postgres set app.environment = 'staging';
+```bash
+docker compose exec db psql \
+  -U supabase_admin \
+  -d postgres \
+  -v ON_ERROR_STOP=1 \
+  -c "alter database postgres set app.environment = 'staging';"
+
+docker compose exec db psql \
+  -U postgres \
+  -d postgres \
+  -tAc "select current_setting('app.environment', true);"
 ```
 
-The committed preflight refuses to run without this marker or when either URL
-matches the documented production host.
+The verification command must print exactly `staging`. It opens a new
+connection because `alter database ... set` applies its default to new
+sessions. The committed preflight refuses to run without this marker or when
+either URL matches the documented production host.
 
 ## 3. Connect without publishing PostgreSQL
 
@@ -59,22 +79,34 @@ Keep the staging database bound to localhost on the server. From the migration
 workstation, create an SSH tunnel (adjust ports and user):
 
 ```powershell
-ssh -N -L 55432:127.0.0.1:5433 your-user@your-server
+ssh -N `
+  -o ExitOnForwardFailure=yes `
+  -o ServerAliveInterval=30 `
+  -L 127.0.0.1:55432:127.0.0.1:5432 `
+  your-user@your-server
+```
+
+Verify with:
+
+```powershell
+Test-NetConnection 127.0.0.1 -Port 55432
 ```
 
 In a second PowerShell window, set the variables listed in
 [`staging.env.example`](staging.env.example). Never save real values in the
-repository or shell history. Then run the read-only checks:
+repository or shell history. When the SSH target is Supavisor, the database URL
+username must be `postgres.<POOLER_TENANT_ID>` using the exact staging value;
+plain `postgres` fails because Supavisor cannot identify the tenant. The
+server-local Supavisor listener does not provide TLS, so the URL must also end
+in `?sslmode=disable`. Also add
+`&options=reference%3D<POOLER_TENANT_ID>` so clients that do not expose the
+username suffix to Supavisor still send the tenant explicitly. This is
+acceptable only because the database traffic is inside the encrypted SSH
+tunnel; never disable TLS for a direct remote database connection. Then run the
+read-only checks:
 
 ```powershell
 npm run supabase:staging:preflight
-```
-
-Immediately after a verified clean staging reset, require empty application
-tables:
-
-```powershell
-npm run supabase:staging:preflight -- --expect-empty
 ```
 
 This checks HTTPS Auth and REST through Nginx, validates the service-role claim,
@@ -87,13 +119,25 @@ Run the dry run and inspect every statement before applying migrations. The
 database URL is supplied from the current shell variable:
 
 ```powershell
-npx supabase db push --db-url $env:SUPABASE_MIGRATION_STAGING_DB_URL --dry-run
-npx supabase db push --db-url $env:SUPABASE_MIGRATION_STAGING_DB_URL
+npx supabase db push --db-url $env:SUPABASE_MIGRATION_STAGING_DB_URL --dry-run --debug
+npx supabase db push --db-url $env:SUPABASE_MIGRATION_STAGING_DB_URL --debug
 ```
+
+The repository's pinned Supabase CLI `2.109.1` currently has a regression where
+the normal command path can ignore `sslmode=disable` and fail with `server
+refused TLS connection`. The `--debug` path honors it. Remove this workaround
+after upgrading to a release that fixes the regression.
 
 Never add `--include-seed`: `supabase/seed.sql` contains local-only accounts and
 trackers. Run the pgTAP suite locally against the identical migrations; do not
 run data-mutating fixture tests against hosted staging.
+
+After the schema has been applied and before importing any data, require empty
+application tables:
+
+```powershell
+npm run supabase:staging:preflight -- --expect-empty
+```
 
 ## 5. Rehearse the imports
 
@@ -113,6 +157,15 @@ in this order:
 
 Do not use real user recovery or invitation emails until the SMTP routing has
 been manually verified.
+
+For the initial sink rehearsal, deliberately request recovery for a controlled
+staging account whose address resembles a real external address. Confirm that
+the message appears only in Mailpit and that no relay or outbound-delivery
+attempt is logged:
+
+```bash
+docker compose logs --since 10m mailpit auth
+```
 
 ## 6. Deploy and test the staging frontend
 

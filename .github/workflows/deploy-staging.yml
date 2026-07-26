@@ -24,8 +24,41 @@ jobs:
             exit 1
           fi
 
-  build:
+  build-config:
     needs: validate-ref
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      deployment: false
+    permissions:
+      contents: read
+    outputs:
+      supabase_url: ${{ steps.values.outputs.supabase_url }}
+      supabase_anon_key: ${{ steps.values.outputs.supabase_anon_key }}
+    steps:
+      - name: Read staging frontend configuration
+        id: values
+        shell: bash
+        env:
+          SUPABASE_URL: ${{ vars.STAGING_VITE_SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ vars.STAGING_VITE_SUPABASE_ANON_KEY }}
+        run: |
+          set -Eeuo pipefail
+
+          if [[ "$SUPABASE_URL" != https://* ]]; then
+            echo "STAGING_VITE_SUPABASE_URL must be a non-empty HTTPS URL." >&2
+            exit 1
+          fi
+          if [[ -z "$SUPABASE_ANON_KEY" ]]; then
+            echo "STAGING_VITE_SUPABASE_ANON_KEY must not be empty." >&2
+            exit 1
+          fi
+
+          printf 'supabase_url=%s\n' "$SUPABASE_URL" >> "$GITHUB_OUTPUT"
+          printf 'supabase_anon_key=%s\n' "$SUPABASE_ANON_KEY" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: [validate-ref, build-config]
     permissions:
       contents: read
       packages: write
@@ -36,8 +69,8 @@ jobs:
       keep-versions: 3
       build-args: |
         VITE_BACKEND=supabase
-        VITE_SUPABASE_URL=${{ vars.STAGING_VITE_SUPABASE_URL }}
-        VITE_SUPABASE_ANON_KEY=${{ vars.STAGING_VITE_SUPABASE_ANON_KEY }}
+        VITE_SUPABASE_URL=${{ needs.build-config.outputs.supabase_url }}
+        VITE_SUPABASE_ANON_KEY=${{ needs.build-config.outputs.supabase_anon_key }}
 
   test:
     needs: validate-ref

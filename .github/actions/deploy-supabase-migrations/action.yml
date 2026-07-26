@@ -107,10 +107,12 @@ runs:
 
         supabase db push \
           --db-url "$SUPABASE_MIGRATION_DB_URL" \
-          --dry-run
+          --dry-run \
+          --debug
 
         supabase db push \
-          --db-url "$SUPABASE_MIGRATION_DB_URL"
+          --db-url "$SUPABASE_MIGRATION_DB_URL" \
+          --debug
 
         node scripts/verify-supabase-migrations.mjs \
           --environment "$DEPLOY_ENVIRONMENT" \

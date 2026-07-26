@@ -42,14 +42,20 @@ if (decodeJwtPayload(serviceRoleKey).role !== "service_role") {
 const request = async (pathname, headers = {}) => {
   const response = await fetch(new URL(pathname, apiUrl), { headers });
   if (!response.ok) {
+    const authenticationChallenge = response.headers.get("www-authenticate");
     throw new Error(
-      `${pathname} returned ${response.status} from ${apiUrl.origin}.`,
+      `${pathname} returned ${response.status} from ${apiUrl.origin}.` +
+        (authenticationChallenge
+          ? ` WWW-Authenticate: ${authenticationChallenge}.`
+          : ""),
     );
   }
   return response;
 };
 
-await request("/auth/v1/health");
+await request("/auth/v1/health", {
+  apikey: serviceRoleKey,
+});
 await request("/rest/v1/", {
   apikey: serviceRoleKey,
   Authorization: `Bearer ${serviceRoleKey}`,
