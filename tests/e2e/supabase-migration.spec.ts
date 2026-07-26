@@ -38,8 +38,11 @@ test("restores an owner session and persists a revision-aware state update", asy
   ).toBeVisible();
 
   await page.goto(`/tracker/${PUBLIC_TRACKER_ID}`);
-  const moveToBox = page.getByTitle("Move to box");
-  const moveToTeam = page.getByTitle("Move to team");
+  const pidgeyRow = page
+    .getByRole("row")
+    .filter({ has: page.getByRole("link", { name: "Pidgey", exact: true }) });
+  const moveToBox = pidgeyRow.getByTitle("Move to box");
+  const moveToTeam = pidgeyRow.getByTitle("Move to team");
   await expect(moveToBox).toBeVisible();
 
   try {
