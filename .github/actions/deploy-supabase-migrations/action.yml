@@ -86,6 +86,7 @@ runs:
         ssh \
           -N \
           -o BatchMode=yes \
+          -o ConnectTimeout=15 \
           -o ExitOnForwardFailure=yes \
           -o ServerAliveInterval=30 \
           -o ServerAliveCountMax=3 \
@@ -96,9 +97,26 @@ runs:
           "$SSH_USERNAME@$SSH_HOST" &
         tunnel_pid=$!
 
-        sleep 2
-        if ! kill -0 "$tunnel_pid" 2>/dev/null; then
-          wait "$tunnel_pid"
+        tunnel_ready="false"
+        for attempt in {1..30}; do
+          if ! kill -0 "$tunnel_pid" 2>/dev/null; then
+            echo "The SSH tunnel exited before local port 55432 became ready." >&2
+            wait "$tunnel_pid" || true
+            exit 1
+          fi
+
+          if timeout 1 bash -c "echo > /dev/tcp/127.0.0.1/55432" 2>/dev/null; then
+            tunnel_ready="true"
+            break
+          fi
+
+          sleep 1
+        done
+
+        if [[ "$tunnel_ready" != "true" ]]; then
+          echo "The SSH tunnel did not begin listening on 127.0.0.1:55432 within 30 seconds." >&2
+          echo "Check SSH_HOST, SSH_USERNAME, SSH_PRIVATE_KEY, SSH_KNOWN_HOSTS, and SUPABASE_DB_REMOTE_PORT for this environment." >&2
+          exit 1
         fi
 
         node scripts/verify-supabase-migrations.mjs \
