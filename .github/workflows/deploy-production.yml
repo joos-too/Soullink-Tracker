@@ -72,7 +72,7 @@ jobs:
         VITE_SUPABASE_URL=${{ needs.build-config.outputs.supabase_url }}
         VITE_SUPABASE_ANON_KEY=${{ needs.build-config.outputs.supabase_anon_key }}
 
-  release:
+  deploy:
     needs: [build]
     runs-on: ubuntu-latest
     timeout-minutes: 20
