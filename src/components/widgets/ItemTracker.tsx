@@ -3,10 +3,13 @@ import { useTranslation } from "react-i18next";
 import { FossilEntry, ItemEntry } from "@/types";
 import { PLAYER_COLORS } from "@/src/services/init";
 import { MEGA_STONES, FOSSILS, STONES } from "@/src/data/special-items.ts";
-import { getItemName, getItemSpriteUrl } from "@/src/services/itemSearch";
-import { resolveLocationDisplay } from "@/src/services/locationSearch";
+import {
+  getItemName,
+  getItemSpriteUrl,
+} from "@/src/services/search/itemSearch.ts";
+import { resolveLocationDisplay } from "@/src/services/search/locationSearch.ts";
 import { normalizeLanguage } from "@/src/utils/language";
-import { getPokemonNameById } from "@/src/services/pokemonSearch";
+import { getPokemonNameById } from "@/src/services/search/pokemonSearch.ts";
 import {
   FiPlus,
   FiCheck,

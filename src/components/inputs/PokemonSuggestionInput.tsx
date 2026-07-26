@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { searchPokemonNames } from "@/src/services/pokemonSearch.ts";
+import { searchPokemonNames } from "@/src/services/search/pokemonSearch.ts";
 import { getSpriteUrlForPokemonName } from "@/src/services/sprites.ts";
 import { normalizeLanguage } from "@/src/utils/language.ts";
 import SuggestionInput from "@/src/components/inputs/SuggestionInput.tsx";

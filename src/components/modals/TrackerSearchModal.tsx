@@ -9,15 +9,18 @@ import {
 import {
   getPokemonFamilyIdsMatchingQuery,
   getPokemonNameById,
-} from "@/src/services/pokemonSearch";
-import { resolvePokemonDisplay } from "@/src/services/pokemonDisplay.ts";
+} from "@/src/services/search/pokemonSearch.ts";
+import { resolvePokemonDisplay } from "@/src/services/pokemons/pokemonDisplay.ts";
 import { FOSSILS, STONES, MEGA_STONES } from "@/src/data/special-items.ts";
-import { getItemName, getItemSpriteUrl } from "@/src/services/itemSearch";
+import {
+  getItemName,
+  getItemSpriteUrl,
+} from "@/src/services/search/itemSearch.ts";
 import {
   locationMatchesQuery,
   resolveLocationDisplay,
   resolvePokemonLocationDisplay,
-} from "@/src/services/locationSearch";
+} from "@/src/services/search/locationSearch.ts";
 import { normalizeLanguage } from "@/src/utils/language";
 import { useMultiLocaleSearch } from "@/src/hooks/useMultiLocaleSearch.ts";
 

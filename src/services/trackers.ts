@@ -1,6 +1,6 @@
 import { get, ref, set, update } from "firebase/database";
-import type { User } from "firebase/auth";
-import { db } from "@/src/firebaseConfig";
+import { db } from "@/src/firebaseConfig.ts";
+import { BACKEND } from "@/src/services/backend/backend.ts";
 import {
   createInitialState,
   MIN_PLAYER_COUNT,
@@ -8,12 +8,25 @@ import {
   sanitizeRules,
 } from "@/src/services/init.ts";
 import { DEFAULT_RULESET_ID } from "@/src/data/rulesets.ts";
+import {
+  createSupabaseTracker,
+  deleteSupabaseTracker,
+  getSupabaseTrackerMeta,
+  inviteSupabaseTrackerMember,
+  removeSupabaseTrackerMember,
+  updateSupabaseRivalPreference,
+} from "@/src/services/repos/supabaseTrackerRepository.ts";
+import {
+  getDefaultDisplayName,
+  getUserProfilePreferences,
+} from "@/src/services/repos/profileRepository.ts";
 import type {
   RivalGender,
   TrackerMember,
   TrackerMeta,
   TrackerRole,
-} from "@/types";
+} from "@/types.ts";
+import { AuthenticatedUser } from "@/src/services/backend/auth.ts";
 
 export class TrackerOperationError extends Error {
   code: "user-not-found" | "member-exists" | "invalid-input" | "unknown";
@@ -30,39 +43,34 @@ export class TrackerOperationError extends Error {
   }
 }
 
-const normalizeEmail = (email: string): string => email.trim().toLowerCase();
+const toTrackerOperationError = (error: unknown): TrackerOperationError => {
+  if (error instanceof TrackerOperationError) return error;
+  const message =
+    error instanceof Error ? error.message : "Unknown tracker error";
+  switch (message) {
+    case "invite_user_not_found":
+      return new TrackerOperationError(
+        "Kein Account mit dieser Email gefunden.",
+        "user-not-found",
+      );
+    case "tracker_member_exists":
+      return new TrackerOperationError(
+        "Nutzer ist bereits Mitglied des Trackers.",
+        "member-exists",
+      );
+    case "invalid_tracker_input":
+    case "invalid_invite_role":
+    case "invalid_or_duplicate_invite":
+      return new TrackerOperationError(message, "invalid-input");
+    default:
+      return new TrackerOperationError(message, "unknown", error);
+  }
+};
+
+const normalizeEmail = (email?: string | null): string =>
+  email?.trim().toLowerCase() ?? "";
 const encodeEmailKey = (normalizedEmail: string): string =>
   normalizedEmail.replace(/[.#$/\[\]]/g, "_");
-
-export const ensureUserProfile = async (user: User): Promise<void> => {
-  if (!user.email) return;
-  const now = Date.now();
-  const profileRef = ref(db, `users/${user.uid}`);
-  const snapshot = await get(profileRef);
-  const payload = {
-    uid: user.uid,
-    lastLoginAt: now,
-  };
-  if (snapshot.exists()) {
-    await update(profileRef, payload);
-  } else {
-    await set(profileRef, {
-      ...payload,
-      createdAt: now,
-    });
-  }
-
-  const normalizedEmail = normalizeEmail(user.email);
-  const emailKey = encodeEmailKey(normalizedEmail);
-  const updates: Record<string, unknown> = {
-    [`userEmails/${emailKey}`]: {
-      uid: user.uid,
-      updatedAt: now,
-    },
-  };
-
-  await update(ref(db), updates);
-};
 
 export const findUserByEmail = async (
   email: string,
@@ -106,25 +114,27 @@ const buildMember = (
   uid: string,
   email: string,
   role: TrackerRole,
+  displayName = getDefaultDisplayName(email),
 ): TrackerMember => ({
   uid,
   email,
+  displayName,
   role,
   addedAt: Date.now(),
 });
 
 type InviteRole = Exclude<TrackerRole, "owner">;
 
-interface InviteEntry {
+export interface InviteEntry {
   email: string;
   role: InviteRole;
 }
 
-interface CreateTrackerPayload {
+export interface CreateTrackerPayload {
   title: string;
   playerNames: string[];
   memberInvites: InviteEntry[];
-  owner: User;
+  owner: AuthenticatedUser;
   gameVersionId: string;
   allPokemonAndItems?: boolean;
   rulesetId?: string;
@@ -174,6 +184,41 @@ export const createTracker = async ({
   });
 
   const filteredEmails = Array.from(inviteByEmail.keys());
+  const normalizedRules = sanitizeRules(rules);
+  const resolvedRulesetId =
+    typeof rulesetId === "string" && rulesetId.trim().length > 0
+      ? rulesetId
+      : DEFAULT_RULESET_ID;
+  const initialState = createInitialState(
+    gameVersionId,
+    normalizedPlayerNames,
+    {
+      id: resolvedRulesetId,
+      rules: normalizedRules,
+    },
+  );
+
+  if (BACKEND === "supabase") {
+    try {
+      const trackerId = await createSupabaseTracker({
+        title: sanitizedTitle,
+        playerNames: normalizedPlayerNames,
+        gameVersionId,
+        allPokemonAndItems: Boolean(allPokemonAndItems),
+        rulesetId: resolvedRulesetId,
+        initialState,
+        invites: Array.from(inviteByEmail, ([email, role]) => ({
+          email,
+          role,
+        })),
+      });
+      const meta = await getSupabaseTrackerMeta(trackerId);
+      if (!meta) throw new Error("Created tracker could not be loaded.");
+      return { trackerId, meta };
+    } catch (error) {
+      throw toTrackerOperationError(error);
+    }
+  }
 
   const { found, missing } = await resolveUsersByEmails(filteredEmails);
   if (missing.length > 0) {
@@ -189,8 +234,16 @@ export const createTracker = async ({
       ? crypto.randomUUID()
       : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
   const createdAt = Date.now();
+  const ownerDisplayName = (
+    await getUserProfilePreferences(owner.uid, owner.email)
+  ).displayName;
   const members: Record<string, TrackerMember> = {
-    [owner.uid]: buildMember(owner.uid, owner.email!, "owner"),
+    [owner.uid]: buildMember(
+      owner.uid,
+      owner.email!,
+      "owner",
+      ownerDisplayName,
+    ),
   };
   const guests: Record<string, TrackerMember> = {};
 
@@ -206,12 +259,6 @@ export const createTracker = async ({
     }
   }
 
-  const normalizedRules = sanitizeRules(rules);
-  const resolvedRulesetId =
-    typeof rulesetId === "string" && rulesetId.trim().length > 0
-      ? rulesetId
-      : DEFAULT_RULESET_ID;
-
   const meta: TrackerMeta = {
     id: trackerId,
     title: sanitizedTitle,
@@ -225,15 +272,6 @@ export const createTracker = async ({
     rulesetId: resolvedRulesetId,
     isPublic: false,
   };
-
-  const initialState = createInitialState(
-    gameVersionId,
-    normalizedPlayerNames,
-    {
-      id: resolvedRulesetId,
-      rules: normalizedRules,
-    },
-  );
 
   const trackerUpdates: Record<string, unknown> = {
     [`trackers/${trackerId}/meta`]: meta,
@@ -271,6 +309,29 @@ export const addMemberByEmail = async (
       "Bitte gib eine gültige Email an.",
       "invalid-input",
     );
+  }
+
+  if (BACKEND === "supabase") {
+    try {
+      const targetRole: InviteRole = role === "guest" ? "guest" : "editor";
+      const userId = await inviteSupabaseTrackerMember(
+        trackerId,
+        normalized,
+        targetRole,
+      );
+      const meta = await getSupabaseTrackerMeta(trackerId);
+      const member = meta
+        ? [
+            ...Object.values(meta.members),
+            ...Object.values(meta.guests ?? []),
+          ].find((entry) => entry.uid === userId)
+        : undefined;
+      if (!member)
+        throw new Error("Invited tracker member could not be loaded.");
+      return member;
+    } catch (error) {
+      throw toTrackerOperationError(error);
+    }
   }
 
   const metaSnap = await get(ref(db, `trackers/${trackerId}/meta`));
@@ -323,6 +384,15 @@ export const removeMemberFromTracker = async (
     );
   }
 
+  if (BACKEND === "supabase") {
+    try {
+      await removeSupabaseTrackerMember(trackerId, memberUid);
+      return;
+    } catch (error) {
+      throw toTrackerOperationError(error);
+    }
+  }
+
   const memberRef = ref(db, `trackers/${trackerId}/meta/members/${memberUid}`);
   const guestRef = ref(db, `trackers/${trackerId}/meta/guests/${memberUid}`);
   const [memberSnap, guestSnap] = await Promise.all([
@@ -367,6 +437,15 @@ export const deleteTracker = async (trackerId: string): Promise<void> => {
     throw new TrackerOperationError("Ungültiger Tracker.", "invalid-input");
   }
 
+  if (BACKEND === "supabase") {
+    try {
+      await deleteSupabaseTracker(trackerId);
+      return;
+    } catch (error) {
+      throw toTrackerOperationError(error);
+    }
+  }
+
   const trackerSnapshot = await get(ref(db, `trackers/${trackerId}`));
   if (!trackerSnapshot.exists()) {
     return;
@@ -397,70 +476,11 @@ export const updateRivalPreference = async (
   rivalKey: string,
   gender: RivalGender,
 ): Promise<void> => {
+  if (BACKEND === "supabase") {
+    await updateSupabaseRivalPreference(trackerId, userId, rivalKey, gender);
+    return;
+  }
+
   const prefPath = `trackers/${trackerId}/meta/userSettings/${userId}/rivalPreferences/${rivalKey}`;
   await set(ref(db, prefPath), gender);
-};
-
-export const updateUserGenerationSpritePreference = async (
-  userId: string,
-  useGenerationSprites: boolean,
-): Promise<void> => {
-  const userPath = `users/${userId}/useGenerationSprites`;
-  await set(ref(db, userPath), useGenerationSprites);
-};
-
-export const getUserGenerationSpritePreference = async (
-  userId: string,
-): Promise<boolean> => {
-  const userPath = `users/${userId}/useGenerationSprites`;
-  const snapshot = await get(ref(db, userPath));
-  return snapshot.exists() ? snapshot.val() : false;
-};
-
-export const updateUserSpritesInTeamTablePreference = async (
-  userId: string,
-  useSpritesInTeamTable: boolean,
-): Promise<void> => {
-  const userPath = `users/${userId}/useSpritesInTeamTable`;
-  await set(ref(db, userPath), useSpritesInTeamTable);
-};
-
-export const getUserSpritesInTeamTablePreference = async (
-  userId: string,
-): Promise<boolean> => {
-  const userPath = `users/${userId}/useSpritesInTeamTable`;
-  const snapshot = await get(ref(db, userPath));
-  return snapshot.exists() ? snapshot.val() : false;
-};
-
-export const updateUserWikiPreference = async (
-  userId: string,
-  wikiId: string,
-): Promise<void> => {
-  const userPath = `users/${userId}/wikiId`;
-  await set(ref(db, userPath), wikiId);
-};
-
-export const getUserWikiPreference = async (
-  userId: string,
-): Promise<string | null> => {
-  const userPath = `users/${userId}/wikiId`;
-  const snapshot = await get(ref(db, userPath));
-  return snapshot.exists() ? (snapshot.val() as string) : null;
-};
-
-export const updateUserMultiLocaleSearchPreference = async (
-  userId: string,
-  multiLocaleSearch: boolean,
-): Promise<void> => {
-  const userPath = `users/${userId}/multiLocaleSearch`;
-  await set(ref(db, userPath), multiLocaleSearch);
-};
-
-export const getUserMultiLocaleSearchPreference = async (
-  userId: string,
-): Promise<boolean> => {
-  const userPath = `users/${userId}/multiLocaleSearch`;
-  const snapshot = await get(ref(db, userPath));
-  return snapshot.exists() ? snapshot.val() : false;
 };

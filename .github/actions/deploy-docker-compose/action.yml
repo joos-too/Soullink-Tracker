@@ -1,0 +1,172 @@
+name: Deploy Docker Compose
+description: Deploy a Compose file over SSH using verified host keys
+
+inputs:
+  ssh-host:
+    description: SSH server hostname
+    required: true
+  ssh-username:
+    description: SSH server username
+    required: true
+  ssh-private-key:
+    description: SSH private key
+    required: true
+  ssh-known-hosts:
+    description: Verified known_hosts entry for the SSH server
+    required: true
+  remote-path:
+    description: Absolute server directory containing the persistent .env file
+    required: true
+  compose-file:
+    description: Repository-relative Compose file to deploy
+    required: false
+    default: docker-compose.yml
+  expected-compose-project:
+    description: Required COMPOSE_PROJECT_NAME in the persistent server .env
+    required: true
+  expected-image-tag:
+    description: Required IMAGE_TAG in the persistent server .env
+    required: true
+  expected-app-port:
+    description: Required APP_PORT in the persistent server .env
+    required: true
+  registry-host:
+    description: Container registry hostname
+    required: false
+    default: ghcr.io
+  registry-username:
+    description: Container registry username
+    required: true
+  registry-password:
+    description: Container registry password or access token
+    required: true
+  cleanup:
+    description: Whether dangling server images should be removed
+    required: false
+    default: "true"
+
+runs:
+  using: composite
+  steps:
+    - name: Transfer Compose file and deploy
+      shell: bash
+      env:
+        SSH_HOST: ${{ inputs.ssh-host }}
+        SSH_USERNAME: ${{ inputs.ssh-username }}
+        SSH_PRIVATE_KEY: ${{ inputs.ssh-private-key }}
+        SSH_KNOWN_HOSTS: ${{ inputs.ssh-known-hosts }}
+        REMOTE_PATH: ${{ inputs.remote-path }}
+        COMPOSE_FILE: ${{ inputs.compose-file }}
+        EXPECTED_COMPOSE_PROJECT: ${{ inputs.expected-compose-project }}
+        EXPECTED_IMAGE_TAG: ${{ inputs.expected-image-tag }}
+        EXPECTED_APP_PORT: ${{ inputs.expected-app-port }}
+        REGISTRY_HOST: ${{ inputs.registry-host }}
+        REGISTRY_USERNAME: ${{ inputs.registry-username }}
+        REGISTRY_PASSWORD: ${{ inputs.registry-password }}
+        CLEANUP_IMAGES: ${{ inputs.cleanup }}
+      run: |
+        set -Eeuo pipefail
+
+        if [[ ! -f "$COMPOSE_FILE" ]]; then
+          echo "Compose file '$COMPOSE_FILE' does not exist." >&2
+          exit 1
+        fi
+        if [[ ! "$REMOTE_PATH" =~ ^/[A-Za-z0-9_./-]+$ ]] || [[ "$REMOTE_PATH" =~ (^|/)\.\.(/|$) ]]; then
+          echo "DEPLOY_PATH must be a safe absolute server path." >&2
+          exit 1
+        fi
+        if [[ ! "$EXPECTED_COMPOSE_PROJECT" =~ ^[A-Za-z0-9._-]+$ ]]; then
+          echo "Expected Compose project name is invalid." >&2
+          exit 1
+        fi
+        if [[ ! "$EXPECTED_IMAGE_TAG" =~ ^[A-Za-z0-9._-]+$ ]]; then
+          echo "Expected image tag is invalid." >&2
+          exit 1
+        fi
+        if [[ ! "$EXPECTED_APP_PORT" =~ ^[0-9]+$ ]] || (( EXPECTED_APP_PORT < 1 || EXPECTED_APP_PORT > 65535 )); then
+          echo "Expected application port must be a valid TCP port." >&2
+          exit 1
+        fi
+        if [[ ! "$REGISTRY_HOST" =~ ^[A-Za-z0-9.-]+(:[0-9]+)?$ ]]; then
+          echo "Registry host is invalid." >&2
+          exit 1
+        fi
+        if [[ "$CLEANUP_IMAGES" != "true" && "$CLEANUP_IMAGES" != "false" ]]; then
+          echo "cleanup must be true or false." >&2
+          exit 1
+        fi
+
+        echo "::add-mask::$REGISTRY_PASSWORD"
+
+        key_file="$RUNNER_TEMP/docker-deploy-key"
+        known_hosts_file="$RUNNER_TEMP/docker-deploy-known-hosts"
+        registry_login_complete="false"
+        target="$SSH_USERNAME@$SSH_HOST"
+
+        printf -v quoted_remote_path '%q' "$REMOTE_PATH"
+        printf -v quoted_registry_host '%q' "$REGISTRY_HOST"
+        printf -v quoted_registry_username '%q' "$REGISTRY_USERNAME"
+        printf -v quoted_project_setting '%q' "COMPOSE_PROJECT_NAME=$EXPECTED_COMPOSE_PROJECT"
+        printf -v quoted_tag_setting '%q' "IMAGE_TAG=$EXPECTED_IMAGE_TAG"
+        printf -v quoted_port_setting '%q' "APP_PORT=$EXPECTED_APP_PORT"
+
+        ssh_command=(
+          ssh
+          -o BatchMode=yes
+          -o StrictHostKeyChecking=yes
+          -o "UserKnownHostsFile=$known_hosts_file"
+          -i "$key_file"
+        )
+
+        cleanup() {
+          set +e
+          if [[ "$registry_login_complete" == "true" ]]; then
+            "${ssh_command[@]}" "$target" \
+              "docker logout $quoted_registry_host" >/dev/null 2>&1
+          fi
+          rm -f "$key_file" "$known_hosts_file"
+        }
+        trap cleanup EXIT
+
+        printf '%s\n' "$SSH_PRIVATE_KEY" > "$key_file"
+        printf '%s\n' "$SSH_KNOWN_HOSTS" > "$known_hosts_file"
+        chmod 600 "$key_file" "$known_hosts_file"
+
+        "${ssh_command[@]}" "$target" \
+          "mkdir -p -- $quoted_remote_path"
+
+        "${ssh_command[@]}" "$target" \
+          "test -f $quoted_remote_path/.env &&
+           grep -Fqx -- $quoted_project_setting $quoted_remote_path/.env &&
+           grep -Fqx -- $quoted_tag_setting $quoted_remote_path/.env &&
+           grep -Fqx -- $quoted_port_setting $quoted_remote_path/.env" || {
+          echo "The persistent server .env is missing or does not match the target environment." >&2
+          exit 1
+        }
+
+        rsync \
+          --archive \
+          --compress \
+          --rsh="ssh -i $key_file -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$known_hosts_file" \
+          -- \
+          "$COMPOSE_FILE" \
+          "$target:$REMOTE_PATH/docker-compose.yml"
+
+        printf '%s' "$REGISTRY_PASSWORD" |
+          "${ssh_command[@]}" "$target" \
+            "docker login $quoted_registry_host --username $quoted_registry_username --password-stdin"
+        registry_login_complete="true"
+
+        "${ssh_command[@]}" "$target" \
+          "cd $quoted_remote_path && docker compose config --quiet && docker compose pull && docker compose up -d"
+
+        "${ssh_command[@]}" "$target" \
+          "docker logout $quoted_registry_host"
+        registry_login_complete="false"
+
+        if [[ "$CLEANUP_IMAGES" == "true" ]]; then
+          "${ssh_command[@]}" "$target" \
+            "docker image prune --force" || true
+        fi
+
+        echo "Docker Compose deployment completed."

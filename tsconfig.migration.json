@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["node", "vitest/globals"],
+    "noEmit": true
+  },
+  "include": [
+    "scripts/migrate-firebase-auth-to-supabase.ts",
+    "scripts/migrate-firebase-to-supabase.ts",
+    "scripts/firebase-migration/**/*.ts",
+    "src/data/game-versions.ts",
+    "types.ts"
+  ]
+}

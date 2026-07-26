@@ -11,12 +11,12 @@ import { useFocusTrap } from "@/src/hooks/useFocusTrap.ts";
 import {
   getPokemonIdFromName,
   getPokemonNameById,
-} from "@/src/services/pokemonSearch.ts";
+} from "@/src/services/search/pokemonSearch.ts";
 import {
   findLocationByName,
   getFossilLocationName,
   getLocationName,
-} from "@/src/services/locationSearch.ts";
+} from "@/src/services/search/locationSearch.ts";
 import { normalizeLanguage } from "@/src/utils/language.ts";
 
 interface EditPairModalProps {

@@ -1,10 +1,4 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   FiHome,
   FiMenu,
@@ -19,18 +13,14 @@ import type {
   AppState,
   FossilEntry,
   ItemEntry,
-  LevelCap,
   LinkEditPayload,
   Pokemon,
   PokemonLink,
-  RivalCap,
   RivalCensorMode,
   RivalGender,
   Ruleset,
   TrackerMeta,
-  TrackerSummary,
 } from "@/types";
-import { computeWeightedProgress } from "@/src/utils/progressWeights";
 import {
   createInitialState,
   ensureStatsForPlayers,
@@ -43,7 +33,11 @@ import BoxFilters, {
   type TypeFilterEntry,
 } from "@/src/components/widgets/BoxFilters.tsx";
 import { useHiddenLinks } from "@/src/hooks/useHiddenLinks.ts";
-import { getPokemonTypeSlugsById } from "@/src/services/pokemonTypes.ts";
+import { useAuthSession } from "@/src/hooks/useAuthSession.ts";
+import { useActiveTracker } from "@/src/hooks/useActiveTracker.ts";
+import { useRulesets } from "@/src/hooks/useRulesets.ts";
+import { useTrackerList } from "@/src/hooks/useTrackerList.ts";
+import { getPokemonTypeSlugsById } from "@/src/services/pokemons/pokemonTypes.ts";
 import InfoPanel from "@/src/components/widgets/InfoPanel.tsx";
 import Graveyard from "@/src/components/widgets/Graveyard.tsx";
 import ClearedLocations from "@/src/components/widgets/ClearedLocations.tsx";
@@ -79,27 +73,33 @@ import {
   useNavigate,
   useSearchParams,
 } from "react-router-dom";
-import { auth, db, USE_EMULATORS } from "@/src/firebaseConfig";
-import { get, onValue, ref, set, update } from "firebase/database";
-import { onAuthStateChanged, signOut, User } from "firebase/auth";
+import { USE_EMULATORS } from "@/src/firebaseConfig";
 import { seedEmulatorData } from "@/src/services/emulatorSeed";
+import {
+  setTrackerVisibility,
+  subscribeToTrackerMeta,
+  updateTrackerMetadata,
+} from "@/src/services/repos/trackerRepository.ts";
+import { signOutCurrentUser } from "@/src/services/backend/auth.ts";
 import {
   addMemberByEmail,
   createTracker,
   deleteTracker,
-  ensureUserProfile,
-  getUserGenerationSpritePreference,
-  getUserMultiLocaleSearchPreference,
-  getUserSpritesInTeamTablePreference,
-  getUserWikiPreference,
   removeMemberFromTracker,
   TrackerOperationError,
   updateRivalPreference,
+} from "@/src/services/trackers.ts";
+import {
+  ensureUserProfile,
+  getDefaultDisplayName,
+  getUserProfilePreferences,
+  updateUserDisplayName,
   updateUserGenerationSpritePreference,
   updateUserMultiLocaleSearchPreference,
   updateUserSpritesInTeamTablePreference,
   updateUserWikiPreference,
-} from "@/src/services/trackers";
+} from "@/src/services/repos/profileRepository.ts";
+import { isSupabaseBackend } from "@/src/services/backend/backend.ts";
 import { GAME_VERSIONS } from "@/src/data/game-versions";
 import {
   DEFAULT_RULES,
@@ -109,7 +109,6 @@ import {
 } from "@/src/data/rulesets";
 import {
   deleteRuleset,
-  listenToUserRulesets,
   saveRuleset,
   SaveRulesetPayload,
 } from "@/src/services/rulesets";
@@ -120,11 +119,53 @@ import {
   DEFAULT_WIKI_EN,
   type WikiId,
 } from "@/src/utils/wiki.ts";
-import { resolvePokemonLocationDisplay } from "@/src/services/locationSearch.ts";
+import { resolvePokemonLocationDisplay } from "@/src/services/search/locationSearch.ts";
 import { normalizeLanguage } from "@/src/utils/language.ts";
 import "@/src/pokeapi"; // initialize Pokedex once so sprite caching SW gets registered
 
-const LAST_TRACKER_STORAGE_KEY = "soullink:lastTrackerId";
+const LEGACY_LAST_TRACKER_STORAGE_KEY = "soullink:lastTrackerId";
+const SUPABASE_LAST_TRACKER_STORAGE_KEY = "soullink:lastSupabaseTrackerId";
+const BACKEND_MIGRATION_VERSION_STORAGE_KEY =
+  "soullink:backendMigrationVersion";
+const SUPABASE_BACKEND_MIGRATION_VERSION = "1";
+const AUTOSAVE_DEBOUNCE_MS = 200;
+const LAST_TRACKER_STORAGE_KEY = isSupabaseBackend
+  ? SUPABASE_LAST_TRACKER_STORAGE_KEY
+  : LEGACY_LAST_TRACKER_STORAGE_KEY;
+
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+const isTrackerUuid = (value: string | null): value is string =>
+  Boolean(value && UUID_PATTERN.test(value));
+
+const getInitialActiveTrackerId = (): string | null => {
+  if (typeof window === "undefined") return null;
+
+  if (isSupabaseBackend) {
+    if (
+      window.localStorage.getItem(BACKEND_MIGRATION_VERSION_STORAGE_KEY) !==
+      SUPABASE_BACKEND_MIGRATION_VERSION
+    ) {
+      window.localStorage.removeItem(LEGACY_LAST_TRACKER_STORAGE_KEY);
+      window.localStorage.setItem(
+        BACKEND_MIGRATION_VERSION_STORAGE_KEY,
+        SUPABASE_BACKEND_MIGRATION_VERSION,
+      );
+    }
+
+    const storedSupabaseTrackerId = window.localStorage.getItem(
+      SUPABASE_LAST_TRACKER_STORAGE_KEY,
+    );
+    if (!isTrackerUuid(storedSupabaseTrackerId)) {
+      window.localStorage.removeItem(SUPABASE_LAST_TRACKER_STORAGE_KEY);
+      return null;
+    }
+    return storedSupabaseTrackerId;
+  }
+
+  return window.localStorage.getItem(LEGACY_LAST_TRACKER_STORAGE_KEY);
+};
 
 const MAX_SUPPORTED_GENERATION = 9;
 const resolveGenerationFromVersionId = (versionId?: string | null): number => {
@@ -141,48 +182,6 @@ const normalizePokemonId = (id: unknown): number | null => {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
 };
 
-const normalizeTrackerMeta = (
-  trackerId: string,
-  meta: TrackerMeta,
-): TrackerMeta => ({
-  ...meta,
-  id: trackerId,
-  allPokemonAndItems: meta.allPokemonAndItems === true ? true : undefined,
-});
-
-const computeTrackerSummary = (
-  state?: Partial<AppState> | null,
-): TrackerSummary => {
-  const teamCount = Array.isArray(state?.team) ? state.team.length : 0;
-  const boxCount = Array.isArray(state?.box) ? state.box.length : 0;
-  const graveyardCount = Array.isArray(state?.graveyard)
-    ? state.graveyard.length
-    : 0;
-  const runs = Number(state?.stats?.runs ?? 0) || 0;
-  const levelCaps = Array.isArray(state?.levelCaps)
-    ? (state.levelCaps as LevelCap[])
-    : [];
-  const rivalCaps = Array.isArray(state?.rivalCaps)
-    ? (state.rivalCaps as RivalCap[])
-    : [];
-  const doneCapsCount = levelCaps.filter((cap) => cap?.done).length;
-  const { pct: progressPct } = computeWeightedProgress(levelCaps, rivalCaps);
-
-  const deathCount = Array.isArray(state?.stats?.deaths)
-    ? state!.stats!.deaths.reduce((sum, value) => sum + Number(value || 0), 0)
-    : 0;
-  return {
-    teamCount,
-    boxCount,
-    graveyardCount,
-    deathCount,
-    runs,
-    championDone: doneCapsCount > 12,
-    doneCapsCount,
-    progressPct,
-  };
-};
-
 const App: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -192,32 +191,35 @@ const App: React.FC = () => {
     ? searchParams.get("oobCode")
     : null;
   const trackerRouteMatch = useMatch("/tracker/:trackerId");
-  const routeTrackerId = trackerRouteMatch?.params?.trackerId ?? null;
+  const routeTrackerParam = trackerRouteMatch?.params?.trackerId ?? null;
+  const isInvalidSupabaseTrackerRoute =
+    isSupabaseBackend &&
+    routeTrackerParam !== null &&
+    !isTrackerUuid(routeTrackerParam);
+  const routeTrackerId = isInvalidSupabaseTrackerRoute
+    ? null
+    : routeTrackerParam;
   const [data, setData] = useState<AppState>(createInitialState());
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const storedTrackerId =
-    typeof window !== "undefined"
-      ? window.localStorage.getItem(LAST_TRACKER_STORAGE_KEY)
-      : null;
+  const { user, loading } = useAuthSession();
   const [activeTrackerId, setActiveTrackerId] = useState<string | null>(
-    storedTrackerId,
+    getInitialActiveTrackerId,
   );
-  const [userTrackerIds, setUserTrackerIds] = useState<string[]>([]);
-  const [trackerMetas, setTrackerMetas] = useState<Record<string, TrackerMeta>>(
-    {},
-  );
+  const {
+    userTrackerIds,
+    trackerMetas,
+    setTrackerMetas,
+    trackerSummaries,
+    loading: userTrackersLoading,
+    upsertTrackerMeta,
+    removeTrackerMeta,
+    removeTrackerLocally,
+  } = useTrackerList(user?.uid, activeTrackerId);
   const isViewingPublicTracker = useMemo(
     () =>
       !user &&
       Boolean(routeTrackerId && trackerMetas[routeTrackerId]?.isPublic),
     [user, routeTrackerId, trackerMetas],
   );
-  const metaListenersRef = useRef<Map<string, () => void>>(new Map());
-  const trackerStateListenersRef = useRef<Map<string, () => void>>(new Map());
-  const [trackerSummaries, setTrackerSummaries] = useState<
-    Record<string, TrackerSummary>
-  >({});
   const { t, i18n } = useTranslation();
   const locale = normalizeLanguage(i18n.language);
   const defaultLocaleRulesetId = useMemo(() => {
@@ -230,7 +232,6 @@ const App: React.FC = () => {
       ? DEFAULT_RULESET_ID_EN
       : DEFAULT_RULESET_ID;
   }, [i18n.language, i18n.resolvedLanguage]);
-  const [userTrackersLoading, setUserTrackersLoading] = useState(false);
   const [publicTrackerLoading, setPublicTrackerLoading] = useState(() =>
     Boolean(routeTrackerId),
   );
@@ -241,6 +242,9 @@ const App: React.FC = () => {
     useState(false);
   const [userWikiId, setUserWikiId] = useState<string | null>(null);
   const [userMultiLocaleSearch, setUserMultiLocaleSearch] = useState(false);
+  const [userDisplayName, setUserDisplayName] = useState("");
+  const [userDisplayNameRequiresUpdate, setUserDisplayNameRequiresUpdate] =
+    useState(false);
   const showSettings = searchParams.get("panel") === "settings";
   const openSettingsPanel = useCallback(() => {
     const next = new URLSearchParams(searchParams);
@@ -253,10 +257,6 @@ const App: React.FC = () => {
     setSearchParams(next, { replace: true });
   }, [searchParams, setSearchParams]);
   const [showResetModal, setShowResetModal] = useState(false);
-  const [dataLoaded, setDataLoaded] = useState(false);
-  const skipNextWriteRef = useRef(false);
-  const pendingWriteRef = useRef<Promise<void>>(Promise.resolve());
-  const isHydratingRef = useRef(true);
   const [showLossModal, setShowLossModal] = useState(false);
   const [pendingLossPair, setPendingLossPair] = useState<PokemonLink | null>(
     null,
@@ -275,12 +275,14 @@ const App: React.FC = () => {
   const [createTrackerLoading, setCreateTrackerLoading] = useState(false);
   const [trackerPendingDelete, setTrackerPendingDelete] =
     useState<TrackerMeta | null>(null);
+  const [trackerExitRedirectId, setTrackerExitRedirectId] = useState<
+    string | null
+  >(null);
   const [deleteTrackerLoading, setDeleteTrackerLoading] = useState(false);
   const [deleteTrackerError, setDeleteTrackerError] = useState<string | null>(
     null,
   );
-  const [rulesets, setRulesets] = useState<Ruleset[]>(PRESET_RULESETS);
-  const rulesetUnsubscribeRef = useRef<(() => void) | null>(null);
+  const rulesets = useRulesets(user?.uid);
   const [showRulesetSaveModal, setShowRulesetSaveModal] = useState(false);
   const [pendingRulesetId, setPendingRulesetId] = useState<string | null>(null);
   const [rulesetSaveReason, setRulesetSaveReason] = useState<
@@ -569,6 +571,15 @@ const App: React.FC = () => {
     [user],
   );
 
+  const handleDisplayNameChange = useCallback(
+    async (displayName: string) => {
+      if (!user) return;
+      setUserDisplayName(await updateUserDisplayName(user.uid, displayName));
+      setUserDisplayNameRequiresUpdate(false);
+    },
+    [user],
+  );
+
   const effectiveWikiId: WikiId =
     (userWikiId as WikiId | null) ??
     ((i18n.resolvedLanguage || i18n.language || "")
@@ -774,36 +785,6 @@ const App: React.FC = () => {
     [activeGameVersion],
   );
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
-      setLoading(false);
-    });
-    return () => unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    if (rulesetUnsubscribeRef.current) {
-      rulesetUnsubscribeRef.current();
-      rulesetUnsubscribeRef.current = null;
-    }
-    setRulesets(PRESET_RULESETS);
-    if (!user) return;
-
-    const unsubscribe = listenToUserRulesets(user.uid, (customRulesets) => {
-      const sortedCustom = [...customRulesets].sort(
-        (a, b) => (b.updatedAt ?? 0) - (a.updatedAt ?? 0),
-      );
-      setRulesets([...sortedCustom, ...PRESET_RULESETS]);
-    });
-    rulesetUnsubscribeRef.current = unsubscribe;
-
-    return () => {
-      unsubscribe();
-      rulesetUnsubscribeRef.current = null;
-    };
-  }, [user]);
-
   /**
    * Seed emulator with test data when running in emulator mode
    * This effect runs after Firebase initialization and creates:
@@ -828,30 +809,30 @@ const App: React.FC = () => {
   useEffect(() => {
     if (!user) return;
     ensureUserProfile(user).catch(() => {});
-    // Load user's sprite preferences
-    Promise.all([
-      getUserGenerationSpritePreference(user.uid),
-      getUserSpritesInTeamTablePreference(user.uid),
-      getUserWikiPreference(user.uid),
-      getUserMultiLocaleSearchPreference(user.uid),
-    ])
-      .then(([genSprites, teamTableSprites, wikiId, multiLocale]) => {
-        setUserUseGenerationSprites(genSprites);
-        setUserUseSpritesInTeamTable(teamTableSprites);
-        setUserWikiId(wikiId);
-        setUserMultiLocaleSearch(multiLocale);
+    getUserProfilePreferences(user.uid, user.email)
+      .then((preferences) => {
+        setUserUseGenerationSprites(preferences.useGenerationSprites);
+        setUserUseSpritesInTeamTable(preferences.useSpritesInTeamTable);
+        setUserWikiId(preferences.wikiId);
+        setUserMultiLocaleSearch(preferences.multiLocaleSearch);
+        setUserDisplayName(preferences.displayName);
+        setUserDisplayNameRequiresUpdate(preferences.displayNameRequiresUpdate);
       })
       .catch(() => {
         setUserUseGenerationSprites(false);
         setUserUseSpritesInTeamTable(false);
         setUserWikiId(null);
         setUserMultiLocaleSearch(false);
+        setUserDisplayName(getDefaultDisplayName(user.email));
+        setUserDisplayNameRequiresUpdate(false);
       });
   }, [user]);
 
   useEffect(() => {
     // Don't redirect away from tracker route while we are still resolving whether it is public
     if (user || loading) return;
+
+    if (isInvalidSupabaseTrackerRoute) return;
 
     if (!routeTrackerId) {
       navigate("/", { replace: true });
@@ -868,6 +849,7 @@ const App: React.FC = () => {
     loading,
     navigate,
     routeTrackerId,
+    isInvalidSupabaseTrackerRoute,
     publicTrackerLoading,
     trackerMetas,
     isViewingPublicTracker,
@@ -880,137 +862,10 @@ const App: React.FC = () => {
   }, [location.pathname, showSettings, closeSettingsPanel]);
 
   useEffect(() => {
-    if (!user) {
-      setUserTrackerIds([]);
-      setTrackerMetas({});
-      metaListenersRef.current.forEach((unsub) => unsub());
-      metaListenersRef.current.clear();
+    if (isInvalidSupabaseTrackerRoute) {
       setActiveTrackerId(null);
-      setUserTrackersLoading(false);
-      return;
     }
-
-    setUserTrackersLoading(true);
-    const userTrackersRef = ref(db, `userTrackers/${user.uid}`);
-    const unsubscribe = onValue(
-      userTrackersRef,
-      (snapshot) => {
-        const ids = snapshot.exists() ? Object.keys(snapshot.val()) : [];
-        setUserTrackerIds(ids);
-        setUserTrackersLoading(false);
-      },
-      () => setUserTrackersLoading(false),
-    );
-
-    return () => {
-      unsubscribe();
-      setUserTrackersLoading(false);
-    };
-  }, [user]);
-
-  useEffect(() => {
-    if (!user) return;
-
-    const listeners = metaListenersRef.current;
-    for (const [trackerId, unsub] of listeners.entries()) {
-      if (!userTrackerIds.includes(trackerId)) {
-        unsub();
-        listeners.delete(trackerId);
-        setTrackerMetas((prev) => {
-          const next = { ...prev };
-          delete next[trackerId];
-          return next;
-        });
-      }
-    }
-
-    userTrackerIds.forEach((trackerId) => {
-      if (listeners.has(trackerId)) return;
-      const metaRef = ref(db, `trackers/${trackerId}/meta`);
-      const unsubscribe = onValue(
-        metaRef,
-        (snapshot) => {
-          const meta = snapshot.val();
-          setTrackerMetas((prev) => {
-            const next = { ...prev };
-            if (meta) {
-              next[trackerId] = normalizeTrackerMeta(trackerId, meta);
-            } else {
-              delete next[trackerId];
-            }
-            return next;
-          });
-        },
-        () => {
-          setTrackerMetas((prev) => {
-            const next = { ...prev };
-            delete next[trackerId];
-            return next;
-          });
-        },
-      );
-      listeners.set(trackerId, unsubscribe);
-    });
-
-    return () => {
-      if (!user) {
-        listeners.forEach((unsub) => unsub());
-        listeners.clear();
-      }
-    };
-  }, [userTrackerIds, user]);
-
-  useEffect(() => {
-    if (!user) {
-      trackerStateListenersRef.current.forEach((unsub) => unsub());
-      trackerStateListenersRef.current.clear();
-      setTrackerSummaries({});
-      return;
-    }
-
-    const listeners = trackerStateListenersRef.current;
-    for (const [trackerId, unsubscribe] of listeners.entries()) {
-      if (!userTrackerIds.includes(trackerId)) {
-        unsubscribe();
-        listeners.delete(trackerId);
-        setTrackerSummaries((prev) => {
-          const next = { ...prev };
-          delete next[trackerId];
-          return next;
-        });
-      }
-    }
-
-    userTrackerIds.forEach((trackerId) => {
-      if (listeners.has(trackerId)) return;
-      const stateRef = ref(db, `trackers/${trackerId}/state`);
-      const unsubscribe = onValue(
-        stateRef,
-        (snapshot) => {
-          const stateValue = snapshot.val();
-          setTrackerSummaries((prev) => ({
-            ...prev,
-            [trackerId]: computeTrackerSummary(stateValue),
-          }));
-        },
-        () => {
-          setTrackerSummaries((prev) => {
-            const next = { ...prev };
-            delete next[trackerId];
-            return next;
-          });
-        },
-      );
-      listeners.set(trackerId, unsubscribe);
-    });
-
-    return () => {
-      if (!user) {
-        listeners.forEach((unsub) => unsub());
-        listeners.clear();
-      }
-    };
-  }, [user, userTrackerIds]);
+  }, [isInvalidSupabaseTrackerRoute]);
 
   // Load tracker metadata for direct URL access (used for public trackers)
   useEffect(() => {
@@ -1027,34 +882,21 @@ const App: React.FC = () => {
     }
 
     setPublicTrackerLoading(true);
-    const metaRef = ref(db, `trackers/${routeTrackerId}/meta`);
-    const unsubscribe = onValue(
-      metaRef,
-      (snapshot) => {
-        const meta = snapshot.val();
+    const unsubscribe = subscribeToTrackerMeta(
+      routeTrackerId,
+      (meta) => {
         if (meta && meta.isPublic) {
-          setTrackerMetas((prev) => ({
-            ...prev,
-            [routeTrackerId]: normalizeTrackerMeta(routeTrackerId, meta),
-          }));
+          upsertTrackerMeta(routeTrackerId, meta);
           setActiveTrackerId(routeTrackerId);
         } else {
-          setTrackerMetas((prev) => {
-            const next = { ...prev };
-            delete next[routeTrackerId];
-            return next;
-          });
+          removeTrackerMeta(routeTrackerId);
           setActiveTrackerId(null);
         }
         setPublicTrackerLoading(false);
       },
       () => {
         // Error handling - tracker doesn't exist or can't be read
-        setTrackerMetas((prev) => {
-          const next = { ...prev };
-          delete next[routeTrackerId];
-          return next;
-        });
+        removeTrackerMeta(routeTrackerId);
         setActiveTrackerId(null);
         setPublicTrackerLoading(false);
       },
@@ -1063,7 +905,13 @@ const App: React.FC = () => {
     return () => {
       unsubscribe();
     };
-  }, [user, routeTrackerId, userTrackerIds]);
+  }, [
+    removeTrackerMeta,
+    routeTrackerId,
+    upsertTrackerMeta,
+    user,
+    userTrackerIds,
+  ]);
 
   useEffect(() => {
     if (!user) {
@@ -1123,6 +971,12 @@ const App: React.FC = () => {
     }
   }, [activeTrackerId, user]);
 
+  useEffect(() => {
+    if (trackerExitRedirectId && routeTrackerId !== trackerExitRedirectId) {
+      setTrackerExitRedirectId(null);
+    }
+  }, [routeTrackerId, trackerExitRedirectId]);
+
   // Keep local isDark in sync with document class/localStorage
   useEffect(() => {
     const target = document.documentElement;
@@ -1144,12 +998,13 @@ const App: React.FC = () => {
     ? Boolean(trackerMetas[routeTrackerId]?.isPublic)
     : false;
   const routeTrackerKnownMissing = Boolean(
-    user &&
-      routeTrackerId &&
-      !userTrackersLoading &&
-      !routeTrackerExistsForUser &&
-      !routeTrackerIsPublic &&
-      !publicTrackerLoading,
+    isInvalidSupabaseTrackerRoute ||
+      (user &&
+        routeTrackerId &&
+        !userTrackersLoading &&
+        !routeTrackerExistsForUser &&
+        !routeTrackerIsPublic &&
+        !publicTrackerLoading),
   );
   const routeTrackerPendingSelection = user
     ? Boolean(
@@ -1159,120 +1014,24 @@ const App: React.FC = () => {
       )
     : false;
 
-  useEffect(() => {
-    isHydratingRef.current = true;
-    const gameVersionId = activeGameVersionId;
-    if (!user && !isViewingPublicTracker) {
-      setData(createInitialState());
-      setDataLoaded(false);
-      isHydratingRef.current = false;
-      return;
-    }
-
-    if (!isViewingPublicTracker && routeTrackerPendingSelection) {
-      setData(createInitialState());
-      setDataLoaded(false);
-      return;
-    }
-
-    if (!isViewingPublicTracker && routeTrackerKnownMissing) {
-      setData(createInitialState());
-      setDataLoaded(true);
-      isHydratingRef.current = false;
-      return;
-    }
-
-    if (!activeTrackerId) {
-      setData(createInitialState());
-      setDataLoaded(true);
-      isHydratingRef.current = false;
-      return;
-    }
-
-    const dbRef = ref(db, `trackers/${activeTrackerId}/state`);
-    let unsub: (() => void) | undefined;
-    let cancelled = false;
-    let initialSnapshotApplied = false;
-    const markInitialSnapshot = () => {
-      if (!initialSnapshotApplied) {
-        initialSnapshotApplied = true;
-        isHydratingRef.current = false;
-        setDataLoaded(true);
-      }
-    };
-
-    (async () => {
-      try {
-        const snapshot = await get(dbRef);
-        if (cancelled) return;
-        const dbData = snapshot.val();
-        if (dbData) {
-          skipNextWriteRef.current = true;
-          setData((prev) => coerceAppState(dbData, prev));
-        } else {
-          setData(createInitialState(gameVersionId));
-        }
-        markInitialSnapshot();
-      } catch (e) {
-        console.error("Tracker state fetch failed", e);
-        setData(createInitialState(gameVersionId));
-      } finally {
-        if (!cancelled) {
-          unsub = onValue(
-            dbRef,
-            (snap) => {
-              const liveData = snap.val();
-              if (liveData) {
-                skipNextWriteRef.current = true;
-                setData((prev) => coerceAppState(liveData, prev));
-              }
-              markInitialSnapshot();
-            },
-            (error) => {
-              console.error("Tracker state listener error", error);
-            },
-          );
-        }
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-      if (unsub) unsub();
-      isHydratingRef.current = true;
-      setDataLoaded(false);
-    };
-  }, [
-    user,
+  const {
+    dataLoaded,
+    stateConflict,
+    reloadAfterConflict: handleReloadAfterStateConflict,
+  } = useActiveTracker({
     activeTrackerId,
-    activeGameVersionId,
-    coerceAppState,
+    userId: user?.uid,
+    gameVersionId: activeGameVersionId,
+    canLoad: Boolean(user || isViewingPublicTracker),
+    canWrite: Boolean(user && !isReadOnly),
+    isViewingPublicTracker,
     routeTrackerPendingSelection,
     routeTrackerKnownMissing,
-    isViewingPublicTracker,
-  ]);
-
-  useEffect(() => {
-    if (!user || !dataLoaded || !activeTrackerId || isHydratingRef.current)
-      return;
-
-    if (skipNextWriteRef.current) {
-      // Skip echoing writes caused by remote updates
-      skipNextWriteRef.current = false;
-      return;
-    }
-
-    const dbRef = ref(db, `trackers/${activeTrackerId}/state`);
-    pendingWriteRef.current = pendingWriteRef.current
-      .then(() => set(dbRef, data))
-      .catch((error) => {
-        console.error("Tracker state write failed", error);
-      });
-  }, [data, user, dataLoaded, activeTrackerId]);
-
-  useEffect(() => {
-    pendingWriteRef.current = Promise.resolve();
-  }, [activeTrackerId, user]);
+    data,
+    setData,
+    coerceState: coerceAppState,
+    debounceMs: AUTOSAVE_DEBOUNCE_MS,
+  });
 
   const handleReset = () => {
     if (isReadOnly) return;
@@ -1345,7 +1104,9 @@ const App: React.FC = () => {
       window.localStorage.removeItem(LAST_TRACKER_STORAGE_KEY);
     }
     navigate("/");
-    signOut(auth);
+    signOutCurrentUser().catch((error) => {
+      console.error("Error signing out", error);
+    });
   };
 
   const handleOpenUserSettings = useCallback(() => {
@@ -1771,7 +1532,7 @@ const App: React.FC = () => {
           },
         };
       });
-      update(ref(db, `trackers/${activeTrackerId}/meta`), {
+      updateTrackerMetadata(activeTrackerId, {
         playerNames: names,
       }).catch(() => {});
     },
@@ -1801,7 +1562,7 @@ const App: React.FC = () => {
         },
       };
     });
-    update(ref(db, `trackers/${activeTrackerId}/meta`), { title });
+    updateTrackerMetadata(activeTrackerId, { title });
   };
 
   const handleLegendaryTrackerToggle = (enabled: boolean) => {
@@ -2038,7 +1799,7 @@ const App: React.FC = () => {
             },
           };
         });
-        update(ref(db, `trackers/${activeTrackerId}/meta`), {
+        updateTrackerMetadata(activeTrackerId, {
           rulesetId: resolvedId,
         });
       }
@@ -2096,7 +1857,7 @@ const App: React.FC = () => {
         },
       };
     });
-    update(ref(db, `trackers/${activeTrackerId}/meta`), { isPublic: enabled });
+    setTrackerVisibility(activeTrackerId, enabled);
   };
 
   const handleAllPokemonAndItemsToggle = (enabled: boolean) => {
@@ -2112,7 +1873,7 @@ const App: React.FC = () => {
         },
       };
     });
-    update(ref(db, `trackers/${activeTrackerId}/meta`), {
+    updateTrackerMetadata(activeTrackerId, {
       allPokemonAndItems: enabled,
     });
   };
@@ -2318,17 +2079,21 @@ const App: React.FC = () => {
 
   const handleDeleteTracker = useCallback(async () => {
     if (!trackerPendingDelete) return;
+    const trackerId = trackerPendingDelete.id;
+    const shouldReturnHome =
+      routeTrackerId === trackerId || activeTrackerId === trackerId;
     setDeleteTrackerError(null);
     setDeleteTrackerLoading(true);
     try {
-      await deleteTracker(trackerPendingDelete.id);
-      if (trackerPendingDelete.id === activeTrackerId) {
+      await deleteTracker(trackerId);
+      removeTrackerLocally(trackerId);
+      if (shouldReturnHome) {
+        setTrackerExitRedirectId(trackerId);
         setActiveTrackerId(null);
         setData(createInitialState());
         if (typeof window !== "undefined") {
           window.localStorage.removeItem(LAST_TRACKER_STORAGE_KEY);
         }
-        navigate("/");
       }
       setTrackerPendingDelete(null);
     } catch (error) {
@@ -2340,7 +2105,12 @@ const App: React.FC = () => {
     } finally {
       setDeleteTrackerLoading(false);
     }
-  }, [trackerPendingDelete, activeTrackerId, navigate]);
+  }, [
+    trackerPendingDelete,
+    routeTrackerId,
+    activeTrackerId,
+    removeTrackerLocally,
+  ]);
 
   const handleInviteMember = useCallback(
     async (email: string, role: "editor" | "guest") => {
@@ -2367,16 +2137,17 @@ const App: React.FC = () => {
       if (!activeTrackerId) {
         throw new Error("Kein aktiver Tracker ausgewählt.");
       }
+      const trackerId = activeTrackerId;
       try {
-        await removeMemberFromTracker(activeTrackerId, memberUid);
+        await removeMemberFromTracker(trackerId, memberUid);
         if (user && memberUid === user.uid) {
-          closeSettingsPanel();
+          removeTrackerLocally(trackerId);
+          setTrackerExitRedirectId(trackerId);
           setActiveTrackerId(null);
           setData(createInitialState());
           if (typeof window !== "undefined") {
             window.localStorage.removeItem(LAST_TRACKER_STORAGE_KEY);
           }
-          navigate("/");
         }
       } catch (error) {
         if (error instanceof TrackerOperationError) {
@@ -2385,7 +2156,7 @@ const App: React.FC = () => {
         throw new Error("Mitglied konnte nicht entfernt werden.");
       }
     },
-    [activeTrackerId, user, navigate, closeSettingsPanel],
+    [activeTrackerId, user, removeTrackerLocally],
   );
 
   const clearedLocations = useMemo(() => {
@@ -2516,6 +2287,10 @@ const App: React.FC = () => {
     return <PasswordResetPage oobCode={passwordResetOobCode} />;
   }
 
+  if (trackerExitRedirectId && routeTrackerId === trackerExitRedirectId) {
+    return <Navigate to="/" replace />;
+  }
+
   // Show loading while auth is initializing, or while the target tracker is still resolving/loading
   // For public trackers when not logged in, also wait for data to load
   if (
@@ -2540,7 +2315,7 @@ const App: React.FC = () => {
     );
   }
 
-  if (!user && !isViewingPublicTracker) {
+  if (!user && !isViewingPublicTracker && !routeTrackerKnownMissing) {
     return authScreen === "login" ? (
       <LoginPage onSwitchToRegister={() => setAuthScreen("register")} />
     ) : (
@@ -2614,7 +2389,6 @@ const App: React.FC = () => {
         }
       }}
       canManageMembers={canManageMembers}
-      currentUserEmail={user?.email}
       currentUserId={user?.uid}
       gameVersion={activeGameVersion}
       rivalPreferences={currentUserRivalPreferences}
@@ -3042,6 +2816,26 @@ const App: React.FC = () => {
 
   return (
     <MultiLocaleSearchContext.Provider value={userMultiLocaleSearch}>
+      {stateConflict && (
+        <div
+          role="alert"
+          className="fixed inset-x-4 top-4 z-[100] mx-auto max-w-lg rounded-lg border border-amber-300 bg-amber-50 p-4 shadow-lg dark:border-amber-700 dark:bg-amber-950"
+        >
+          <p className="font-semibold text-amber-900 dark:text-amber-100">
+            {t("app.stateConflict.title")}
+          </p>
+          <p className="mt-1 text-sm text-amber-800 dark:text-amber-200">
+            {t("app.stateConflict.description")}
+          </p>
+          <button
+            type="button"
+            onClick={() => void handleReloadAfterStateConflict()}
+            className={`mt-3 rounded-md bg-amber-700 px-3 py-2 text-sm font-semibold text-white hover:bg-amber-800 ${focusRingClasses}`}
+          >
+            {t("app.stateConflict.reload")}
+          </button>
+        </div>
+      )}
       <CreateTrackerModal
         isOpen={showCreateModal}
         onClose={() => {
@@ -3091,6 +2885,9 @@ const App: React.FC = () => {
               activeTrackerId={activeTrackerId}
               userEmail={user?.email ?? undefined}
               currentUserId={user?.uid ?? null}
+              displayName={userDisplayName}
+              displayNameRequiresUpdate={userDisplayNameRequiresUpdate}
+              onDisplayNameChange={handleDisplayNameChange}
               trackerSummaries={trackerSummaries}
             />
           }
@@ -3128,6 +2925,8 @@ const App: React.FC = () => {
             user ? (
               <UserSettingsPage
                 email={user.email}
+                displayName={userDisplayName}
+                onDisplayNameChange={handleDisplayNameChange}
                 onBack={handleNavigateHome}
                 onLogout={handleLogout}
                 useGenerationSprites={userUseGenerationSprites}

@@ -14,13 +14,13 @@ import {
 import { LuCircleFadingArrowUp } from "react-icons/lu";
 import { PiSkullBold } from "react-icons/pi";
 import { getOfficialArtworkUrlById } from "@/src/services/sprites.ts";
-import { getPokemonTypeSlugsById } from "@/src/services/pokemonTypes.ts";
+import { getPokemonTypeSlugsById } from "@/src/services/pokemons/pokemonTypes.ts";
 import TypeBadge from "@/src/components/badges/TypeBadge.tsx";
 import { useTranslation } from "react-i18next";
 import { focusRingClasses } from "@/src/styles/focusRing.ts";
 import { getWikiUrlById, type WikiId } from "@/src/utils/wiki.ts";
-import { resolvePokemonDisplay } from "@/src/services/pokemonDisplay.ts";
-import { resolvePokemonLocationDisplay } from "@/src/services/locationSearch.ts";
+import { resolvePokemonDisplay } from "@/src/services/pokemons/pokemonDisplay.ts";
+import { resolvePokemonLocationDisplay } from "@/src/services/search/locationSearch.ts";
 import { normalizeLanguage } from "@/src/utils/language.ts";
 
 interface TeamTableProps {

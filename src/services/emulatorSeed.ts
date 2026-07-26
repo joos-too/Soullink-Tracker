@@ -291,17 +291,30 @@ async function createSampleTrackerData(userId: string): Promise<void> {
           inBag: false,
           revived: false,
         },
-        { fossilId: "helix-fossil", location: "", inBag: true, revived: false },
+        {
+          fossilId: "helix-fossil",
+          location: "",
+          locationSlug: "",
+          inBag: true,
+          revived: false,
+        },
         {
           fossilId: "old-amber",
           location: "",
+          locationSlug: "",
           inBag: true,
           revived: true,
           pokemonId: 142,
         },
       ],
       [
-        { fossilId: "plume-fossil", location: "", inBag: true, revived: false },
+        {
+          fossilId: "plume-fossil",
+          location: "",
+          locationSlug: "",
+          inBag: true,
+          revived: false,
+        },
         {
           fossilId: "dome-fossil",
           location: "",
@@ -312,6 +325,7 @@ async function createSampleTrackerData(userId: string): Promise<void> {
         {
           fossilId: "skull-fossil",
           location: "",
+          locationSlug: "",
           inBag: true,
           revived: true,
           pokemonId: 408,
@@ -461,11 +475,29 @@ async function createSampleTrackerData(userId: string): Promise<void> {
     revealedRivalCaps: [0, 1, 2, 3, 4, 5],
     fossilEntries: [
       [
-        { fossilId: "old-amber", location: "", inBag: true, revived: false },
-        { fossilId: "helix-fossil", location: "", inBag: true, revived: false },
+        {
+          fossilId: "old-amber",
+          location: "",
+          locationSlug: "",
+          inBag: true,
+          revived: false,
+        },
+        {
+          fossilId: "helix-fossil",
+          location: "",
+          locationSlug: "",
+          inBag: true,
+          revived: false,
+        },
       ],
       [
-        { fossilId: "dome-fossil", location: "", inBag: true, revived: false },
+        {
+          fossilId: "dome-fossil",
+          location: "",
+          locationSlug: "",
+          inBag: true,
+          revived: false,
+        },
         {
           fossilId: "old-amber",
           location: "",
@@ -611,8 +643,20 @@ async function createSampleTrackerData(userId: string): Promise<void> {
     revealedRivalCaps: [0, 1, 2, 3, 4],
     fossilEntries: [
       [
-        { fossilId: "skull-fossil", location: "", inBag: true, revived: false },
-        { fossilId: "old-amber", location: "", inBag: true, revived: false },
+        {
+          fossilId: "skull-fossil",
+          location: "",
+          locationSlug: "",
+          inBag: true,
+          revived: false,
+        },
+        {
+          fossilId: "old-amber",
+          location: "",
+          locationSlug: "",
+          inBag: true,
+          revived: false,
+        },
         {
           fossilId: "helix-fossil",
           location: "",
@@ -622,8 +666,20 @@ async function createSampleTrackerData(userId: string): Promise<void> {
         },
       ],
       [
-        { fossilId: "armor-fossil", location: "", inBag: true, revived: false },
-        { fossilId: "dome-fossil", location: "", inBag: true, revived: false },
+        {
+          fossilId: "armor-fossil",
+          location: "",
+          locationSlug: "",
+          inBag: true,
+          revived: false,
+        },
+        {
+          fossilId: "dome-fossil",
+          location: "",
+          locationSlug: "",
+          inBag: true,
+          revived: false,
+        },
       ],
     ],
     itemEntries: [
@@ -786,6 +842,7 @@ async function createSampleTrackerData(userId: string): Promise<void> {
         {
           fossilId: "root-fossil",
           location: "",
+          locationSlug: "",
           inBag: true,
           revived: true,
           pokemonId: 345,
@@ -802,6 +859,7 @@ async function createSampleTrackerData(userId: string): Promise<void> {
         {
           fossilId: "claw-fossil",
           location: "",
+          locationSlug: "",
           inBag: true,
           revived: true,
           pokemonId: 347,

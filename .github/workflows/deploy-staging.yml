@@ -1,0 +1,120 @@
+name: Deploy staging
+
+on:
+  push:
+    branches:
+      - staging
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+jobs:
+  validate-ref:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Require staging branch
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF" != "refs/heads/staging" ]]; then
+            echo "The staging deployment workflow must run from the staging branch." >&2
+            exit 1
+          fi
+
+  build-config:
+    needs: validate-ref
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      deployment: false
+    permissions:
+      contents: read
+    outputs:
+      supabase_url: ${{ steps.values.outputs.supabase_url }}
+      supabase_anon_key: ${{ steps.values.outputs.supabase_anon_key }}
+    steps:
+      - name: Read staging frontend configuration
+        id: values
+        shell: bash
+        env:
+          SUPABASE_URL: ${{ vars.STAGING_VITE_SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ vars.STAGING_VITE_SUPABASE_ANON_KEY }}
+        run: |
+          set -Eeuo pipefail
+
+          if [[ "$SUPABASE_URL" != https://* ]]; then
+            echo "STAGING_VITE_SUPABASE_URL must be a non-empty HTTPS URL." >&2
+            exit 1
+          fi
+          if [[ -z "$SUPABASE_ANON_KEY" ]]; then
+            echo "STAGING_VITE_SUPABASE_ANON_KEY must not be empty." >&2
+            exit 1
+          fi
+
+          printf 'supabase_url=%s\n' "$SUPABASE_URL" >> "$GITHUB_OUTPUT"
+          printf 'supabase_anon_key=%s\n' "$SUPABASE_ANON_KEY" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: [validate-ref, build-config]
+    permissions:
+      contents: read
+      packages: write
+    uses: FreakMediaLP/Workflows/.github/workflows/build-docker.yml@v3
+    with:
+      version: staging
+      cleanup: true
+      keep-versions: 3
+      build-args: |
+        VITE_BACKEND=supabase
+        VITE_SUPABASE_URL=${{ needs.build-config.outputs.supabase_url }}
+        VITE_SUPABASE_ANON_KEY=${{ needs.build-config.outputs.supabase_anon_key }}
+
+  test:
+    needs: validate-ref
+    permissions:
+      contents: read
+    uses: ./.github/workflows/test-pipeline.yml
+
+  release:
+    needs: [build, test]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: staging
+      url: ${{ vars.APP_URL }}
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v5
+
+      - name: Deploy staging database migrations
+        uses: ./.github/actions/deploy-supabase-migrations
+        with:
+          environment: staging
+          ssh-host: ${{ secrets.SSH_HOST }}
+          ssh-username: ${{ secrets.SSH_USERNAME }}
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          ssh-known-hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
+          remote-db-port: ${{ vars.SUPABASE_DB_REMOTE_PORT }}
+          database-url: ${{ secrets.SUPABASE_MIGRATION_DB_URL }}
+          github-token: ${{ github.token }}
+
+      - name: Deploy staging frontend
+        uses: ./.github/actions/deploy-docker-compose
+        with:
+          ssh-host: ${{ secrets.SSH_HOST }}
+          ssh-username: ${{ secrets.SSH_USERNAME }}
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          ssh-known-hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
+          remote-path: ${{ vars.DEPLOY_PATH }}
+          expected-compose-project: soullink-tracker-staging
+          expected-image-tag: staging
+          expected-app-port: "8068"
+          registry-username: ${{ github.actor }}
+          registry-password: ${{ github.token }}
+          cleanup: "true"

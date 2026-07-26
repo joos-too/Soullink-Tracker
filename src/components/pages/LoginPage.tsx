@@ -1,6 +1,5 @@
 import React, { useState } from "react";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "@/src/firebaseConfig.ts";
+import { signIn } from "@/src/services/backend/auth.ts";
 import {
   focusRingBlueClasses,
   focusRingClasses,
@@ -24,7 +23,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onSwitchToRegister }) => {
     setError(null);
     setLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      await signIn(email, password);
     } catch (err) {
       console.error("Error signing in", err);
       setError(t("auth.login.error"));

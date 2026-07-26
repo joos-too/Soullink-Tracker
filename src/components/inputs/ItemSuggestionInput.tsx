@@ -5,7 +5,7 @@ import {
   getItemSpriteUrl,
   searchItems,
   type ItemSearchResult,
-} from "@/src/services/itemSearch";
+} from "@/src/services/search/itemSearch.ts";
 import { normalizeLanguage } from "@/src/utils/language";
 import SuggestionInput from "@/src/components/inputs/SuggestionInput.tsx";
 import ItemSprite from "@/src/components/other/ItemSprite.tsx";

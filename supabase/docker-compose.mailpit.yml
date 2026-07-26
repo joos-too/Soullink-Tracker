@@ -1,0 +1,13 @@
+services:
+  mailpit:
+    image: axllent/mailpit:v1.30.0
+    restart: unless-stopped
+    environment:
+      MP_DATABASE: /data/mailpit.db
+      MP_MAX_MESSAGES: "5000"
+    volumes:
+      - ./volumes/mailpit:/data
+    expose:
+      - "1025"
+    ports:
+      - "127.0.0.1:${MAILPIT_UI_PORT:-8025}:8025/tcp"

@@ -4,7 +4,7 @@ import {
   searchLocations,
   findLocationByName,
   type LocationSearchResult,
-} from "@/src/services/locationSearch.ts";
+} from "@/src/services/search/locationSearch.ts";
 import { normalizeLanguage } from "@/src/utils/language.ts";
 import SuggestionInput from "@/src/components/inputs/SuggestionInput.tsx";
 import { useMultiLocaleSearch } from "@/src/hooks/useMultiLocaleSearch.ts";

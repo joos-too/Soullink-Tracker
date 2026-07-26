@@ -136,6 +136,18 @@ export const en = {
         "Team, box, graveyard, and arena status will be cleared. Stats and rule changes remain. This can’t be undone.",
       submit: "Reset run",
     },
+    migrationDisplayName: {
+      title: "Choose your display name",
+      description:
+        "Your account currently uses a name generated during the migration. Choose the name other tracker members should see.",
+      label: "Display name",
+      required: "Enter a display name.",
+      tooLong: "A display name can contain at most 50 characters.",
+      saveFailed: "Saving the display name failed.",
+      later: "Later",
+      save: "Save",
+      saving: "Saving…",
+    },
     selectLoss: {
       title: "Kill link?",
       locationLabel: "Area: {{location}}",
@@ -378,6 +390,12 @@ export const en = {
       "Public tracker: editing is disabled unless you log in and are a member. This view is read-only.",
     guestReadOnlyNotice:
       "You were invited as a guest. You can view everything, but changes are disabled.",
+    stateConflict: {
+      title: "Tracker updated elsewhere",
+      description:
+        "Another session saved newer changes. Reload the tracker before editing again so nothing is overwritten.",
+      reload: "Reload tracker",
+    },
   },
   team: {
     teamTitle: "Team",
@@ -533,7 +551,8 @@ export const en = {
         tooltipLabel: "Public tracker info",
         tooltip:
           "When enabled, anyone with the URL can view this tracker, even without logging in.\n\nOnly members can still edit the tracker.",
-        description: "Allow anyone to view this tracker via the URL.",
+        description:
+          "Allow anyone to view this tracker via the URL. Only the owner can change this setting.",
       },
       generationSprites: {
         title: "Generation-specific sprites",
@@ -586,7 +605,7 @@ export const en = {
         member: "Member",
         guest: "Guest",
       },
-      removeAriaLabel: "Remove {{email}}",
+      removeAriaLabel: "Remove {{name}}",
       inviteTitle: "Add member or guest",
       inviteSuccess: "User added successfully.",
       inviteError: "Something went wrong while inviting the user.",
@@ -622,6 +641,14 @@ export const en = {
     },
     emailLabel: "Email",
     emailInfo: "We will send the reset link to this address.",
+    displayName: {
+      label: "Display name",
+      info: "This name is shown to other members of your trackers. It does not have to be unique.",
+      save: "Save display name",
+      required: "Enter a display name.",
+      tooLong: "A display name can contain at most 50 characters.",
+      saveFailed: "Saving the display name failed.",
+    },
     actions: {
       resetPassword: "Reset password",
     },
@@ -674,6 +701,12 @@ export const en = {
       title: "Register",
       headline: "Create your account",
       emailLabel: "Email",
+      displayNameLabel: "Display name",
+      displayNamePlaceholder: "Trainer name",
+      displayNameInfo:
+        "This name is visible to members of your trackers and does not have to be unique.",
+      displayNameRequired: "Enter a display name.",
+      displayNameTooLong: "A display name can contain at most 50 characters.",
       passwordLabel: "Password",
       confirmPasswordLabel: "Confirm password",
       passwordMismatch: "Passwords do not match.",
@@ -687,6 +720,16 @@ export const en = {
         invalidEmail: "Please provide a valid email address.",
         weakPassword: "The password must be at least 8 characters long.",
         general: "Registration failed. Please try again later.",
+      },
+      confirmation: {
+        title: "Check your email",
+        sent: "We sent a confirmation code to {{email}}.",
+        checkSpam: "Can't find it? Check your spam or junk folder.",
+        codeLabel: "Confirmation code",
+        submit: "Confirm",
+        error:
+          "The code is invalid or expired. Please try again or register with a new code.",
+        back: "Back to registration",
       },
     },
     passwordReset: {
@@ -707,8 +750,9 @@ export const en = {
       confirmPasswordLabel: "Confirm password",
       passwordTooShort: "The new password must be at least 8 characters long.",
       passwordMismatch: "Passwords do not match.",
+      samePassword:
+        "The new password must be different from your old password.",
       successMessage: "Password updated!",
-      successHint: "You will be redirected shortly.",
       buttonSave: "Set password",
       buttonBack: "Back",
       accountLabel: "Account",
