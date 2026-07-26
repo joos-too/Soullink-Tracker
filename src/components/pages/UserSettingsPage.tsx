@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   FiAlertTriangle,
   FiArrowLeft,
@@ -13,7 +13,7 @@ import {
   focusRingClasses,
   focusRingRedClasses,
 } from "@/src/styles/focusRing.ts";
-import { requestPasswordReset } from "@/src/services/auth.ts";
+import { requestPasswordReset } from "@/src/services/backend/auth.ts";
 import ToggleSwitch from "@/src/components/toggles/ToggleSwitch.tsx";
 import { useTranslation } from "react-i18next";
 import LanguageToggle from "@/src/components/toggles/LanguageToggle.tsx";
@@ -22,6 +22,8 @@ import { WIKIS, type WikiId } from "@/src/utils/wiki.ts";
 
 interface UserSettingsPageProps {
   email?: string | null;
+  displayName: string;
+  onDisplayNameChange: (displayName: string) => Promise<void>;
   onBack: () => void;
   onLogout: () => void;
   useGenerationSprites?: boolean;
@@ -36,6 +38,8 @@ interface UserSettingsPageProps {
 
 const UserSettingsPage: React.FC<UserSettingsPageProps> = ({
   email,
+  displayName,
+  onDisplayNameChange,
   onBack,
   onLogout,
   useGenerationSprites,
@@ -50,7 +54,39 @@ const UserSettingsPage: React.FC<UserSettingsPageProps> = ({
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [displayNameDraft, setDisplayNameDraft] = useState(displayName);
+  const [displayNameSaving, setDisplayNameSaving] = useState(false);
+  const [displayNameError, setDisplayNameError] = useState<string | null>(null);
   const { t } = useTranslation();
+
+  useEffect(() => {
+    setDisplayNameDraft(displayName);
+  }, [displayName]);
+
+  const handleDisplayNameSave = async (event: React.SubmitEvent) => {
+    event.preventDefault();
+    const nextDisplayName = displayNameDraft.trim().replace(/\s+/g, " ");
+    if (!nextDisplayName) {
+      setDisplayNameError(t("userSettings.displayName.required"));
+      return;
+    }
+    if (nextDisplayName.length > 50) {
+      setDisplayNameError(t("userSettings.displayName.tooLong"));
+      return;
+    }
+
+    setDisplayNameSaving(true);
+    setDisplayNameError(null);
+    try {
+      await onDisplayNameChange(nextDisplayName);
+      setDisplayNameDraft(nextDisplayName);
+    } catch (error) {
+      console.error("Failed to save display name", error);
+      setDisplayNameError(t("userSettings.displayName.saveFailed"));
+    } finally {
+      setDisplayNameSaving(false);
+    }
+  };
 
   const handlePasswordReset = async () => {
     if (!email) {
@@ -104,6 +140,46 @@ const UserSettingsPage: React.FC<UserSettingsPageProps> = ({
           </header>
 
           <section className="space-y-4">
+            <form
+              onSubmit={handleDisplayNameSave}
+              className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40 p-4"
+            >
+              <label
+                htmlFor="display-name"
+                className="block text-xs font-semibold uppercase tracking-[0.2em] text-gray-500"
+              >
+                {t("userSettings.displayName.label")}
+              </label>
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                {t("userSettings.displayName.info")}
+              </p>
+              <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                <input
+                  id="display-name"
+                  value={displayNameDraft}
+                  onChange={(event) => {
+                    setDisplayNameDraft(event.target.value);
+                    setDisplayNameError(null);
+                  }}
+                  maxLength={50}
+                  required
+                  className="min-w-0 flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                />
+                <button
+                  type="submit"
+                  disabled={displayNameSaving}
+                  className={`shrink-0 rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60 ${focusRingClasses}`}
+                >
+                  {t("userSettings.displayName.save")}
+                </button>
+              </div>
+              {displayNameError && (
+                <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+                  {displayNameError}
+                </p>
+              )}
+            </form>
+
             <div className="flex items-start gap-3 p-4 rounded-lg bg-gray-50 dark:bg-gray-900/40 border border-gray-200 dark:border-gray-700">
               <FiMail className="mt-1" size={20} />
               <div>

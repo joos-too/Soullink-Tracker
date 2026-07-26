@@ -24,8 +24,25 @@
       }
     },
     {
+      "label": "Supabase Local",
+      "type": "npm",
+      "script": "supabase:start",
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
       "label": "Start Dev + Emulators",
       "dependsOn": ["Dev Server", "Firebase Emulators"],
+      "dependsOrder": "parallel",
+      "problemMatcher": []
+    },
+    {
+      "label": "Start Dev + Supabase",
+      "dependsOn": ["Dev Server", "Supabase Local"],
       "dependsOrder": "parallel",
       "problemMatcher": []
     }

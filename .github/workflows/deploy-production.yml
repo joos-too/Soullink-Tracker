@@ -1,0 +1,114 @@
+name: Deploy production
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  validate-ref:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Require master branch
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF" != "refs/heads/master" ]]; then
+            echo "The production deployment workflow must run from the master branch." >&2
+            exit 1
+          fi
+
+  build-config:
+    needs: validate-ref
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      deployment: false
+    permissions:
+      contents: read
+    outputs:
+      supabase_url: ${{ steps.values.outputs.supabase_url }}
+      supabase_anon_key: ${{ steps.values.outputs.supabase_anon_key }}
+    steps:
+      - name: Read production frontend configuration
+        id: values
+        shell: bash
+        env:
+          SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+        run: |
+          set -Eeuo pipefail
+
+          if [[ "$SUPABASE_URL" != https://* ]]; then
+            echo "VITE_SUPABASE_URL must be a non-empty HTTPS URL." >&2
+            exit 1
+          fi
+          if [[ -z "$SUPABASE_ANON_KEY" ]]; then
+            echo "VITE_SUPABASE_ANON_KEY must not be empty." >&2
+            exit 1
+          fi
+
+          printf 'supabase_url=%s\n' "$SUPABASE_URL" >> "$GITHUB_OUTPUT"
+          printf 'supabase_anon_key=%s\n' "$SUPABASE_ANON_KEY" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: [validate-ref, build-config]
+    permissions:
+      contents: read
+      packages: write
+    uses: FreakMediaLP/Workflows/.github/workflows/build-docker.yml@v3
+    with:
+      version: latest
+      cleanup: true
+      keep-versions: 3
+      build-args: |
+        VITE_BACKEND=supabase
+        VITE_SUPABASE_URL=${{ needs.build-config.outputs.supabase_url }}
+        VITE_SUPABASE_ANON_KEY=${{ needs.build-config.outputs.supabase_anon_key }}
+
+  deploy:
+    needs: [build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: production
+      url: ${{ vars.APP_URL }}
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v5
+
+      - name: Deploy production database migrations
+        uses: ./.github/actions/deploy-supabase-migrations
+        with:
+          environment: production
+          ssh-host: ${{ secrets.SSH_HOST }}
+          ssh-username: ${{ secrets.SSH_USERNAME }}
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          ssh-known-hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
+          remote-db-port: ${{ vars.SUPABASE_DB_REMOTE_PORT }}
+          database-url: ${{ secrets.SUPABASE_MIGRATION_DB_URL }}
+          github-token: ${{ github.token }}
+
+      - name: Deploy production frontend
+        uses: ./.github/actions/deploy-docker-compose
+        with:
+          ssh-host: ${{ secrets.SSH_HOST }}
+          ssh-username: ${{ secrets.SSH_USERNAME }}
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          ssh-known-hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
+          remote-path: ${{ vars.DEPLOY_PATH }}
+          compose-project: soullink-tracker-production
+          image-tag: latest
+          app-port: ${{ vars.APP_PORT }}
+          registry-username: ${{ github.actor }}
+          registry-password: ${{ github.token }}
+          cleanup: "true"

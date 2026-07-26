@@ -1,0 +1,82 @@
+name: Supabase E2E Tests
+
+on:
+  pull_request:
+    branches:
+      - staging
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  e2e:
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    env:
+      OPENAI_API_KEY: ""
+      SUPABASE_AUTH_SITE_URL: http://127.0.0.1:4173
+      SUPABASE_AUTH_RECOVERY_URL: http://127.0.0.1:4173/reset
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v2
+        with:
+          version: 2.109.1
+          github-token: ${{ github.token }}
+
+      - name: Start local Supabase
+        run: supabase start
+
+      - name: Export local Supabase environment
+        run: |
+          {
+            while IFS='=' read -r name value; do
+              case "$name" in
+                VITE_SUPABASE_URL|VITE_SUPABASE_ANON_KEY) ;;
+                *) continue ;;
+              esac
+              value="${value%\"}"
+              value="${value#\"}"
+              printf '%s=%s\n' "$name" "$value"
+            done < <(
+              supabase status -o env \
+                --override-name api.url=VITE_SUPABASE_URL \
+                --override-name auth.anon_key=VITE_SUPABASE_ANON_KEY
+            )
+          } >> "$GITHUB_ENV"
+
+      - name: Run Playwright E2E tests
+        run: npm run test:e2e
+
+      - name: Upload Playwright diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-diagnostics
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Stop Supabase CLI stack
+        if: always()
+        run: supabase stop || true

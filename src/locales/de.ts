@@ -138,6 +138,18 @@ export const de = {
         "Team, Box, Friedhof und Arenen-Status werden geleert. Statistiken und Regeländerungen bleiben erhalten. Dieser Vorgang kann nicht rückgängig gemacht werden.",
       submit: "Bestätigen",
     },
+    migrationDisplayName: {
+      title: "Wähle deinen Anzeigenamen",
+      description:
+        "Dein Account verwendet aktuell einen bei der Migration erzeugten Namen. Wähle den Namen, den andere Tracker-Mitglieder sehen sollen.",
+      label: "Anzeigename",
+      required: "Bitte gib einen Anzeigenamen ein.",
+      tooLong: "Ein Anzeigename darf höchstens 50 Zeichen enthalten.",
+      saveFailed: "Der Anzeigename konnte nicht gespeichert werden.",
+      later: "Später",
+      save: "Speichern",
+      saving: "Speichere…",
+    },
     selectLoss: {
       title: "Link töten?",
       locationLabel: "Gebiet: {{location}}",
@@ -379,6 +391,12 @@ export const de = {
       "Öffentlicher Tracker: Änderungen sind nur nach Anmeldung und Mitgliedschaft möglich. Dieser Modus ist schreibgeschützt.",
     guestReadOnlyNotice:
       "Du wurdest als Gast eingeladen. Du kannst alles ansehen, aber keine Änderungen vornehmen.",
+    stateConflict: {
+      title: "Tracker wurde anderswo aktualisiert",
+      description:
+        "Eine andere Sitzung hat neuere Änderungen gespeichert. Lade den Tracker neu, bevor du weiterarbeitest, damit nichts überschrieben wird.",
+      reload: "Tracker neu laden",
+    },
   },
   team: {
     teamTitle: "Team",
@@ -539,7 +557,8 @@ export const de = {
         tooltipLabel: "Info Öffentlicher Tracker",
         tooltip:
           "Wenn aktiviert, kann jeder mit der URL diesen Tracker ansehen, auch ohne sich einzuloggen.\n\nNur Mitglieder können den Tracker weiterhin bearbeiten.",
-        description: "Erlaube allen, diesen Tracker über die URL anzusehen.",
+        description:
+          "Erlaube allen, diesen Tracker über die URL anzusehen. Nur der Owner kann diese Einstellung ändern.",
       },
       generationSprites: {
         title: "Generationsspezifische Sprites",
@@ -591,7 +610,7 @@ export const de = {
         member: "Mitglied",
         guest: "Gast",
       },
-      removeAriaLabel: "{{email}} entfernen",
+      removeAriaLabel: "{{name}} entfernen",
       inviteTitle: "Mitglied oder Gast hinzufügen",
       inviteSuccess: "Nutzer erfolgreich hinzugefügt.",
       inviteError: "Ein unbekannter Fehler ist aufgetreten.",
@@ -628,6 +647,14 @@ export const de = {
     },
     emailLabel: "Email",
     emailInfo: "Wir senden den Reset-Link an diese Adresse.",
+    displayName: {
+      label: "Anzeigename",
+      info: "Dieser Name wird anderen Mitgliedern deiner Tracker angezeigt. Er muss nicht eindeutig sein.",
+      save: "Anzeigenamen speichern",
+      required: "Bitte gib einen Anzeigenamen ein.",
+      tooLong: "Ein Anzeigename darf höchstens 50 Zeichen enthalten.",
+      saveFailed: "Der Anzeigename konnte nicht gespeichert werden.",
+    },
     actions: {
       resetPassword: "Passwort zurücksetzen",
     },
@@ -682,6 +709,13 @@ export const de = {
       title: "Registrierung",
       headline: "Erstelle deinen Account",
       emailLabel: "Email",
+      displayNameLabel: "Anzeigename",
+      displayNamePlaceholder: "Trainername",
+      displayNameInfo:
+        "Dieser Name ist für Mitglieder deiner Tracker sichtbar und muss nicht eindeutig sein.",
+      displayNameRequired: "Bitte gib einen Anzeigenamen ein.",
+      displayNameTooLong:
+        "Ein Anzeigename darf höchstens 50 Zeichen enthalten.",
       passwordLabel: "Passwort",
       confirmPasswordLabel: "Passwort bestätigen",
       passwordMismatch: "Die Passwörter stimmen nicht überein.",
@@ -696,6 +730,16 @@ export const de = {
         weakPassword: "Das Passwort muss mindestens 8 Zeichen lang sein.",
         general:
           "Registrierung fehlgeschlagen. Bitte versuche es später erneut.",
+      },
+      confirmation: {
+        title: "Email prüfen",
+        sent: "Wir haben einen Bestätigungscode an {{email}} gesendet.",
+        checkSpam: "Nicht gefunden? Überprüfe deinen Spam- oder Junk-Ordner.",
+        codeLabel: "Bestätigungscode",
+        submit: "Bestätigen",
+        error:
+          "Der Code ist ungültig oder abgelaufen. Bitte versuche es erneut oder registriere dich mit einem neuen Code.",
+        back: "Zurück zur Registrierung",
       },
     },
     passwordReset: {
@@ -717,8 +761,9 @@ export const de = {
       confirmPasswordLabel: "Passwort bestätigen",
       passwordTooShort: "Das neue Passwort muss mindestens 8 Zeichen besitzen.",
       passwordMismatch: "Die Passwörter stimmen nicht überein.",
+      samePassword:
+        "Das neue Passwort muss sich von deinem bisherigen Passwort unterscheiden.",
       successMessage: "Passwort aktualisiert!",
-      successHint: "Du wirst gleich weitergeleitet.",
       buttonSave: "Passwort setzen",
       buttonBack: "Zurück",
       accountLabel: "Account",

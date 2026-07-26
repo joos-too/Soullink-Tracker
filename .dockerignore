@@ -1,0 +1,15 @@
+.git
+.github
+.husky
+node_modules
+dist
+coverage
+playwright-report
+test-results
+.env
+.env.*
+!.env.example
+!.env.production.example
+supabase/.branches
+supabase/.temp
+*.log

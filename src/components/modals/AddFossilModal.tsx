@@ -5,7 +5,7 @@ import { FiX, FiInfo } from "react-icons/fi";
 import LocationSuggestionInput from "@/src/components/inputs/LocationSuggestionInput.tsx";
 import Tooltip from "@/src/components/other/Tooltip.tsx";
 import { useFocusTrap } from "@/src/hooks/useFocusTrap.ts";
-import { findLocationByName } from "@/src/services/locationSearch.ts";
+import { findLocationByName } from "@/src/services/search/locationSearch.ts";
 import { normalizeLanguage } from "@/src/utils/language.ts";
 import {
   focusRingCardClasses,

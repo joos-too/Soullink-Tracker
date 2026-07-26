@@ -69,7 +69,6 @@ interface SettingsPageProps {
   onRemoveMember: (memberUid: string) => Promise<void>;
   onRequestDeleteTracker: () => void;
   canManageMembers: boolean;
-  currentUserEmail?: string | null;
   currentUserId?: string | null;
   gameVersion?: GameVersion;
   rivalPreferences?: UserSettings["rivalPreferences"];
@@ -110,7 +109,6 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
   onRemoveMember,
   onRequestDeleteTracker,
   canManageMembers,
-  currentUserEmail,
   currentUserId,
   gameVersion,
   rivalPreferences,
@@ -261,12 +259,12 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
     }
   });
   const sortedMembers = Array.from(participantsMap.values()).sort((a, b) => {
-    if (a.role === b.role) return a.email.localeCompare(b.email);
+    if (a.role === b.role) return a.displayName.localeCompare(b.displayName);
     if (a.role === "owner") return -1;
     if (b.role === "owner") return 1;
     if (a.role === "editor" && b.role === "guest") return -1;
     if (a.role === "guest" && b.role === "editor") return 1;
-    return a.email.localeCompare(b.email);
+    return a.displayName.localeCompare(b.displayName);
   });
 
   const currentMember = currentUserId
@@ -646,7 +644,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
                   checked={isPublic}
                   onChange={onPublicToggle}
                   ariaLabel={t("settings.features.publicTracker.title")}
-                  disabled={isGuest}
+                  disabled={!canManageMembers}
                 />
               </div>
             </section>
@@ -753,23 +751,22 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
                   >
                     <div>
                       <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-gray-900 dark:text-gray-100">
-                        <span>{member.email}</span>
-                        {currentUserEmail &&
-                          member.email === currentUserEmail && (
-                            <span className="text-xs text-green-600">
-                              {t("settings.members.youBadge")}
-                            </span>
-                          )}
+                        <span>{member.displayName}</span>
+                        {currentUserId === member.uid && (
+                          <span className="text-xs text-green-600">
+                            {t("settings.members.youBadge")}
+                          </span>
+                        )}
                         {canManageMembers &&
                           member.role !== "owner" &&
-                          member.email !== currentUserEmail && (
+                          member.uid !== currentUserId && (
                             <button
                               type="button"
                               onClick={() => setMemberPendingRemoval(member)}
                               className="text-xs text-red-600 hover:text-red-800 flex items-center gap-1"
                               aria-label={t(
                                 "settings.members.removeAriaLabel",
-                                { email: member.email },
+                                { name: member.displayName },
                               )}
                             >
                               <FiX size={14} />
@@ -777,6 +774,9 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
                           )}
                       </div>
                       <p className="text-xs text-gray-500">
+                        {canManageMembers && member.email && (
+                          <span className="block">{member.email}</span>
+                        )}
                         {member.addedAt
                           ? new Date(member.addedAt).toLocaleDateString()
                           : t("settings.members.unknownDate")}
@@ -1001,7 +1001,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
                 >
                   {pendingRemovalIsSelf
                     ? trackerTitle
-                    : memberPendingRemoval.email}
+                    : memberPendingRemoval.displayName}
                 </h2>
               </div>
               <button

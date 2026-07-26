@@ -5,8 +5,8 @@ import { useFocusTrap } from "@/src/hooks/useFocusTrap.ts";
 import { focusRingClasses } from "@/src/styles/focusRing.ts";
 import { FiInfo } from "react-icons/fi";
 import Tooltip from "@/src/components/other/Tooltip.tsx";
-import { resolvePokemonDisplay } from "@/src/services/pokemonDisplay.ts";
-import { resolvePokemonLocationDisplay } from "@/src/services/locationSearch.ts";
+import { resolvePokemonDisplay } from "@/src/services/pokemons/pokemonDisplay.ts";
+import { resolvePokemonLocationDisplay } from "@/src/services/search/locationSearch.ts";
 import { normalizeLanguage } from "@/src/utils/language.ts";
 
 interface SelectLossModalProps {

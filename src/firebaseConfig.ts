@@ -2,6 +2,7 @@
 import { type FirebaseOptions, initializeApp } from "firebase/app";
 import { connectDatabaseEmulator, getDatabase } from "firebase/database";
 import { connectAuthEmulator, getAuth } from "firebase/auth";
+import { BACKEND } from "@/src/services/backend/backend.ts";
 
 // Read Firebase config from Vite env
 const apiKey = import.meta.env.VITE_FIREBASE_API_KEY as string | undefined;
@@ -26,7 +27,9 @@ const useEmulator = import.meta.env.VITE_USE_FIREBASE_EMULATOR as
   | undefined;
 
 // Emulator env toggles (optional). Vite injects import.meta.env.MODE and DEV.
-const USE_EMULATORS = useEmulator?.toLowerCase() === "true";
+const IS_FIREBASE_BACKEND = BACKEND === "firebase";
+const USE_EMULATORS =
+  IS_FIREBASE_BACKEND && useEmulator?.toLowerCase() === "true";
 const EMULATOR_HOST = import.meta.env.VITE_FIREBASE_EMULATOR_HOST as
   | string
   | undefined;
@@ -39,6 +42,7 @@ const DB_EMULATOR_PORT = Number(
 
 // Validate required env vars for production only
 if (
+  IS_FIREBASE_BACKEND &&
   !USE_EMULATORS &&
   (!apiKey ||
     !authDomain ||
@@ -65,15 +69,27 @@ const firebaseConfig: FirebaseOptions = USE_EMULATORS
       messagingSenderId: messagingSenderId || "0",
       appId: appId || "demo:app",
     }
-  : {
-      apiKey: apiKey!,
-      authDomain: authDomain!,
-      databaseURL: databaseURL!,
-      projectId: projectId!,
-      storageBucket: storageBucket!,
-      messagingSenderId: messagingSenderId!,
-      appId: appId!,
-    };
+  : IS_FIREBASE_BACKEND
+    ? {
+        apiKey: apiKey!,
+        authDomain: authDomain!,
+        databaseURL: databaseURL!,
+        projectId: projectId!,
+        storageBucket: storageBucket!,
+        messagingSenderId: messagingSenderId!,
+        appId: appId!,
+      }
+    : {
+        apiKey: "firebase-not-active",
+        authDomain: "firebase-not-active.invalid",
+        // Firebase validates this value during SDK initialization even when
+        // Supabase is the selected backend.
+        databaseURL: "https://firebase-not-active.firebaseio.com",
+        projectId: "firebase-not-active",
+        storageBucket: "firebase-not-active.invalid",
+        messagingSenderId: "0",
+        appId: "firebase-not-active",
+      };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
