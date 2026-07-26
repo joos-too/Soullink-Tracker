@@ -53,7 +53,7 @@ export const getLegendariesUpToGeneration = (
   maxGeneration: number,
 ): string[] => {
   const result: string[] = [];
-  for (let gen = 1; gen <= Math.min(maxGeneration, 6); gen++) {
+  for (let gen = 1; gen <= maxGeneration; gen++) {
     result.push(...(LEGENDARY_POKEMON_BY_GENERATION[gen] || []));
   }
   return result;

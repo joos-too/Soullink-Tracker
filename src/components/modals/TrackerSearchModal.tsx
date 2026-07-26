@@ -1,22 +1,27 @@
 import React, { useEffect, useId, useMemo, useState } from "react";
-import type { FossilEntry, PokemonLink, StoneEntry } from "@/types";
+import type { FossilEntry, PokemonLink, ItemEntry } from "@/types";
 import { useTranslation } from "react-i18next";
 import { useFocusTrap } from "@/src/hooks/useFocusTrap.ts";
 import {
   focusRingClasses,
   focusRingInputClasses,
 } from "@/src/styles/focusRing.ts";
-import { getSpriteUrlForPokemonName } from "@/src/services/sprites.ts";
 import {
   getPokemonFamilyIdsMatchingQuery,
-  getPokemonIdFromName,
+  getPokemonNameById,
 } from "@/src/services/pokemonSearch";
+import { resolvePokemonDisplay } from "@/src/services/pokemonDisplay.ts";
 import { FOSSILS, STONES, MEGA_STONES } from "@/src/data/special-items.ts";
 import { getItemName, getItemSpriteUrl } from "@/src/services/itemSearch";
+import {
+  locationMatchesQuery,
+  resolveLocationDisplay,
+  resolvePokemonLocationDisplay,
+} from "@/src/services/locationSearch";
 import { normalizeLanguage } from "@/src/utils/language";
-import { compareRoutes } from "@/src/utils/routes.ts";
+import { useMultiLocaleSearch } from "@/src/hooks/useMultiLocaleSearch.ts";
 
-type SearchMode = "pokemon" | "routes" | "items";
+type SearchMode = "pokemon" | "items";
 type PokemonSectionKey = "team" | "box" | "graveyard";
 type ItemCategory = "fossils" | "stones" | "megaStones" | "items";
 
@@ -28,10 +33,10 @@ interface TrackerSearchModalProps {
   team: PokemonLink[];
   box: PokemonLink[];
   graveyard: PokemonLink[];
-  routes: string[];
   fossils: FossilEntry[][];
-  stones: StoneEntry[][];
+  items: ItemEntry[][];
   generationSpritePath?: string | null;
+  gameVersionId?: string;
 }
 
 interface PokemonSection {
@@ -64,16 +69,18 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
   team,
   box,
   graveyard,
-  routes,
   fossils,
-  stones,
+  items,
   generationSpritePath,
+  gameVersionId,
 }) => {
   const { t, i18n } = useTranslation();
   const { containerRef } = useFocusTrap(isOpen);
   const titleId = useId();
   const [mode, setMode] = useState<SearchMode>("pokemon");
   const [query, setQuery] = useState("");
+  const locale = normalizeLanguage(i18n.language);
+  const multiLocaleSearch = useMultiLocaleSearch();
 
   useEffect(() => {
     if (!isOpen) return;
@@ -90,27 +97,45 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
   const matchingFamilyIds = useMemo(
     () =>
       normalizedQuery
-        ? getPokemonFamilyIdsMatchingQuery(normalizedQuery)
+        ? getPokemonFamilyIdsMatchingQuery(normalizedQuery, {
+            locale,
+            multiLocaleSearch,
+          })
         : new Set<number>(),
-    [normalizedQuery],
+    [normalizedQuery, locale, multiLocaleSearch],
   );
 
   const matchesPokemonQuery = (pair: PokemonLink) => {
+    const locationLabel = resolvePokemonLocationDisplay(pair, locale);
+
     if (!normalizedQuery) {
-      return pair.members.some((member) => member?.name?.trim().length);
+      return pair.members.some(
+        (member) => typeof member?.id === "number" || member?.name?.trim(),
+      );
+    }
+
+    if (
+      locationMatchesQuery(locationLabel, normalizedQuery, {
+        locale,
+        gameVersionId,
+        multiLocaleSearch,
+      })
+    ) {
+      return true;
     }
 
     return pair.members.some((member) => {
       const name = member?.name || "";
+      const pokemonId = member?.id;
+      const displayName = getPokemonNameById(pokemonId, locale) || name;
       const nickname = member?.nickname || "";
       if (
-        name.toLowerCase().includes(normalizedQuery) ||
+        displayName.toLowerCase().includes(normalizedQuery) ||
         nickname.toLowerCase().includes(normalizedQuery)
       ) {
         return true;
       }
 
-      const pokemonId = getPokemonIdFromName(name);
       return pokemonId !== null && matchingFamilyIds.has(pokemonId);
     });
   };
@@ -135,17 +160,17 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
     ];
 
     return sections.filter((section) => section.pairs.length > 0);
-  }, [box, graveyard, team, t, matchingFamilyIds, normalizedQuery]);
-
-  const filteredRoutes = useMemo(() => {
-    const uniqueRoutes = Array.from(new Set(routes)).sort(compareRoutes);
-    if (!normalizedQuery) return uniqueRoutes;
-    return uniqueRoutes.filter((route) =>
-      route.toLowerCase().includes(normalizedQuery),
-    );
-  }, [normalizedQuery, routes]);
-
-  const locale = normalizeLanguage(i18n.language);
+  }, [
+    box,
+    gameVersionId,
+    graveyard,
+    locale,
+    multiLocaleSearch,
+    team,
+    t,
+    matchingFamilyIds,
+    normalizedQuery,
+  ]);
 
   const allItems = useMemo<ItemRow[]>(() => {
     const rows: ItemRow[] = [];
@@ -154,14 +179,17 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
     (fossils ?? []).forEach((playerFossils, pIdx) => {
       (playerFossils ?? []).forEach((entry) => {
         const def = FOSSILS.find((f) => f.id === entry.fossilId);
+        const location = resolveLocationDisplay(entry, locale);
         const status = entry.revived
-          ? entry.pokemonName
-            ? `${t("tracker.infoPanel.fossilRevived")}: ${entry.pokemonName}`
-            : t("tracker.infoPanel.fossilRevived")
+          ? entry.pokemonId
+            ? `${t("tracker.infoPanel.fossilRevived")}: ${getPokemonNameById(entry.pokemonId, locale) || ""}`
+            : entry.pokemonName
+              ? `${t("tracker.infoPanel.fossilRevived")}: ${entry.pokemonName}`
+              : t("tracker.infoPanel.fossilRevived")
           : entry.inBag
             ? t("tracker.infoPanel.fossilBag")
             : t("tracker.infoPanel.fossilLocation", {
-                location: entry.location,
+                location,
               });
         rows.push({
           category: "fossils",
@@ -170,23 +198,23 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
           spriteUrl: def ? `/fossil-sprites/${def.sprite}` : "",
           playerIndex: pIdx,
           status,
-          location: entry.location,
+          location,
           pixelated: true,
         });
       });
     });
 
     // Stones & items
-    (stones ?? []).forEach((playerStones, pIdx) => {
-      (playerStones ?? []).forEach((entry) => {
-        const isCustomItem = entry.stoneId.startsWith("item:");
-        const itemSlug = isCustomItem
-          ? entry.stoneId.replace("item:", "")
-          : null;
+    (items ?? []).forEach((playerItems, pIdx) => {
+      (playerItems ?? []).forEach((entry) => {
+        const itemId = entry.id ?? "";
+        const customName = entry.name?.trim() ?? "";
+        const isCustomItem = itemId.startsWith("item:");
+        const itemSlug = isCustomItem ? itemId.replace("item:", "") : null;
         const isMega = itemSlug ? MEGA_STONE_IDS.has(itemSlug) : false;
         const stoneDef = isCustomItem
           ? null
-          : STONES.find((s) => s.id === entry.stoneId);
+          : STONES.find((s) => s.id === itemId);
 
         let category: ItemCategory;
         let name: string;
@@ -194,7 +222,7 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
 
         if (!isCustomItem && stoneDef) {
           category = "stones";
-          name = t(`stones.${entry.stoneId}`);
+          name = t(`stones.${itemId}`);
           spriteUrl = `/stone-sprites/${stoneDef.sprite}`;
         } else if (isMega && itemSlug) {
           category = "megaStones";
@@ -206,33 +234,34 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
           spriteUrl = getItemSpriteUrl(itemSlug);
         } else {
           category = "items";
-          name = entry.stoneId;
+          name = customName || itemId;
           spriteUrl = "";
         }
 
+        const location = resolveLocationDisplay(entry, locale);
         const status = entry.used
           ? t("tracker.infoPanel.stoneUsed")
           : entry.inBag
             ? t("tracker.infoPanel.stoneBag")
             : t("tracker.infoPanel.stoneLocation", {
-                location: entry.location,
+                location,
               });
 
         rows.push({
           category,
-          id: entry.stoneId,
+          id: itemId || customName,
           name,
           spriteUrl,
           playerIndex: pIdx,
           status,
-          location: entry.location,
+          location,
           pixelated: true,
         });
       });
     });
 
     return rows;
-  }, [fossils, stones, t, locale]);
+  }, [fossils, items, t, locale]);
 
   const itemSections = useMemo(() => {
     const categories: { key: ItemCategory; titleKey: string }[] = [
@@ -249,16 +278,19 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
           if (!normalizedQuery) return true;
           return (
             item.name.toLowerCase().includes(normalizedQuery) ||
-            item.location.toLowerCase().includes(normalizedQuery)
+            locationMatchesQuery(item.location, normalizedQuery, {
+              locale,
+              gameVersionId,
+              multiLocaleSearch,
+            })
           );
         });
         return { key, title: t(titleKey), items };
       })
       .filter((section) => section.items.length > 0);
-  }, [allItems, normalizedQuery, t]);
+  }, [allItems, gameVersionId, locale, multiLocaleSearch, normalizedQuery, t]);
 
   const hasPokemonResults = pokemonSections.length > 0;
-  const hasRouteResults = filteredRoutes.length > 0;
   const hasItemResults = itemSections.length > 0;
 
   if (!isOpen) return null;
@@ -314,17 +346,6 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
             </button>
             <button
               type="button"
-              onClick={() => setMode("routes")}
-              className={`${SEARCH_MODE_BUTTON_CLASS} ${
-                mode === "routes"
-                  ? "bg-green-600 text-white"
-                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
-              } ${focusRingClasses}`}
-            >
-              {t("tracker.search.modeRoutes")}
-            </button>
-            <button
-              type="button"
               onClick={() => setMode("items")}
               className={`${SEARCH_MODE_BUTTON_CLASS} ${
                 mode === "items"
@@ -364,7 +385,9 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
                         >
                           <p className="text-center font-bold text-gray-600 dark:text-gray-300 mb-1">
                             {t("graveyard.areaLabel", {
-                              route: pair.route || t("common.unknownRoute"),
+                              location:
+                                resolvePokemonLocationDisplay(pair, locale) ||
+                                t("common.unknownLocation"),
                             })}
                           </p>
                           <div
@@ -375,13 +398,16 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
                           >
                             {playerNames.map((name, index) => {
                               const member = pair.members?.[index] ?? {
-                                name: "",
+                                id: null,
                                 nickname: "",
                               };
-                              const spriteUrl = getSpriteUrlForPokemonName(
-                                member.name,
-                                generationSpritePath,
-                              );
+                              const { displayName, spriteUrl } =
+                                resolvePokemonDisplay(
+                                  member,
+                                  locale,
+                                  generationSpritePath,
+                                );
+
                               return (
                                 <div
                                   key={`${section.key}-${pair.id}-player-${index}`}
@@ -391,7 +417,7 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
                                     {spriteUrl ? (
                                       <img
                                         src={spriteUrl}
-                                        alt={member.name || "Pokemon"}
+                                        alt=""
                                         className="w-16 h-16 -my-3"
                                         loading="lazy"
                                       />
@@ -407,7 +433,7 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
                                         {t("graveyard.memberTitle", {
                                           name,
                                           pokemon:
-                                            member.name ||
+                                            displayName ||
                                             t("graveyard.unknownPokemon"),
                                         })}
                                       </p>
@@ -435,25 +461,6 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
                 {normalizedQuery
                   ? t("modals.common.noMatches")
                   : t("tracker.search.emptyPokemon")}
-              </p>
-            )
-          ) : mode === "routes" ? (
-            hasRouteResults ? (
-              <ul className="grid grid-cols-1 gap-2 pb-2 text-sm text-gray-800 dark:text-gray-200">
-                {filteredRoutes.map((route) => (
-                  <li
-                    key={route}
-                    className="px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md"
-                  >
-                    {route}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-center text-gray-500 dark:text-gray-400 text-sm py-8">
-                {normalizedQuery
-                  ? t("modals.common.noMatches")
-                  : t("tracker.search.emptyRoutes")}
               </p>
             )
           ) : hasItemResults ? (

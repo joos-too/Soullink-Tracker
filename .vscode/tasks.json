@@ -1,0 +1,33 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Dev Server",
+      "type": "npm",
+      "script": "dev",
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "Firebase Emulators",
+      "type": "npm",
+      "script": "emulators",
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "Start Dev + Emulators",
+      "dependsOn": ["Dev Server", "Firebase Emulators"],
+      "dependsOrder": "parallel",
+      "problemMatcher": []
+    }
+  ]
+}

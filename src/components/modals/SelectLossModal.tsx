@@ -3,9 +3,11 @@ import type { PokemonLink } from "@/types.ts";
 import { Trans, useTranslation } from "react-i18next";
 import { useFocusTrap } from "@/src/hooks/useFocusTrap.ts";
 import { focusRingClasses } from "@/src/styles/focusRing.ts";
-import { getSpriteUrlForPokemonName } from "@/src/services/sprites.ts";
 import { FiInfo } from "react-icons/fi";
 import Tooltip from "@/src/components/other/Tooltip.tsx";
+import { resolvePokemonDisplay } from "@/src/services/pokemonDisplay.ts";
+import { resolvePokemonLocationDisplay } from "@/src/services/locationSearch.ts";
+import { normalizeLanguage } from "@/src/utils/language.ts";
 
 interface SelectLossModalProps {
   isOpen: boolean;
@@ -13,6 +15,8 @@ interface SelectLossModalProps {
   onConfirm: (playerIndex: number) => void;
   pair: PokemonLink | null;
   playerNames: string[];
+  generationSpritePath: string;
+  nicknamesEnabled?: boolean;
 }
 
 const SelectLossModal: React.FC<SelectLossModalProps> = ({
@@ -21,9 +25,12 @@ const SelectLossModal: React.FC<SelectLossModalProps> = ({
   onConfirm,
   pair,
   playerNames,
+  generationSpritePath,
+  nicknamesEnabled = true,
 }) => {
   const [selected, setSelected] = useState<number | null>(null);
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const locale = normalizeLanguage(i18n.language);
   const { containerRef } = useFocusTrap(isOpen);
   const titleId = useId();
 
@@ -34,6 +41,7 @@ const SelectLossModal: React.FC<SelectLossModalProps> = ({
   }, [isOpen, playerNames.length]);
 
   if (!isOpen) return null;
+  const locationLabel = pair ? resolvePokemonLocationDisplay(pair, locale) : "";
 
   const handleSubmit = (e: React.SubmitEvent) => {
     e.preventDefault();
@@ -90,9 +98,11 @@ const SelectLossModal: React.FC<SelectLossModalProps> = ({
         <form onSubmit={handleSubmit}>
           {pair && (
             <div className="mb-4 text-sm text-gray-700 dark:text-gray-300">
-              {pair.route && (
+              {locationLabel && (
                 <div className="text-sm text-gray-500 dark:text-gray-400 mb-3 px-1">
-                  {t("modals.selectLoss.routeLabel", { route: pair.route })}
+                  {t("modals.selectLoss.locationLabel", {
+                    location: locationLabel,
+                  })}
                 </div>
               )}
 
@@ -100,10 +110,15 @@ const SelectLossModal: React.FC<SelectLossModalProps> = ({
                 <div className="flex flex-col gap-1 bg-gray-50 dark:bg-gray-700/50 rounded-md px-2.5 py-1.5">
                   {playerNames.map((name, index) => {
                     const member = pair.members?.[index] ?? {
-                      name: "",
+                      id: null,
                       nickname: "",
                     };
-                    const spriteUrl = getSpriteUrlForPokemonName(member.name);
+                    const { displayName, spriteUrl } = resolvePokemonDisplay(
+                      member,
+                      locale,
+                      generationSpritePath,
+                    );
+
                     return (
                       <div
                         key={`loss-preview-${index}`}
@@ -112,15 +127,13 @@ const SelectLossModal: React.FC<SelectLossModalProps> = ({
                         <div className="font-semibold">{name}</div>
                         <div className="flex items-center gap-1.5">
                           {spriteUrl && (
-                            <img
-                              src={spriteUrl}
-                              alt={member.name}
-                              className="w-8 h-8"
-                            />
+                            <img src={spriteUrl} alt="" className="w-8 h-8" />
                           )}
                           <span>
-                            {member.name || "-"}
-                            {member.nickname ? ` (${member.nickname})` : ""}
+                            {displayName || "-"}
+                            {nicknamesEnabled && member.nickname
+                              ? ` (${member.nickname})`
+                              : ""}
                           </span>
                         </div>
                       </div>
@@ -131,10 +144,14 @@ const SelectLossModal: React.FC<SelectLossModalProps> = ({
                 <fieldset className="flex flex-col gap-1.5">
                   {playerNames.map((name, index) => {
                     const member = pair.members?.[index] ?? {
-                      name: "",
+                      id: null,
                       nickname: "",
                     };
-                    const spriteUrl = getSpriteUrlForPokemonName(member.name);
+                    const { displayName, spriteUrl } = resolvePokemonDisplay(
+                      member,
+                      locale,
+                      generationSpritePath,
+                    );
                     const isSelected = selected === index;
                     return (
                       <label
@@ -159,15 +176,13 @@ const SelectLossModal: React.FC<SelectLossModalProps> = ({
                         </div>
                         <div className="flex items-center gap-1.5 text-xs">
                           {spriteUrl && (
-                            <img
-                              src={spriteUrl}
-                              alt={member.name}
-                              className="w-8 h-8"
-                            />
+                            <img src={spriteUrl} alt="" className="w-8 h-8" />
                           )}
                           <span>
-                            {member.name || "-"}
-                            {member.nickname ? ` (${member.nickname})` : ""}
+                            {displayName || "-"}
+                            {nicknamesEnabled && member.nickname
+                              ? ` (${member.nickname})`
+                              : ""}
                           </span>
                         </div>
                       </label>

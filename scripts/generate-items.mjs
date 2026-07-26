@@ -1,8 +1,8 @@
 ﻿/**
  * generate-items.mjs
  *
- * Fetches every item from PokeAPI (excluding "key" and "mail" pockets),
- * matches them against the local Itemlists/json/ files to determine the
+ * Fetches every item from PokeAPI, applying pocket/category/slug exclusions,
+ * matches them against the local Itemlists/version-files/ files to determine the
  * earliest game version each item appeared in, then fetches the properly
  * cased English and German names from the API.
  *
@@ -15,55 +15,55 @@
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { createStaticPokeApiClient } from "./pokeapi-static-client.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const jsonDir = path.join(__dirname, "itemlists-source", "json");
+const versionFilesDir = path.join(
+  __dirname,
+  "itemlists-source",
+  "version-files",
+);
+const debugDir = path.join(__dirname, "itemlists-source", "debug");
 const outPath = path.join(__dirname, "..", "src", "data", "items.ts");
+const DEBUG_SLOW_REQUEST_MS = 10000;
 
 // ---------------------------------------------------------------------------
-// 1. Version-ordered JSON files  (earliest first)
+// Version ordering for discovered files. Unknown future labels fall back to
+// filename sorting within the generation.
 // ---------------------------------------------------------------------------
-const VERSION_FILES = [
-  { file: "Gen1 RBY (Red, Blue & Yellow).json", version: "RBY" },
-  { file: "Gen2 GS (Gold & Silver).json", version: "GS" },
-  { file: "Gen2 C (Crystal).json", version: "C" },
-  { file: "Gen3 RUSA (Ruby & Sapphire).json", version: "RUSA" },
-  { file: "Gen3 FRLG (FireRed & LeafGreen).json", version: "FRLG" },
-  { file: "Gen3 EM (Emerald).json", version: "EM" },
-  { file: "Gen4 DP (Diamond & Pearl).json", version: "DP" },
-  { file: "Gen4 PT (Platinum).json", version: "PT" },
-  { file: "Gen4 HGSS (HeartGold & SoulSilver).json", version: "HGSS" },
-  { file: "Gen5 BW (Black & White).json", version: "BW" },
-  { file: "Gen5 B2W2 (Black 2 & White 2).json", version: "B2W2" },
-  { file: "Gen6 XY (X & Y).json", version: "XY" },
-  { file: "Gen6 ORAS (Omega Ruby & Alpha Sapphire).json", version: "ORAS" },
-];
-
-// Excluded version files — Gen 7+; used only to distinguish known post-Gen6
-// items from truly unmatched ones (so they don't pollute items-unmatched.json).
-const EXCLUDED_VERSION_FILES = [
-  { file: "Gen7 SM (Sun & Moon).json", version: "SM" },
-  { file: "Gen7 USUM (Ultra Sun & Ultra Moon).json", version: "USUM" },
-  {
-    file: "Gen7 LGPLGE (Let's Go, Pikachu! & Let's Go, Eevee!).json",
-    version: "LGPLGE",
-  },
-  { file: "Gen8 SWSH (Sword & Shield).json", version: "SWSH" },
-  {
-    file: "Gen8 BDSP (Brilliant Diamond & Shining Pearl).json",
-    version: "BDSP",
-  },
-  { file: "Gen8 PLA (Pokémon Legends Arceus).json", version: "PLA" },
-  { file: "Gen9 SCVI (Scarlet & Violet).json", version: "SCVI" },
-  { file: "Gen9 PLZA (Pokémon Legends Z-A).json", version: "PLZA" },
+const VERSION_RELEASE_ORDER = [
+  "RBY",
+  "GS",
+  "C",
+  "RUSA",
+  "FRLG",
+  "EM",
+  "DP",
+  "PT",
+  "HGSS",
+  "BW",
+  "B2W2",
+  "XY",
+  "ORAS",
+  "SM",
+  "USUM",
+  "LGPLGE",
+  "SWSH",
+  "BDSP",
+  "PLA",
+  "SCVI",
+  "PLZA",
 ];
 
 // ---------------------------------------------------------------------------
-// 2. Manual overrides for known mismatches between PokeAPI slugs and
-//    the English names in the Itemlists (lowercase).
+// 2. Manual overrides for known mismatches.
 // ---------------------------------------------------------------------------
-const MANUAL_OVERRIDES = {
+const MANUAL_MATCH_OVERRIDES = {
   "paralyze-heal": "parlyz heal",
+};
+
+const MANUAL_LOCAL_SLUG_OVERRIDES = {
+  "<sup>p</sup>o<sup>k</sup>éblock case": "pokeblock-case",
 };
 
 // Excluded pockets
@@ -87,6 +87,7 @@ const EXCLUDED_SLUG_PATTERNS = [
   (slug) => slug.endsWith("-wing"),
   (slug) => slug.startsWith("dire-hit"),
   (slug) => slug.startsWith("x-"),
+  (slug) => slug.startsWith("dynamax-"),
 ];
 
 /** Check whether a slug should be excluded */
@@ -96,6 +97,37 @@ function isSlugExcluded(slug) {
   );
 }
 
+function serializeApiFilterEntry(entry) {
+  return {
+    pocket: entry.pocket,
+    categories: Array.from(entry.categories).sort(),
+    reasons: Array.from(entry.reasons).sort(),
+  };
+}
+
+function addApiFilteredItem(map, slug, reason, details = {}) {
+  if (!slug) return;
+  const entry = map.get(slug) || {
+    slug,
+    pocket: details.pocket || "",
+    categories: new Set(),
+    reasons: new Set(),
+  };
+  if (details.pocket && !entry.pocket) entry.pocket = details.pocket;
+  if (details.category) entry.categories.add(details.category);
+  entry.reasons.add(reason);
+  map.set(slug, entry);
+}
+
+function serializeFilteredItems(map) {
+  return Array.from(map.values())
+    .map((entry) => ({
+      slug: entry.slug,
+      ...serializeApiFilterEntry(entry),
+    }))
+    .sort((a, b) => a.slug.localeCompare(b.slug));
+}
+
 // ---------------------------------------------------------------------------
 // 3. Helpers
 // ---------------------------------------------------------------------------
@@ -103,6 +135,7 @@ function isSlugExcluded(slug) {
 /** Normalize an English item name to a PokeAPI-style slug */
 function toSlug(en) {
   return en
+    .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "") // strip diacritics
     .replace(/[^a-z0-9]+/g, "-") // non-alphanum → hyphen
@@ -112,222 +145,362 @@ function toSlug(en) {
 /** Collapse a slug/name to only alphanumeric chars (no hyphens/spaces) */
 function toCollapsed(s) {
   return s
+    .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9]/g, "");
 }
 
-/** Fetch JSON with basic retry */
-async function fetchJson(url, retries = 3) {
-  for (let i = 0; i < retries; i++) {
-    try {
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
-      return await res.json();
-    } catch (err) {
-      if (i === retries - 1) throw err;
-      console.warn(`  Retry ${i + 1} for ${url}`);
-      await new Promise((r) => setTimeout(r, 1000 * (i + 1)));
-    }
-  }
+function normalizeLocalNameCapitalization(name) {
+  return name
+    .toLowerCase()
+    .split(/([\s/.-]+)/)
+    .map((part) => {
+      if (!part || /^[\s/.-]+$/.test(part)) return part;
+      return part.charAt(0).toUpperCase() + part.slice(1);
+    })
+    .join("");
 }
 
-/** Fetch all pages of a paginated PokeAPI list */
-async function fetchAllPages(url) {
-  const results = [];
-  let next = url;
-  while (next) {
-    const data = await fetchJson(next);
-    results.push(...data.results);
-    next = data.next;
+function getManualLocalSlug(name) {
+  return MANUAL_LOCAL_SLUG_OVERRIDES[name.trim().toLowerCase()] || null;
+}
+
+function parseVersionFileName(file) {
+  const match = file.match(/^Gen(\d+)\s+(.+?)\s*\(/);
+  if (!match) return null;
+  return {
+    file,
+    filePath: path.join(versionFilesDir, file),
+    generation: Number(match[1]),
+    version: match[2].trim(),
+  };
+}
+
+function loadVersionFiles() {
+  if (!fs.existsSync(versionFilesDir)) {
+    throw new Error(`Missing version files directory: ${versionFilesDir}`);
   }
-  return results;
+
+  const orderIndex = new Map(
+    VERSION_RELEASE_ORDER.map((version, index) => [version, index]),
+  );
+  return fs
+    .readdirSync(versionFilesDir)
+    .filter((file) => file.endsWith(".txt"))
+    .map((file) => {
+      const entry = parseVersionFileName(file);
+      if (!entry) {
+        console.warn(`  ⚠ Could not parse version from ${file}, skipping`);
+      }
+      return entry;
+    })
+    .filter(Boolean)
+    .sort((a, b) => {
+      if (a.generation !== b.generation) return a.generation - b.generation;
+      const aIndex = orderIndex.get(a.version) ?? Number.MAX_SAFE_INTEGER;
+      const bIndex = orderIndex.get(b.version) ?? Number.MAX_SAFE_INTEGER;
+      if (aIndex !== bIndex) return aIndex - bIndex;
+      return a.file.localeCompare(b.file);
+    });
+}
+
+function parseVersionFileItems(filePath) {
+  const items = [];
+  const seen = new Set();
+  const content = fs.readFileSync(filePath, "utf-8");
+  for (const line of content.split("\n")) {
+    const deMatch = line.match(/\|de=([^|}]+)/);
+    const enMatch = line.match(/\|en=([^|}]+)/);
+    if (!deMatch || !enMatch) continue;
+    const rawEn = enMatch[1].trim();
+    const de = normalizeLocalNameCapitalization(deMatch[1].trim());
+    const en = normalizeLocalNameCapitalization(rawEn);
+    const key = `${de.toLowerCase()}|||${en.toLowerCase()}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    items.push({ slug: getManualLocalSlug(rawEn), de, en });
+  }
+  return items;
+}
+
+const createPokedexClient = () => createStaticPokeApiClient();
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function withRetry(fn, attempts = 3, delayMs = 500, label = "request") {
+  let lastError;
+  for (let i = 0; i < attempts; i++) {
+    const startedAt = Date.now();
+    try {
+      const result = await fn();
+      const elapsed = Date.now() - startedAt;
+      if (elapsed >= DEBUG_SLOW_REQUEST_MS) {
+        console.warn(`  ⚠ Slow ${label}: ${elapsed}ms`);
+      }
+      return result;
+    } catch (err) {
+      lastError = err;
+      console.warn(
+        `  ⚠ ${label} failed attempt ${i + 1}/${attempts}: ${err?.message || err}`,
+      );
+      if (i < attempts - 1) {
+        await sleep(delayMs * (i + 1));
+      }
+    }
+  }
+  throw lastError;
 }
 
 // ---------------------------------------------------------------------------
 // 4. Build local lookup maps
 // ---------------------------------------------------------------------------
 
-/** slug → version  (first occurrence wins, Gen 1–6 only)
+/** slug → item metadata  (first occurrence wins)
  *  Also registers collapsed forms (no hyphens/spaces) as secondary keys. */
-function buildLocalMap() {
-  const map = new Map();
-  for (const { file, version } of VERSION_FILES) {
-    const filePath = path.join(jsonDir, file);
+function buildLocalData(versionFiles) {
+  const lookup = new Map();
+  for (const { file, filePath, version } of versionFiles) {
     if (!fs.existsSync(filePath)) {
       console.warn(`  ⚠ Missing ${file}, skipping`);
       continue;
     }
-    const items = JSON.parse(fs.readFileSync(filePath, "utf-8"));
-    for (const item of items) {
-      const slug = toSlug(item.en);
+    const parsedItems = parseVersionFileItems(filePath);
+    for (const item of parsedItems) {
+      const slug = item.slug || toSlug(item.en);
       const collapsed = toCollapsed(item.en);
-      if (!map.has(slug)) {
-        map.set(slug, version);
+      const entry = { slug, version, de: item.de, en: item.en };
+      if (!lookup.has(slug)) {
+        lookup.set(slug, entry);
       }
-      if (!map.has(collapsed)) {
-        map.set(collapsed, version);
+      if (!lookup.has(collapsed)) {
+        lookup.set(collapsed, entry);
       }
     }
   }
-  return map;
+  return { lookup };
 }
 
-/** Build a Set of slugs that appear in Gen 7+ files but NOT in Gen 1–6 */
-function buildPostGen6Set(localMap) {
-  const set = new Set();
-  for (const { file } of EXCLUDED_VERSION_FILES) {
-    const filePath = path.join(jsonDir, file);
-    if (!fs.existsSync(filePath)) continue;
-    const items = JSON.parse(fs.readFileSync(filePath, "utf-8"));
-    for (const item of items) {
-      const slug = toSlug(item.en);
-      const collapsed = toCollapsed(item.en);
-      if (!localMap.has(slug) && !localMap.has(collapsed)) {
-        set.add(slug);
-        set.add(collapsed);
-      }
-    }
+function resolveLocalMatch(localMap, versionOrder, slug, collapsed) {
+  const slugEntry = localMap.get(slug) ?? null;
+  const collapsedEntry = localMap.get(collapsed) ?? null;
+
+  if (slugEntry && collapsedEntry) {
+    const slugIdx = versionOrder.indexOf(slugEntry.version);
+    const collIdx = versionOrder.indexOf(collapsedEntry.version);
+    return collIdx < slugIdx
+      ? { entry: collapsedEntry, wasFuzzy: true }
+      : { entry: slugEntry, wasFuzzy: false };
   }
-  return set;
+  if (slugEntry) return { entry: slugEntry, wasFuzzy: false };
+  if (collapsedEntry) return { entry: collapsedEntry, wasFuzzy: true };
+  return { entry: null, wasFuzzy: false };
+}
+
+async function resolveItemDetails(P, slug, fallback, attempts = 5) {
+  try {
+    const itemData = await withRetry(
+      () => P.getItemByName(slug),
+      attempts,
+      800,
+      `item:${slug}`,
+    );
+    const en =
+      itemData.names.find((n) => n.language.name === "en")?.name ??
+      fallback?.en ??
+      slug;
+    const de =
+      itemData.names.find((n) => n.language.name === "de")?.name ??
+      fallback?.de ??
+      en;
+    return {
+      found: true,
+      de,
+      en,
+      pocket: itemData.category?.pocket?.name || null,
+    };
+  } catch {
+    return {
+      found: false,
+      de: slug,
+      en: slug,
+      pocket: null,
+    };
+  }
 }
 
 // ---------------------------------------------------------------------------
 // 5. Main
 // ---------------------------------------------------------------------------
 async function main() {
-  console.log("Building local item map from Itemlists/json/ ...");
-  const localMap = buildLocalMap();
-  console.log(`  ${localMap.size} unique items from local lists`);
+  const P = createPokedexClient();
 
-  const postGen6Slugs = buildPostGen6Set(localMap);
-  console.log(`  ${postGen6Slugs.size} additional slugs in Gen 7+ lists\n`);
+  console.log("Discovering local item version files ...");
+  const versionFiles = loadVersionFiles();
+  const VERSION_ORDER = versionFiles.map((v) => v.version);
+  console.log(
+    `  Found ${versionFiles.length} files: ${VERSION_ORDER.join(", ")}\n`,
+  );
+
+  console.log("Building local item map from Itemlists/version-files/ ...");
+  const { lookup: localMap } = buildLocalData(versionFiles);
+  console.log(`  ${localMap.size} unique items from local lists`);
 
   // --- Fetch pockets ---
   console.log("Fetching item pockets from PokeAPI ...");
-  const pockets = await fetchAllPages(
-    "https://pokeapi.co/api/v2/item-pocket/?limit=100",
+  const pocketList = await withRetry(
+    () => P.getItemPocketsList({ limit: 100, offset: 0 }),
+    5,
+    800,
+    "item-pockets:list",
   );
+  const pockets = pocketList.results || [];
   const includedPockets = pockets.filter((p) => !EXCLUDED_POCKETS.has(p.name));
   console.log(
     `  Pockets: ${pockets.map((p) => p.name).join(", ")}` +
+      `\n  Excluding pockets: ${Array.from(EXCLUDED_POCKETS).join(", ")}` +
       `\n  Using: ${includedPockets.map((p) => p.name).join(", ")}\n`,
   );
 
   // --- Fetch categories per pocket, tracking pocket + category per item slug ---
   // Map<slug, { pocket: string, categories: Set<string> }>
   const itemMeta = new Map();
+  const apiFilteredItems = new Map();
   const categoryEntries = [];
 
-  for (const pocket of includedPockets) {
-    const pocketData = await fetchJson(pocket.url);
+  for (const pocket of pockets) {
+    const pocketData = await withRetry(
+      () => P.getItemPocketByName(pocket.name),
+      5,
+      800,
+      `item-pocket:${pocket.name}`,
+    );
     for (const cat of pocketData.categories) {
-      categoryEntries.push({ pocketName: pocket.name, url: cat.url });
+      categoryEntries.push({
+        pocketName: pocket.name,
+        name: cat.name,
+        pocketExcluded: EXCLUDED_POCKETS.has(pocket.name),
+      });
     }
   }
   console.log(`  ${categoryEntries.length} categories to fetch\n`);
 
   // --- Collect item slugs from categories, recording pocket & categories ---
-  for (const { pocketName, url } of categoryEntries) {
-    const catData = await fetchJson(url);
+  for (const { pocketName, name, pocketExcluded } of categoryEntries) {
+    const catData = await withRetry(
+      () => P.getItemCategoryByName(name),
+      5,
+      800,
+      `item-category:${name}`,
+    );
     const categoryName = catData.name;
+    const categoryExcluded = EXCLUDED_CATEGORIES.has(categoryName);
     for (const item of catData.items) {
       const slug = item.name;
+      const slugExcluded = isSlugExcluded(slug);
+
+      if (pocketExcluded) {
+        addApiFilteredItem(apiFilteredItems, slug, `pocket:${pocketName}`, {
+          pocket: pocketName,
+          category: categoryName,
+        });
+      }
+      if (categoryExcluded) {
+        addApiFilteredItem(apiFilteredItems, slug, `category:${categoryName}`, {
+          pocket: pocketName,
+          category: categoryName,
+        });
+      }
+      if (slugExcluded) {
+        addApiFilteredItem(apiFilteredItems, slug, "slug-rule", {
+          pocket: pocketName,
+          category: categoryName,
+        });
+      }
+
+      if (pocketExcluded || categoryExcluded || slugExcluded) {
+        itemMeta.delete(slug);
+        continue;
+      }
+      if (apiFilteredItems.has(slug)) continue;
       if (!itemMeta.has(slug)) {
         itemMeta.set(slug, { pocket: pocketName, categories: new Set() });
       }
       itemMeta.get(slug).categories.add(categoryName);
     }
   }
-  console.log(`  ${itemMeta.size} unique items from PokeAPI\n`);
+  console.log(
+    `  ${itemMeta.size} included items from PokeAPI` +
+      `\n  ${apiFilteredItems.size} filtered items from PokeAPI\n`,
+  );
 
   // --- Match against local map & fetch proper names from API ---
-  const VERSION_ORDER = VERSION_FILES.map((v) => v.version);
   const results = [];
-  const postGen6Items = [];
   const trulyUnmatched = [];
   const fuzzyMatched = []; // items that needed collapsed matching
   let i = 0;
 
   for (const [slug, meta] of itemMeta) {
     i++;
-    if (isSlugExcluded(slug)) continue;
-    if (i % 100 === 0) console.log(`  Processing ${i}/${itemMeta.size} ...`);
+    if (i % 50 === 0) console.log(`  Processing ${i}/${itemMeta.size} ...`);
 
     // Determine version via local map — check both slug and collapsed,
     // pick the earliest version to handle naming inconsistencies across gens
-    const overrideEn = MANUAL_OVERRIDES[slug];
+    const overrideEn = MANUAL_MATCH_OVERRIDES[slug];
     const lookupSlug = overrideEn ? toSlug(overrideEn) : slug;
     const collapsed = toCollapsed(slug);
     let version = null;
+    let localItem = null;
     let wasFuzzy = false;
 
-    const slugVersion = localMap.get(lookupSlug) ?? null;
-    const collapsedVersion = localMap.get(collapsed) ?? null;
-
-    if (slugVersion && collapsedVersion) {
-      // Both matched — pick the earlier one
-      const slugIdx = VERSION_ORDER.indexOf(slugVersion);
-      const collIdx = VERSION_ORDER.indexOf(collapsedVersion);
-      if (collIdx < slugIdx) {
-        version = collapsedVersion;
-        wasFuzzy = true;
-      } else {
-        version = slugVersion;
-      }
-    } else if (slugVersion) {
-      version = slugVersion;
-    } else if (collapsedVersion) {
-      version = collapsedVersion;
-      wasFuzzy = true;
+    const primaryMatch = resolveLocalMatch(
+      localMap,
+      VERSION_ORDER,
+      lookupSlug,
+      collapsed,
+    );
+    if (primaryMatch.entry) {
+      localItem = primaryMatch.entry;
+      version = primaryMatch.entry.version;
+      wasFuzzy = primaryMatch.wasFuzzy;
     }
 
     // Fetch the item detail from PokeAPI for properly cased names
     let enName, deName;
     try {
-      const itemData = await fetchJson(
-        `https://pokeapi.co/api/v2/item/${slug}/`,
-      );
-      enName =
-        itemData.names.find((n) => n.language.name === "en")?.name ?? slug;
-      deName =
-        itemData.names.find((n) => n.language.name === "de")?.name ?? enName;
+      const itemNames = await resolveItemDetails(P, slug, localItem);
+      enName = itemNames.en;
+      deName = itemNames.de;
 
       // If not matched yet, try the API's official English name
       if (!version) {
-        const altSlug = toSlug(enName.toLowerCase());
-        const altCollapsed = toCollapsed(enName.toLowerCase());
-        const altSlugV = localMap.get(altSlug) ?? null;
-        const altCollV = localMap.get(altCollapsed) ?? null;
-
-        if (altSlugV && altCollV) {
-          const si = VERSION_ORDER.indexOf(altSlugV);
-          const ci = VERSION_ORDER.indexOf(altCollV);
-          if (ci < si) {
-            version = altCollV;
-            wasFuzzy = true;
-          } else {
-            version = altSlugV;
-          }
-        } else if (altSlugV) {
-          version = altSlugV;
-        } else if (altCollV) {
-          version = altCollV;
-          wasFuzzy = true;
+        const altMatch = resolveLocalMatch(
+          localMap,
+          VERSION_ORDER,
+          toSlug(enName),
+          toCollapsed(enName),
+        );
+        if (altMatch.entry) {
+          localItem = altMatch.entry;
+          version = altMatch.entry.version;
+          wasFuzzy = altMatch.wasFuzzy;
+          const itemNamesWithFallback = await resolveItemDetails(
+            P,
+            slug,
+            localItem,
+          );
+          enName = itemNamesWithFallback.en;
+          deName = itemNamesWithFallback.de;
         }
       }
     } catch {
+      console.warn(`  ⚠ Falling back to slug names for ${slug}`);
       enName = slug;
       deName = slug;
     }
 
     const pocket = meta.pocket;
-    const categories = [...meta.categories]
-      .filter((c) => !EXCLUDED_CATEGORIES.has(c))
-      .sort();
-
-    // If every category was excluded, skip this item entirely
-    if (categories.length === 0) continue;
+    const categories = [...meta.categories].sort();
 
     if (version) {
       results.push({
@@ -341,13 +514,6 @@ async function main() {
       if (wasFuzzy) {
         fuzzyMatched.push({ slug, en: enName, de: deName, version });
       }
-    } else if (
-      postGen6Slugs.has(slug) ||
-      postGen6Slugs.has(toCollapsed(slug)) ||
-      postGen6Slugs.has(toSlug(enName.toLowerCase())) ||
-      postGen6Slugs.has(toCollapsed(enName.toLowerCase()))
-    ) {
-      postGen6Items.push({ slug, de: deName, en: enName });
     } else {
       trulyUnmatched.push({ slug, de: deName, en: enName });
     }
@@ -364,6 +530,7 @@ async function main() {
   // --- Write output ---
   const dataDir = path.join(__dirname, "..", "src", "data");
   fs.mkdirSync(dataDir, { recursive: true });
+  fs.mkdirSync(debugDir, { recursive: true });
 
   const tsContent =
     `// Generated by scripts/generate-items.mjs\n` +
@@ -373,20 +540,21 @@ async function main() {
     `\n✅ Wrote ${results.length} items to ${outPath} (from ${itemMeta.size} API items)`,
   );
 
-  if (postGen6Items.length > 0) {
-    const postGen6Path = path.join(dataDir, "items-post-gen6.json");
+  const apiFiltered = serializeFilteredItems(apiFilteredItems);
+  if (apiFiltered.length > 0) {
+    const apiFilteredPath = path.join(debugDir, "items-api-filtered.json");
     fs.writeFileSync(
-      postGen6Path,
-      JSON.stringify(postGen6Items, null, 2),
+      apiFilteredPath,
+      JSON.stringify(apiFiltered, null, 2),
       "utf-8",
     );
     console.log(
-      `  ℹ ${postGen6Items.length} items are Gen 7+ (excluded by design) → ${postGen6Path}`,
+      `  ℹ ${apiFiltered.length} API items were filtered by pocket/category/slug rules → ${apiFilteredPath}`,
     );
   }
 
   if (trulyUnmatched.length > 0) {
-    const unmatchedPath = path.join(dataDir, "items-unmatched.json");
+    const unmatchedPath = path.join(debugDir, "items-unmatched.json");
     fs.writeFileSync(
       unmatchedPath,
       JSON.stringify(trulyUnmatched, null, 2),
@@ -395,14 +563,14 @@ async function main() {
     console.log(
       `  ⚠ ${trulyUnmatched.length} items could not be matched to ANY version.` +
         `\n    Review: ${unmatchedPath}` +
-        `\n    Add overrides to MANUAL_OVERRIDES in this script and re-run.`,
+        `\n    Add overrides to MANUAL_MATCH_OVERRIDES in this script and re-run.`,
     );
   } else {
-    console.log("🎉 All non-Gen7+ items matched to a version!");
+    console.log("🎉 All items matched to a version!");
   }
 
   if (fuzzyMatched.length > 0) {
-    const fuzzyPath = path.join(dataDir, "items-fuzzy-matched.json");
+    const fuzzyPath = path.join(debugDir, "items-fuzzy-matched.json");
     fs.writeFileSync(fuzzyPath, JSON.stringify(fuzzyMatched, null, 2), "utf-8");
     console.log(
       `  ℹ ${fuzzyMatched.length} items needed collapsed/fuzzy matching → ${fuzzyPath}`,

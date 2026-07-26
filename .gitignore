@@ -15,6 +15,7 @@ dist-ssr
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
+!.vscode/tasks.json
 .idea
 !.idea/prettier.xml
 .DS_Store
@@ -30,4 +31,10 @@ dist-ssr
 
 # Item list source data (regenerate with scripts/generate-items.mjs)
 scripts/itemlists-source/*
-!scripts/itemlists-source/.gitkeep
+!scripts/.gitkeep
+
+# Local PokeAPI static JSON checkout (https://github.com/PokeAPI/api-data)
+scripts/pokeapi-data/
+
+# Database json exports
+database-exports

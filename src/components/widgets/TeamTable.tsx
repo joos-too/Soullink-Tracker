@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import type { Pokemon, PokemonLink } from "@/types.ts";
+import type { LinkEditPayload, Pokemon, PokemonLink } from "@/types.ts";
 import EditPairModal from "@/src/components/modals/EditPairModal.tsx";
 import SelectEvolveModal from "@/src/components/modals/SelectEvolveModal.tsx";
 import {
@@ -13,15 +13,15 @@ import {
 } from "react-icons/fi";
 import { LuCircleFadingArrowUp } from "react-icons/lu";
 import { PiSkullBold } from "react-icons/pi";
-import {
-  getOfficialArtworkUrlForPokemonName,
-  getSpriteUrlForPokemonName,
-} from "@/src/services/sprites.ts";
-import { getPokemonTypeSlugsForName } from "@/src/services/pokemonTypes.ts";
+import { getOfficialArtworkUrlById } from "@/src/services/sprites.ts";
+import { getPokemonTypeSlugsById } from "@/src/services/pokemonTypes.ts";
 import TypeBadge from "@/src/components/badges/TypeBadge.tsx";
 import { useTranslation } from "react-i18next";
 import { focusRingClasses } from "@/src/styles/focusRing.ts";
-import { getWikiUrl, type WikiId } from "@/src/utils/wiki.ts";
+import { getWikiUrlById, type WikiId } from "@/src/utils/wiki.ts";
+import { resolvePokemonDisplay } from "@/src/services/pokemonDisplay.ts";
+import { resolvePokemonLocationDisplay } from "@/src/services/locationSearch.ts";
+import { normalizeLanguage } from "@/src/utils/language.ts";
 
 interface TeamTableProps {
   title: string;
@@ -32,12 +32,12 @@ interface TeamTableProps {
     index: number,
     playerIndex: number,
     field: keyof Pokemon,
-    value: string,
+    value: string | number | null,
   ) => void;
-  onRouteChange: (index: number, value: string) => void;
+  onRouteChange: (index: number, value: string, locationSlug?: string) => void;
   onAddToGraveyard: (pair: PokemonLink) => void;
   onDeleteLink?: (pair: PokemonLink) => void;
-  onAddLink: (payload: { route: string; members: Pokemon[] }) => void;
+  onAddLink: (payload: LinkEditPayload) => void;
   emptyMessage: string;
   addDisabled?: boolean;
   addDisabledReason?: string;
@@ -55,6 +55,7 @@ interface TeamTableProps {
   onToggleBadLink?: (id: number) => void;
   filterBar?: React.ReactNode;
   filtersExpanded?: boolean;
+  nicknamesEnabled?: boolean;
 }
 
 const TeamTable: React.FC<TeamTableProps> = ({
@@ -84,8 +85,10 @@ const TeamTable: React.FC<TeamTableProps> = ({
   onToggleBadLink,
   filterBar,
   filtersExpanded = false,
+  nicknamesEnabled = true,
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const locale = normalizeLanguage(i18n.language);
   const [editIndex, setEditIndex] = useState<number | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [evolveIndex, setEvolveIndex] = useState<number | null>(null);
@@ -104,18 +107,25 @@ const TeamTable: React.FC<TeamTableProps> = ({
         .map((pair, i) => ({ pair, originalIndex: i }))
         .filter(
           ({ pair }) =>
-            pair.route || pair.members.some((member) => member?.name),
+            pair.locationSlug ||
+            pair.location ||
+            pair.fossilSlugs?.length ||
+            pair.members.some(
+              (member) =>
+                typeof member?.id === "number" || Boolean(member?.name),
+            ),
         ),
     [data],
   );
 
-  const handleSave = (payload: { route: string; members: Pokemon[] }) => {
+  const handleSave = (payload: LinkEditPayload) => {
     if (readOnly || editIndex === null) return;
     payload.members.forEach((member, playerIndex) => {
-      onPokemonChange(editIndex, playerIndex, "name", member.name);
+      onPokemonChange(editIndex, playerIndex, "id", member.id);
+      onPokemonChange(editIndex, playerIndex, "name", member.name ?? "");
       onPokemonChange(editIndex, playerIndex, "nickname", member.nickname);
     });
-    onRouteChange(editIndex, payload.route);
+    onRouteChange(editIndex, payload.location ?? "", payload.locationSlug);
     setEditIndex(null);
   };
 
@@ -123,9 +133,11 @@ const TeamTable: React.FC<TeamTableProps> = ({
     if (editIndex === null) return null;
     const current = data[editIndex];
     return {
-      route: current?.route ?? "",
+      location: current?.location,
+      locationSlug: current?.locationSlug,
+      fossilSlugs: current?.fossilSlugs,
       members: playerNames.map(
-        (_, index) => current?.members?.[index] ?? { name: "", nickname: "" },
+        (_, index) => current?.members?.[index] ?? { id: null, nickname: "" },
       ),
     };
   }, [editIndex, data, playerNames]);
@@ -160,7 +172,7 @@ const TeamTable: React.FC<TeamTableProps> = ({
       </div>
       {filterBar}
       <div className="w-full overflow-x-auto">
-        <table className="w-full border-collapse min-w-[900px]">
+        <table className="w-full border-collapse min-w-225">
           <thead>
             <tr>
               <th
@@ -172,7 +184,7 @@ const TeamTable: React.FC<TeamTableProps> = ({
               {playerNames.map((name, index) => (
                 <th
                   key={`player-header-${index}`}
-                  colSpan={3}
+                  colSpan={nicknamesEnabled ? 3 : 2}
                   className="p-2 text-xs font-press-start text-white text-center border-t border-b border-l border-gray-300 dark:border-gray-700"
                   style={{ backgroundColor: playerColors[index] ?? "#4b5563" }}
                 >
@@ -183,7 +195,7 @@ const TeamTable: React.FC<TeamTableProps> = ({
                 rowSpan={2}
                 className="p-2 text-center text-xs font-bold text-gray-700 dark:text-gray-300 border-t border-b border-l border-gray-300 dark:border-gray-700"
               >
-                {t("team.routeColumn")}
+                {t("team.locationColumn")}
               </th>
               {!readOnly && (
                 <th
@@ -204,9 +216,11 @@ const TeamTable: React.FC<TeamTableProps> = ({
                   <th className="p-1 text-[11px] text-gray-600 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 text-center">
                     {t("team.nameColumn")}
                   </th>
-                  <th className="p-1 text-[11px] text-gray-600 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 text-center">
-                    {t("team.nicknameColumn")}
-                  </th>
+                  {nicknamesEnabled && (
+                    <th className="p-1 text-[11px] text-gray-600 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 text-center">
+                      {t("team.nicknameColumn")}
+                    </th>
+                  )}
                 </React.Fragment>
               ))}
             </tr>
@@ -216,205 +230,228 @@ const TeamTable: React.FC<TeamTableProps> = ({
               <tr>
                 <td
                   className="p-3 text-center text-sm text-gray-500 dark:text-gray-400"
-                  colSpan={2 + playerNames.length * 3 + (readOnly ? 0 : 1)}
+                  colSpan={
+                    2 +
+                    playerNames.length * (nicknamesEnabled ? 3 : 2) +
+                    (readOnly ? 0 : 1)
+                  }
                 >
                   {emptyMessage}
                 </td>
               </tr>
             )}
-            {rows.map(({ pair, originalIndex }, displayIndex) => (
-              <tr
-                key={pair.id}
-                className={`border-t border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 ${badLinkIds?.has(pair.id) ? "opacity-40" : ""}`}
-              >
-                <td className="p-2 text-center text-sm font-semibold text-gray-800 dark:text-gray-200">
-                  {displayIndex + 1}
-                </td>
-                {playerNames.map((_, playerIndex) => {
-                  const member = pair.members?.[playerIndex] ?? {
-                    name: "",
-                    nickname: "",
-                  };
-                  const imgURL = member.name
-                    ? useSpritesInTeamTable
-                      ? getSpriteUrlForPokemonName(
-                          member.name,
-                          generationSpritePath,
-                        )
-                      : getOfficialArtworkUrlForPokemonName(member.name)
-                    : null;
-                  const wikiUrl =
-                    member.name && wikiId
-                      ? getWikiUrl(member.name, wikiId as WikiId)
+            {rows.map(({ pair, originalIndex }, displayIndex) => {
+              const locationLabel = resolvePokemonLocationDisplay(pair, locale);
+              return (
+                <tr
+                  key={pair.id}
+                  className={`border-t border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 ${badLinkIds?.has(pair.id) ? "opacity-40" : ""}`}
+                >
+                  <td className="p-2 text-center text-sm font-semibold text-gray-800 dark:text-gray-200">
+                    {displayIndex + 1}
+                  </td>
+                  {playerNames.map((_, playerIndex) => {
+                    const member = pair.members?.[playerIndex] ?? {
+                      id: null,
+                      nickname: "",
+                    };
+                    const pokemonId = member.id;
+                    const { displayName, spriteUrl } = resolvePokemonDisplay(
+                      member,
+                      locale,
+                      generationSpritePath,
+                    );
+                    const imgURL = pokemonId
+                      ? useSpritesInTeamTable
+                        ? spriteUrl
+                        : getOfficialArtworkUrlById(pokemonId)
                       : null;
-                  return (
-                    <React.Fragment
-                      key={`player-cell-${pair.id}-${playerIndex}`}
-                    >
-                      <td className="p-2 text-center border-l border-gray-200 dark:border-gray-700">
-                        {imgURL ? (
-                          <div className="mx-auto flex h-20 w-20 items-center justify-center">
-                            <img
-                              src={imgURL}
-                              alt=""
-                              className="block max-h-full max-w-full object-contain"
-                              loading="lazy"
-                            />
-                          </div>
-                        ) : (
-                          <span className="text-gray-400 dark:text-gray-500">
-                            -
-                          </span>
-                        )}
-                      </td>
-                      <td className="p-2 text-sm text-gray-800 dark:text-gray-300 text-center whitespace-nowrap">
-                        {member.name ? (
-                          wikiUrl ? (
-                            <a
-                              href={wikiUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="hover:underline"
-                            >
-                              {member.name}
-                            </a>
+                    const wikiUrl =
+                      pokemonId && wikiId
+                        ? getWikiUrlById(pokemonId, wikiId as WikiId)
+                        : null;
+                    return (
+                      <React.Fragment
+                        key={`player-cell-${pair.id}-${playerIndex}`}
+                      >
+                        <td className="p-2 text-center border-l border-gray-200 dark:border-gray-700">
+                          {imgURL ? (
+                            <div className="mx-auto flex h-20 w-20 items-center justify-center">
+                              <img
+                                src={imgURL}
+                                alt=""
+                                className="block max-h-full max-w-full object-contain"
+                                loading="lazy"
+                              />
+                            </div>
                           ) : (
-                            member.name
-                          )
-                        ) : (
-                          "-"
-                        )}
-                        {member.name &&
-                          (() => {
-                            const typeSlugs = getPokemonTypeSlugsForName(
-                              member.name,
-                              pokemonGenerationLimit,
-                            );
-                            return typeSlugs.length > 0 ? (
-                              <div className="flex items-center justify-center gap-0.5 mt-1">
-                                {typeSlugs.map((slug) => (
-                                  <TypeBadge key={slug} typeSlug={slug} />
-                                ))}
-                              </div>
-                            ) : null;
-                          })()}
-                      </td>
-                      <td className="p-2 text-sm text-gray-800 dark:text-gray-300 text-center">
-                        {member.nickname || "-"}
-                      </td>
-                    </React.Fragment>
-                  );
-                })}
-                <td className="p-2 text-sm text-center text-gray-800 dark:text-gray-200 border-l border-gray-200 dark:border-gray-700">
-                  {pair.route || "-"}
-                </td>
-                {!readOnly && (
-                  <td
-                    className="p-2 text-center border-l border-gray-200 dark:border-gray-700"
-                    style={{ width: "28px" }}
-                  >
-                    <div className="inline-flex items-center gap-1.5 justify-center">
-                      {(pair.members.some((m) => m?.name) || pair.route) && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setEditIndex(originalIndex);
-                          }}
-                          className={`p-1 rounded-full inline-flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 ${focusRingClasses}`}
-                          title={t("team.titleEdit")}
-                        >
-                          <FiEdit size={18} />
-                        </button>
-                      )}
-                      {context === "team" ? (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            onMoveToBox(pair);
-                          }}
-                          className={`p-1 rounded-full inline-flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 ${focusRingClasses}`}
-                          title={t("team.titleMoveToBox")}
-                        >
-                          <FiArrowDown size={18} />
-                        </button>
-                      ) : null}
-                      {context === "box" && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (!teamIsFull) onMoveToTeam(pair);
-                          }}
-                          disabled={teamIsFull}
-                          className={`p-1 rounded-full inline-flex items-center justify-center ${teamIsFull ? "text-gray-400 dark:text-gray-500 cursor-not-allowed" : "hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300"} ${focusRingClasses}`}
-                          title={
-                            teamIsFull
-                              ? t("team.teamFull")
-                              : t("team.moveToTeam")
-                          }
-                        >
-                          <FiArrowUp size={18} />
-                        </button>
-                      )}
-                      {pair.members.some((member) => member?.name) && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setEvolveIndex(originalIndex);
-                          }}
-                          className={`p-1 rounded-full inline-flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-600 text-green-600 hover:text-green-700 dark:text-green-500 dark:hover:text-green-400 ${focusRingClasses}`}
-                          title={t("team.titleEvolve")}
-                        >
-                          <LuCircleFadingArrowUp size={20} />
-                        </button>
-                      )}
-                      {filtersExpanded && onToggleBadLink && (
-                        <button
-                          type="button"
-                          onClick={() => onToggleBadLink(pair.id)}
-                          className={`p-1 rounded-full inline-flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-600 text-yellow-600 dark:text-yellow-400 ${focusRingClasses}`}
-                          title={
-                            badLinkIds?.has(pair.id)
-                              ? t("team.unhideLink")
-                              : t("team.toggleHideLink")
-                          }
-                        >
-                          {badLinkIds?.has(pair.id) ? (
-                            <FiEye size={18} />
-                          ) : (
-                            <FiEyeOff size={18} />
+                            <span className="text-gray-400 dark:text-gray-500">
+                              -
+                            </span>
                           )}
-                        </button>
-                      )}
-                      {context === "team" &&
-                        pair.members.some((member) => member?.name) && (
+                        </td>
+                        <td className="p-2 text-sm text-gray-800 dark:text-gray-300 text-center whitespace-nowrap">
+                          {displayName ? (
+                            wikiUrl ? (
+                              <a
+                                href={wikiUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="hover:underline"
+                              >
+                                {displayName}
+                              </a>
+                            ) : (
+                              displayName
+                            )
+                          ) : (
+                            "-"
+                          )}
+                          {pokemonId &&
+                            (() => {
+                              const typeSlugs = getPokemonTypeSlugsById(
+                                pokemonId,
+                                pokemonGenerationLimit,
+                              );
+                              return typeSlugs.length > 0 ? (
+                                <div className="flex items-center justify-center gap-0.5 mt-1">
+                                  {typeSlugs.map((slug) => (
+                                    <TypeBadge key={slug} typeSlug={slug} />
+                                  ))}
+                                </div>
+                              ) : null;
+                            })()}
+                        </td>
+                        {nicknamesEnabled && (
+                          <td className="p-2 text-sm text-gray-800 dark:text-gray-300 text-center">
+                            {member.nickname || "-"}
+                          </td>
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
+                  <td className="p-2 text-sm text-center text-gray-800 dark:text-gray-200 border-l border-gray-200 dark:border-gray-700">
+                    {locationLabel || "-"}
+                  </td>
+                  {!readOnly && (
+                    <td
+                      className="p-2 text-center border-l border-gray-200 dark:border-gray-700"
+                      style={{ width: "28px" }}
+                    >
+                      <div className="inline-flex items-center gap-1.5 justify-center">
+                        {(pair.members.some(
+                          (m) => typeof m?.id === "number" || Boolean(m?.name),
+                        ) ||
+                          pair.location ||
+                          pair.locationSlug ||
+                          pair.fossilSlugs?.length) && (
                           <button
                             type="button"
                             onClick={() => {
-                              onAddToGraveyard(pair);
+                              setEditIndex(originalIndex);
                             }}
-                            className={`p-1 rounded-full inline-flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-600 text-red-600 hover:text-red-700 dark:text-red-500 dark:hover:text-red-400 focus-visible:ring-red-500 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-900 ${focusRingClasses}`}
-                            title={t("team.titleSendToGraveyard")}
+                            className={`p-1 rounded-full inline-flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 ${focusRingClasses}`}
+                            title={t("team.titleEdit")}
                           >
-                            <PiSkullBold size={18} />
+                            <FiEdit size={18} />
                           </button>
                         )}
-                      {context === "box" && onDeleteLink && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            onDeleteLink(pair);
-                          }}
-                          className={`p-1 rounded-full inline-flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-600 text-red-600 hover:text-red-700 dark:text-red-500 dark:hover:text-red-400 focus-visible:ring-red-500 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-900 ${focusRingClasses}`}
-                          title={t("team.titleDeleteLink")}
-                        >
-                          <FiTrash size={18} />
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                )}
-              </tr>
-            ))}
+                        {context === "team" ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              onMoveToBox(pair);
+                            }}
+                            className={`p-1 rounded-full inline-flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 ${focusRingClasses}`}
+                            title={t("team.titleMoveToBox")}
+                          >
+                            <FiArrowDown size={18} />
+                          </button>
+                        ) : null}
+                        {context === "box" && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (!teamIsFull) onMoveToTeam(pair);
+                            }}
+                            disabled={teamIsFull}
+                            className={`p-1 rounded-full inline-flex items-center justify-center ${teamIsFull ? "text-gray-400 dark:text-gray-500 cursor-not-allowed" : "hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300"} ${focusRingClasses}`}
+                            title={
+                              teamIsFull
+                                ? t("team.teamFull")
+                                : t("team.moveToTeam")
+                            }
+                          >
+                            <FiArrowUp size={18} />
+                          </button>
+                        )}
+                        {pair.members.some(
+                          (member) => typeof member?.id === "number",
+                        ) && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEvolveIndex(originalIndex);
+                            }}
+                            className={`p-1 rounded-full inline-flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-600 text-green-600 hover:text-green-700 dark:text-green-500 dark:hover:text-green-400 ${focusRingClasses}`}
+                            title={t("team.titleEvolve")}
+                          >
+                            <LuCircleFadingArrowUp size={20} />
+                          </button>
+                        )}
+                        {filtersExpanded && onToggleBadLink && (
+                          <button
+                            type="button"
+                            onClick={() => onToggleBadLink(pair.id)}
+                            className={`p-1 rounded-full inline-flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-600 text-yellow-600 dark:text-yellow-400 ${focusRingClasses}`}
+                            title={
+                              badLinkIds?.has(pair.id)
+                                ? t("team.unhideLink")
+                                : t("team.toggleHideLink")
+                            }
+                          >
+                            {badLinkIds?.has(pair.id) ? (
+                              <FiEye size={18} />
+                            ) : (
+                              <FiEyeOff size={18} />
+                            )}
+                          </button>
+                        )}
+                        {context === "team" &&
+                          pair.members.some(
+                            (member) =>
+                              typeof member?.id === "number" ||
+                              Boolean(member?.name),
+                          ) && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                onAddToGraveyard(pair);
+                              }}
+                              className={`p-1 rounded-full inline-flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-600 text-red-600 hover:text-red-700 dark:text-red-500 dark:hover:text-red-400 focus-visible:ring-red-500 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-900 ${focusRingClasses}`}
+                              title={t("team.titleSendToGraveyard")}
+                            >
+                              <PiSkullBold size={18} />
+                            </button>
+                          )}
+                        {context === "box" && onDeleteLink && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              onDeleteLink(pair);
+                            }}
+                            className={`p-1 rounded-full inline-flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-600 text-red-600 hover:text-red-700 dark:text-red-500 dark:hover:text-red-400 focus-visible:ring-red-500 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-900 ${focusRingClasses}`}
+                            title={t("team.titleDeleteLink")}
+                          >
+                            <FiTrash size={18} />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  )}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -427,20 +464,23 @@ const TeamTable: React.FC<TeamTableProps> = ({
         mode="edit"
         initial={
           editInitial || {
-            route: "",
-            members: playerNames.map(() => ({ name: "", nickname: "" })),
+            location: "",
+            locationSlug: null,
+            members: playerNames.map(() => ({ id: null, nickname: "" })),
           }
         }
         generationLimit={pokemonGenerationLimit}
         gameVersionId={gameVersionId}
         generationSpritePath={generationSpritePath}
+        nicknamesEnabled={nicknamesEnabled}
       />
       <SelectEvolveModal
         isOpen={!readOnly && evolveIndex !== null}
         onClose={() => setEvolveIndex(null)}
-        onConfirm={(playerIndex, newName) => {
+        onConfirm={(playerIndex, _newName, newId) => {
           if (evolveIndex === null) return;
-          onPokemonChange(evolveIndex, playerIndex, "name", newName);
+          onPokemonChange(evolveIndex, playerIndex, "id", newId);
+          onPokemonChange(evolveIndex, playerIndex, "name", "");
           setEvolveIndex(null);
         }}
         pair={evolveIndex !== null ? data[evolveIndex] : null}
@@ -449,6 +489,7 @@ const TeamTable: React.FC<TeamTableProps> = ({
         gameVersionId={gameVersionId}
         generationSpritePath={generationSpritePath}
         useSpritesEverywhere={useSpritesInTeamTable}
+        nicknamesEnabled={nicknamesEnabled}
       />
       <EditPairModal
         isOpen={!readOnly && addOpen}
@@ -460,12 +501,14 @@ const TeamTable: React.FC<TeamTableProps> = ({
         playerLabels={playerNames}
         mode="create"
         initial={{
-          route: "",
-          members: playerNames.map(() => ({ name: "", nickname: "" })),
+          location: "",
+          locationSlug: null,
+          members: playerNames.map(() => ({ id: null, nickname: "" })),
         }}
         generationLimit={pokemonGenerationLimit}
         gameVersionId={gameVersionId}
         generationSpritePath={generationSpritePath}
+        nicknamesEnabled={nicknamesEnabled}
       />
     </div>
   );

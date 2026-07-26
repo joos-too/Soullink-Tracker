@@ -12,7 +12,7 @@ import {
 } from "firebase/auth";
 import { get, ref, update } from "firebase/database";
 import { createInitialState } from "@/src/services/init.ts";
-import { FossilEntry, StoneEntry } from "@/types";
+import { FossilEntry, ItemEntry, PokemonLink } from "@/types";
 
 // Test user credentials for emulator mode
 const TEST_USER_EMAIL = "test@example.com";
@@ -85,27 +85,14 @@ async function createTracker(
     title: string;
     gameVersionId: string;
     playerNames: string[];
-    teamPokemon: Array<{
-      id: number;
-      route: string;
-      members: Array<{ name: string; nickname: string }>;
-    }>;
-    boxPokemon: Array<{
-      id: number;
-      route: string;
-      members: Array<{ name: string; nickname: string }>;
-    }>;
-    graveyardPokemon: Array<{
-      id: number;
-      route: string;
-      members: Array<{ name: string; nickname: string }>;
-      isLost?: boolean;
-    }>;
+    teamPokemon: PokemonLink[];
+    boxPokemon: PokemonLink[];
+    graveyardPokemon: PokemonLink[];
     checkedLevelCaps: number[];
     checkedRivalCaps: number[];
     rivalCensorEnabled?: boolean;
     revealedRivalCaps?: number[];
-    stoneEntries?: StoneEntry[][];
+    itemEntries?: ItemEntry[][];
     fossilEntries?: FossilEntry[][];
     createdAt?: number;
     runs?: number;
@@ -142,7 +129,6 @@ async function createTracker(
     config.playerNames,
   );
 
-  // Add sample data
   initialState.team = config.teamPokemon;
   initialState.box = config.boxPokemon;
   initialState.graveyard = config.graveyardPokemon;
@@ -152,8 +138,8 @@ async function createTracker(
     initialState.fossils = config.fossilEntries;
   }
 
-  if (config.stoneEntries) {
-    initialState.stones = config.stoneEntries;
+  if (config.itemEntries) {
+    initialState.items = config.itemEntries;
   }
 
   const deadCount = config.graveyardPokemon.filter((p) => !p.isLost).length;
@@ -220,70 +206,71 @@ async function createSampleTrackerData(userId: string): Promise<void> {
     teamPokemon: [
       {
         id: 1,
-        route: "Route 1",
+        locationSlug: "unova-route-1",
         members: [
-          { name: "Oshawott", nickname: "Otterpop" },
-          { name: "Tepig", nickname: "Sizzle" },
+          { id: 501, nickname: "Otterpop" },
+          { id: 498, nickname: "Sizzle" },
         ],
       },
       {
         id: 2,
-        route: "Route 2",
+        locationSlug: "unova-route-2",
         members: [
-          { name: "Patrat", nickname: "Scout" },
-          { name: "Lillipup", nickname: "Buddy" },
+          { id: 504, nickname: "Scout" },
+          { id: 506, nickname: "Buddy" },
         ],
       },
       {
         id: 3,
-        route: "Route 3",
+        locationSlug: "unova-route-3",
         members: [
-          { name: "Blitzle", nickname: "Sparky" },
-          { name: "Purrloin", nickname: "Whiskers" },
+          { id: 522, nickname: "Sparky" },
+          { id: 509, nickname: "Whiskers" },
         ],
       },
     ],
     boxPokemon: [
       {
         id: 4,
-        route: "Dreamyard",
+        locationSlug: "dreamyard",
         members: [
-          { name: "Munna", nickname: "Dreamy" },
-          { name: "Pidove", nickname: "Coo" },
+          { id: 517, nickname: "Dreamy" },
+          { id: 519, nickname: "Coo" },
         ],
       },
       {
         id: 5,
-        route: "Pinwheel Forest",
+        locationSlug: "pinwheel-forest",
         members: [
-          { name: "Sewaddle", nickname: "Leafy" },
-          { name: "Venipede", nickname: "Stinger" },
+          { id: 540, nickname: "Leafy" },
+          { id: 543, nickname: "Stinger" },
         ],
       },
       {
         id: 6,
-        route: "Old Amber/Skull Fossil",
+        locationSlug: null,
+        fossilSlugs: ["old-amber", "skull-fossil"],
         members: [
-          { name: "Aerodactyl", nickname: "Amber" },
-          { name: "Cranidos", nickname: "Rocky" },
+          { id: 142, nickname: "Amber" },
+          { id: 408, nickname: "Rocky" },
         ],
       },
     ],
     graveyardPokemon: [
       {
         id: 7,
-        route: "Wellspring Cave",
+        locationSlug: "wellspring-cave",
         members: [
-          { name: "Roggenrola", nickname: "Pebble" },
-          { name: "Woobat", nickname: "Sonar" },
+          { id: 524, nickname: "Pebble" },
+          { id: 527, nickname: "Sonar" },
         ],
       },
       {
         id: 8,
-        route: "Cold Storage",
+        locationSlug: "cold-storage",
         members: [
-          { name: "Vanillite", nickname: "Frosty" },
-          { name: "Timburr", nickname: "Lumber" },
+          { id: 582, nickname: "Frosty" },
+          { id: 532, nickname: "Lumber" },
         ],
       },
     ],
@@ -299,7 +286,8 @@ async function createSampleTrackerData(userId: string): Promise<void> {
       [
         {
           fossilId: "cover-fossil",
-          location: "Nacrene City",
+          location: "",
+          locationSlug: "nacrene-city",
           inBag: false,
           revived: false,
         },
@@ -309,14 +297,15 @@ async function createSampleTrackerData(userId: string): Promise<void> {
           location: "",
           inBag: true,
           revived: true,
-          pokemonName: "Aerodactyl",
+          pokemonId: 142,
         },
       ],
       [
         { fossilId: "plume-fossil", location: "", inBag: true, revived: false },
         {
           fossilId: "dome-fossil",
-          location: "Nacrene City",
+          location: "",
+          locationSlug: "nacrene-city",
           inBag: false,
           revived: false,
         },
@@ -325,53 +314,60 @@ async function createSampleTrackerData(userId: string): Promise<void> {
           location: "",
           inBag: true,
           revived: true,
-          pokemonName: "Cranidos",
+          pokemonId: 408,
         },
       ],
     ],
-    stoneEntries: [
+    itemEntries: [
       [
         {
-          stoneId: "fire-stone",
-          location: "Nimbasa City",
+          id: "fire-stone",
+          location: "",
+          locationSlug: "nimbasa-city",
           inBag: true,
           used: false,
         },
         {
-          stoneId: "water-stone",
-          location: "Driftveil City",
+          id: "water-stone",
+          location: "",
+          locationSlug: "driftveil-city",
           inBag: true,
           used: true,
         },
         {
-          stoneId: "dusk-stone",
-          location: "Mistralton City",
+          id: "dusk-stone",
+          location: "",
+          locationSlug: "mistralton-city",
           inBag: false,
           used: false,
         },
       ],
       [
         {
-          stoneId: "leaf-stone",
-          location: "Castelia City",
+          id: "leaf-stone",
+          location: "",
+          locationSlug: "castelia-city",
           inBag: true,
           used: false,
         },
         {
-          stoneId: "thunder-stone",
-          location: "Driftveil City",
+          id: "thunder-stone",
+          location: "",
+          locationSlug: "driftveil-city",
           inBag: true,
           used: true,
         },
         {
-          stoneId: "sun-stone",
-          location: "Nacrene City",
+          id: "sun-stone",
+          location: "",
+          locationSlug: "nacrene-city",
           inBag: false,
           used: false,
         },
         {
-          stoneId: "moon-stone",
-          location: "Icirrus City",
+          id: "moon-stone",
+          location: "",
+          locationSlug: "icirrus-city",
           inBag: true,
           used: false,
         },
@@ -387,70 +383,70 @@ async function createSampleTrackerData(userId: string): Promise<void> {
     teamPokemon: [
       {
         id: 1,
-        route: "Route 1",
+        locationSlug: "kanto-route-1",
         members: [
-          { name: "Pidgey", nickname: "Gust" },
-          { name: "Rattata", nickname: "Ratty" },
+          { id: 16, nickname: "Gust" },
+          { id: 19, nickname: "Ratty" },
         ],
       },
       {
         id: 2,
-        route: "Route 2",
+        locationSlug: "kanto-route-2",
         members: [
-          { name: "Caterpie", nickname: "Crawler" },
-          { name: "Weedle", nickname: "Stinger" },
+          { id: 10, nickname: "Crawler" },
+          { id: 13, nickname: "Stinger" },
         ],
       },
       {
         id: 3,
-        route: "Viridian Forest",
+        locationSlug: "viridian-forest",
         members: [
-          { name: "Pikachu", nickname: "Sparky" },
-          { name: "Sandshrew", nickname: "Sandy" },
+          { id: 25, nickname: "Sparky" },
+          { id: 27, nickname: "Sandy" },
         ],
       },
     ],
     boxPokemon: [
       {
         id: 4,
-        route: "Route 3",
+        locationSlug: "kanto-route-3",
         members: [
-          { name: "Butterfree", nickname: "Flutter" },
-          { name: "Kakuna", nickname: "Cocoon" },
+          { id: 12, nickname: "Flutter" },
+          { id: 14, nickname: "Cocoon" },
         ],
       },
       {
         id: 5,
-        route: "Route 4",
+        locationSlug: "kanto-route-4",
         members: [
-          { name: "Magikarp", nickname: "Splashy" },
-          { name: "Zubat", nickname: "Fang" },
+          { id: 129, nickname: "Splashy" },
+          { id: 41, nickname: "Fang" },
         ],
       },
     ],
     graveyardPokemon: [
       {
         id: 6,
-        route: "Mt. Moon",
+        locationSlug: "mt-moon",
         members: [
-          { name: "Geodude", nickname: "Boulder" },
-          { name: "Clefairy", nickname: "Moony" },
+          { id: 74, nickname: "Boulder" },
+          { id: 35, nickname: "Moony" },
         ],
       },
       {
         id: 7,
-        route: "Rock Tunnel",
+        locationSlug: "rock-tunnel",
         members: [
-          { name: "Machop", nickname: "Flex" },
-          { name: "Onix", nickname: "Slither" },
+          { id: 66, nickname: "Flex" },
+          { id: 95, nickname: "Slither" },
         ],
       },
       {
         id: 8,
-        route: "Pokémon Tower",
+        locationSlug: "pokemon-tower",
         members: [
-          { name: "Gastly", nickname: "" },
-          { name: "Cubone", nickname: "" },
+          { id: 92, nickname: "" },
+          { id: 104, nickname: "" },
         ],
         isLost: true,
       },
@@ -472,49 +468,56 @@ async function createSampleTrackerData(userId: string): Promise<void> {
         { fossilId: "dome-fossil", location: "", inBag: true, revived: false },
         {
           fossilId: "old-amber",
-          location: "Pewter City",
+          location: "",
+          locationSlug: "pewter-city",
           inBag: false,
           revived: false,
         },
       ],
     ],
-    stoneEntries: [
+    itemEntries: [
       [
         {
-          stoneId: "fire-stone",
-          location: "Celadon City",
+          id: "fire-stone",
+          location: "",
+          locationSlug: "celadon-city",
           inBag: true,
           used: true,
         },
         {
-          stoneId: "water-stone",
-          location: "Celadon City",
+          id: "water-stone",
+          location: "",
+          locationSlug: "celadon-city",
           inBag: true,
           used: false,
         },
         {
-          stoneId: "thunder-stone",
-          location: "Celadon City",
+          id: "thunder-stone",
+          location: "",
+          locationSlug: "celadon-city",
           inBag: true,
           used: true,
         },
         {
-          stoneId: "moon-stone",
-          location: "Pewter City",
+          id: "moon-stone",
+          location: "",
+          locationSlug: "pewter-city",
           inBag: true,
           used: false,
         },
       ],
       [
         {
-          stoneId: "leaf-stone",
-          location: "Celadon City",
+          id: "leaf-stone",
+          location: "",
+          locationSlug: "celadon-city",
           inBag: true,
           used: true,
         },
         {
-          stoneId: "fire-stone",
-          location: "Cinnabar Island",
+          id: "fire-stone",
+          location: "",
+          locationSlug: "cinnabar-island",
           inBag: true,
           used: false,
         },
@@ -530,70 +533,70 @@ async function createSampleTrackerData(userId: string): Promise<void> {
     teamPokemon: [
       {
         id: 1,
-        route: "Route 201",
+        locationSlug: "sinnoh-route-201",
         members: [
-          { name: "Turtwig", nickname: "Leafy" },
-          { name: "Chimchar", nickname: "Blaze" },
+          { id: 387, nickname: "Leafy" },
+          { id: 390, nickname: "Blaze" },
         ],
       },
       {
         id: 2,
-        route: "Route 202",
+        locationSlug: "sinnoh-route-202",
         members: [
-          { name: "Starly", nickname: "Swoosh" },
-          { name: "Bidoof", nickname: "Chompy" },
+          { id: 396, nickname: "Swoosh" },
+          { id: 399, nickname: "Chompy" },
         ],
       },
       {
         id: 3,
-        route: "Route 204",
+        locationSlug: "sinnoh-route-204",
         members: [
-          { name: "Shinx", nickname: "Sparky" },
-          { name: "Budew", nickname: "Rosie" },
+          { id: 403, nickname: "Sparky" },
+          { id: 406, nickname: "Rosie" },
         ],
       },
     ],
     boxPokemon: [
       {
         id: 4,
-        route: "Valley Windworks",
+        locationSlug: "valley-windworks",
         members: [
-          { name: "Pachirisu", nickname: "Zippy" },
-          { name: "Drifloon", nickname: "Balloon" },
+          { id: 417, nickname: "Zippy" },
+          { id: 425, nickname: "Balloon" },
         ],
       },
       {
         id: 5,
-        route: "Route 205",
+        locationSlug: "sinnoh-route-205",
         members: [
-          { name: "Bronzor", nickname: "Mirror" },
-          { name: "Ponyta", nickname: "Ember" },
+          { id: 436, nickname: "Mirror" },
+          { id: 77, nickname: "Ember" },
         ],
       },
     ],
     graveyardPokemon: [
       {
         id: 6,
-        route: "Ravaged Path",
+        locationSlug: "ravaged-path",
         members: [
-          { name: "Kricketot", nickname: "Cricket" },
-          { name: "Buneary", nickname: "Hoppy" },
+          { id: 401, nickname: "Cricket" },
+          { id: 427, nickname: "Hoppy" },
         ],
       },
       {
         id: 7,
-        route: "Eterna Forest",
+        locationSlug: "eterna-forest",
         members: [
-          { name: "Burmy", nickname: "Cloak" },
-          { name: "Cherubi", nickname: "Cherry" },
+          { id: 412, nickname: "Cloak" },
+          { id: 420, nickname: "Cherry" },
         ],
       },
       {
         id: 8,
-        route: "Lost Tower",
+        locationSlug: "lost-tower",
         members: [
-          { name: "Chingling", nickname: "" },
-          { name: "Stunky", nickname: "" },
+          { id: 433, nickname: "" },
+          { id: 434, nickname: "" },
         ],
         isLost: true,
       },
@@ -612,7 +615,8 @@ async function createSampleTrackerData(userId: string): Promise<void> {
         { fossilId: "old-amber", location: "", inBag: true, revived: false },
         {
           fossilId: "helix-fossil",
-          location: "Oreburgh City",
+          location: "",
+          locationSlug: "oreburgh-city",
           inBag: false,
           revived: false,
         },
@@ -622,55 +626,63 @@ async function createSampleTrackerData(userId: string): Promise<void> {
         { fossilId: "dome-fossil", location: "", inBag: true, revived: false },
       ],
     ],
-    stoneEntries: [
+    itemEntries: [
       [
         {
-          stoneId: "fire-stone",
-          location: "Veilstone City",
+          id: "fire-stone",
+          location: "",
+          locationSlug: "veilstone-city",
           inBag: true,
           used: false,
         },
         {
-          stoneId: "dawn-stone",
-          location: "Hearthome City",
+          id: "dawn-stone",
+          location: "",
+          locationSlug: "hearthome-city",
           inBag: true,
           used: true,
         },
         {
-          stoneId: "shiny-stone",
-          location: "Canalave City",
+          id: "shiny-stone",
+          location: "",
+          locationSlug: "canalave-city",
           inBag: false,
           used: false,
         },
         {
-          stoneId: "water-stone",
-          location: "Solaceon Town",
+          id: "water-stone",
+          location: "",
+          locationSlug: "solaceon-town",
           inBag: true,
           used: false,
         },
         {
-          stoneId: "dusk-stone",
-          location: "Eterna City",
+          id: "dusk-stone",
+          location: "",
+          locationSlug: "eterna-city",
           inBag: true,
           used: false,
         },
       ],
       [
         {
-          stoneId: "leaf-stone",
-          location: "Floaroma Town",
+          id: "leaf-stone",
+          location: "",
+          locationSlug: "floaroma-town",
           inBag: true,
           used: false,
         },
         {
-          stoneId: "thunder-stone",
-          location: "Sunyshore City",
+          id: "thunder-stone",
+          location: "",
+          locationSlug: "sunyshore-city",
           inBag: true,
           used: true,
         },
         {
-          stoneId: "sun-stone",
-          location: "Pastoria City",
+          id: "sun-stone",
+          location: "",
+          locationSlug: "pastoria-city",
           inBag: false,
           used: false,
         },
@@ -686,70 +698,71 @@ async function createSampleTrackerData(userId: string): Promise<void> {
     teamPokemon: [
       {
         id: 1,
-        route: "Route 101",
+        locationSlug: "hoenn-route-101",
         members: [
-          { name: "Treecko", nickname: "Gecko" },
-          { name: "Torchic", nickname: "Chicky" },
+          { id: 252, nickname: "Gecko" },
+          { id: 255, nickname: "Chicky" },
         ],
       },
       {
         id: 2,
-        route: "Route 102",
+        locationSlug: "hoenn-route-102",
         members: [
-          { name: "Zigzagoon", nickname: "Ziggy" },
-          { name: "Lotad", nickname: "Lilypad" },
+          { id: 263, nickname: "Ziggy" },
+          { id: 270, nickname: "Lilypad" },
         ],
       },
       {
         id: 3,
-        route: "Route 104",
+        locationSlug: "hoenn-route-104",
         members: [
-          { name: "Taillow", nickname: "Swift" },
-          { name: "Wingull", nickname: "Gully" },
+          { id: 276, nickname: "Swift" },
+          { id: 278, nickname: "Gully" },
         ],
       },
     ],
     boxPokemon: [
       {
         id: 4,
-        route: "Petalburg Woods",
+        locationSlug: "petalburg-woods",
         members: [
-          { name: "Wurmple", nickname: "Squirmy" },
-          { name: "Seedot", nickname: "Acorn" },
+          { id: 265, nickname: "Squirmy" },
+          { id: 273, nickname: "Acorn" },
         ],
       },
       {
         id: 5,
-        route: "Route 116",
+        locationSlug: "hoenn-route-116",
         members: [
-          { name: "Nosepass", nickname: "Compass" },
-          { name: "Whismur", nickname: "Whisper" },
+          { id: 299, nickname: "Compass" },
+          { id: 293, nickname: "Whisper" },
         ],
       },
       {
         id: 6,
-        route: "Root Fossil/Claw Fossil",
+        locationSlug: null,
+        fossilSlugs: ["root-fossil", "claw-fossil"],
         members: [
-          { name: "Lileep", nickname: "Rooty" },
-          { name: "Anorith", nickname: "Claws" },
+          { id: 345, nickname: "Rooty" },
+          { id: 347, nickname: "Claws" },
         ],
       },
     ],
     graveyardPokemon: [
       {
         id: 7,
-        route: "Granite Cave",
+        locationSlug: "granite-cave",
         members: [
-          { name: "Makuhita", nickname: "Sumo" },
-          { name: "Aron", nickname: "Ironclad" },
+          { id: 296, nickname: "Sumo" },
+          { id: 304, nickname: "Ironclad" },
         ],
       },
       {
         id: 8,
-        route: "Route 110",
+        locationSlug: "hoenn-route-110",
         members: [
-          { name: "Electrike", nickname: "Volt" },
-          { name: "Gulpin", nickname: "Blob" },
+          { id: 309, nickname: "Volt" },
+          { id: 316, nickname: "Blob" },
         ],
       },
     ],
@@ -765,7 +778,8 @@ async function createSampleTrackerData(userId: string): Promise<void> {
       [
         {
           fossilId: "jaw-fossil",
-          location: "Rustboro City",
+          location: "",
+          locationSlug: "rustboro-city",
           inBag: false,
           revived: false,
         },
@@ -774,13 +788,14 @@ async function createSampleTrackerData(userId: string): Promise<void> {
           location: "",
           inBag: true,
           revived: true,
-          pokemonName: "Lileep",
+          pokemonId: 345,
         },
       ],
       [
         {
           fossilId: "sail-fossil",
-          location: "Rustboro City",
+          location: "",
+          locationSlug: "rustboro-city",
           inBag: false,
           revived: false,
         },
@@ -789,71 +804,81 @@ async function createSampleTrackerData(userId: string): Promise<void> {
           location: "",
           inBag: true,
           revived: true,
-          pokemonName: "Anorith",
+          pokemonId: 347,
         },
         {
           fossilId: "cover-fossil",
-          location: "Mauville City",
+          location: "",
+          locationSlug: "mauville-city",
           inBag: false,
           revived: false,
         },
       ],
     ],
-    stoneEntries: [
+    itemEntries: [
       [
         {
-          stoneId: "fire-stone",
-          location: "Lavaridge Town",
+          id: "fire-stone",
+          location: "",
+          locationSlug: "lavaridge-town",
           inBag: true,
           used: false,
         },
         {
-          stoneId: "water-stone",
-          location: "Slateport City",
+          id: "water-stone",
+          location: "",
+          locationSlug: "slateport-city",
           inBag: true,
           used: true,
         },
         {
-          stoneId: "sun-stone",
-          location: "Mossdeep City",
+          id: "sun-stone",
+          location: "",
+          locationSlug: "mossdeep-city",
           inBag: false,
           used: false,
         },
         {
-          stoneId: "item:sceptilite",
-          location: "Fortree City",
+          id: "item:sceptilite",
+          location: "",
+          locationSlug: "fortree-city",
           inBag: true,
           used: false,
         },
       ],
       [
         {
-          stoneId: "leaf-stone",
-          location: "Fortree City",
+          id: "leaf-stone",
+          location: "",
+          locationSlug: "fortree-city",
           inBag: true,
           used: false,
         },
         {
-          stoneId: "thunder-stone",
-          location: "Mauville City",
+          id: "thunder-stone",
+          location: "",
+          locationSlug: "mauville-city",
           inBag: true,
           used: false,
         },
         {
-          stoneId: "moon-stone",
-          location: "Fallarbor Town",
+          id: "moon-stone",
+          location: "",
+          locationSlug: "fallarbor-town",
           inBag: true,
           used: true,
         },
         {
-          stoneId: "item:blazikenite",
-          location: "Fallarbor Town",
+          id: "item:blazikenite",
+          location: "",
+          locationSlug: "fallarbor-town",
           inBag: true,
           used: false,
         },
         {
-          stoneId: "item:altarianite",
-          location: "Lilycove City",
+          id: "item:altarianite",
+          location: "",
+          locationSlug: "lilycove-city",
           inBag: false,
           used: false,
         },

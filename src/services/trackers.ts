@@ -126,6 +126,7 @@ interface CreateTrackerPayload {
   memberInvites: InviteEntry[];
   owner: User;
   gameVersionId: string;
+  allPokemonAndItems?: boolean;
   rulesetId?: string;
   rules?: string[];
 }
@@ -136,6 +137,7 @@ export const createTracker = async ({
   memberInvites,
   owner,
   gameVersionId,
+  allPokemonAndItems,
   rulesetId,
   rules,
 }: CreateTrackerPayload): Promise<{ trackerId: string; meta: TrackerMeta }> => {
@@ -219,6 +221,7 @@ export const createTracker = async ({
     members,
     guests,
     gameVersionId,
+    ...(allPokemonAndItems ? { allPokemonAndItems: true } : {}),
     rulesetId: resolvedRulesetId,
     isPublic: false,
   };
@@ -444,4 +447,20 @@ export const getUserWikiPreference = async (
   const userPath = `users/${userId}/wikiId`;
   const snapshot = await get(ref(db, userPath));
   return snapshot.exists() ? (snapshot.val() as string) : null;
+};
+
+export const updateUserMultiLocaleSearchPreference = async (
+  userId: string,
+  multiLocaleSearch: boolean,
+): Promise<void> => {
+  const userPath = `users/${userId}/multiLocaleSearch`;
+  await set(ref(db, userPath), multiLocaleSearch);
+};
+
+export const getUserMultiLocaleSearchPreference = async (
+  userId: string,
+): Promise<boolean> => {
+  const userPath = `users/${userId}/multiLocaleSearch`;
+  const snapshot = await get(ref(db, userPath));
+  return snapshot.exists() ? snapshot.val() : false;
 };

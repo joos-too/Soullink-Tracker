@@ -1,6 +1,4 @@
-import { GERMAN_POKEMON_NAMES } from "@/src/data/pokemon-de.ts";
-import { ENGLISH_POKEMON_NAMES } from "@/src/data/pokemon-en.ts";
-import { GERMAN_TO_ID, ENGLISH_TO_ID } from "@/src/data/pokemon-map.ts";
+import { POKEMON_DATA } from "@/src/data/pokemon.ts";
 
 export type WikiId = "pokewiki" | "bulbapedia" | "pokemondb";
 
@@ -11,15 +9,6 @@ export interface Wiki {
   baseUrl: string;
   buildUrl: (pokemonName: string) => string;
 }
-
-// Build ID → localized name lookups once at module load
-const ID_TO_GERMAN: Record<number, string> = Object.fromEntries(
-  GERMAN_POKEMON_NAMES.map((e) => [e.id, e.name]),
-);
-
-const ID_TO_ENGLISH: Record<number, string> = Object.fromEntries(
-  ENGLISH_POKEMON_NAMES.map((e) => [e.id, e.name]),
-);
 
 export const WIKIS: Wiki[] = [
   {
@@ -54,34 +43,22 @@ export const DEFAULT_WIKI_DE: WikiId = "pokewiki";
 export const DEFAULT_WIKI_EN: WikiId = "bulbapedia";
 
 /**
- * Resolve a Pokemon name (German or English) to its national-dex ID.
- * The lookup is case-insensitive.
+ * Build the wiki URL for a given Pokémon id and wiki.
+ * The correct localized name for the target wiki is resolved automatically via the existing Pokémon data.
+ * Returns null when the Pokémon cannot be found in the data.
  */
-function resolveId(name: string): number | undefined {
-  const lower = name.toLowerCase();
-  const fromGerman = GERMAN_TO_ID[lower];
-  if (fromGerman !== undefined) return fromGerman;
-  const fromEnglish = ENGLISH_TO_ID[lower];
-  if (fromEnglish !== undefined) return fromEnglish;
-  return undefined;
-}
-
-/**
- * Build the wiki URL for a given Pokemon name and wiki.
- * The name may be in German or English – the correct localized name for
- * the target wiki is resolved automatically via the existing data mappings.
- * Returns null when the Pokemon cannot be found in the data.
- */
-export function getWikiUrl(pokemonName: string, wikiId: WikiId): string | null {
-  if (!pokemonName?.trim()) return null;
+export function getWikiUrlById(
+  pokemonId: number | null | undefined,
+  wikiId: WikiId,
+): string | null {
   const wiki = WIKIS.find((w) => w.id === wikiId);
   if (!wiki) return null;
-
-  const id = resolveId(pokemonName);
-  if (id === undefined) return null;
+  if (typeof pokemonId !== "number") return null;
 
   const targetName =
-    wiki.language === "de" ? ID_TO_GERMAN[id] : ID_TO_ENGLISH[id];
+    wiki.language === "de"
+      ? POKEMON_DATA[pokemonId]?.names.de
+      : POKEMON_DATA[pokemonId]?.names.en;
   if (!targetName) return null;
 
   return wiki.buildUrl(targetName);

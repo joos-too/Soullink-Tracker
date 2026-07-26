@@ -4,17 +4,13 @@
 
 @font-face {
   font-family: "Press Start 2P";
-  src:
-    url("/dist/fonts/press-start-2p.woff2") format("woff2"),
-    url("/public/fonts/press-start-2p.woff2") format("woff2");
+  src: url("/fonts/press-start-2p.woff2") format("woff2");
   font-display: swap;
 }
 
 @font-face {
   font-family: "Roboto";
-  src:
-    url("/dist/fonts/Roboto-VariableFont.woff2") format("woff2"),
-    url("/public/fonts/Roboto-VariableFont.woff2") format("woff2");
+  src: url("/fonts/Roboto-VariableFont.woff2") format("woff2");
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
@@ -22,9 +18,7 @@
 
 @font-face {
   font-family: "Roboto";
-  src:
-    url("/dist/fonts/Roboto-VariableFont.woff2") format("woff2"),
-    url("/public/fonts/Roboto-Italic-VariableFont.woff2") format("woff2");
+  src: url("/fonts/Roboto-Italic-VariableFont.woff2") format("woff2");
   font-weight: 100 900;
   font-style: italic;
   font-display: swap;

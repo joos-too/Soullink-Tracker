@@ -13,10 +13,10 @@ export const de = {
     searchPlaceholder: "Suchen…",
     overview: "Zur Übersicht",
     unknownPlayers: "Unbekannte Spieler",
-    unknownRoute: "Unbekanntes Gebiet",
+    unknownLocation: "Unbekanntes Gebiet",
     nickname: "Spitzname",
     pokemonPlaceholder: "Pokémon",
-    routePlaceholder: "z. B. Route 1",
+    locationPlaceholder: "z. B. Route 1",
     logout: "Logout",
     languageToggleLabel: "Sprache wechseln",
     darkModeToggleLabel: "Darkmode umschalten",
@@ -75,7 +75,7 @@ export const de = {
     },
     addLost: {
       title: "Verlorene Pokémon hinzufügen",
-      routeLabel: "Gebiet",
+      locationLabel: "Gebiet",
       playerPokemonLabel: "{{name}}’s Pokémon",
     },
     editLost: {
@@ -104,6 +104,10 @@ export const de = {
       versionButton: "Spielversion auswählen",
       versionPlaceholder: "Keine Version ausgewählt",
       versionRequired: "Bitte wähle eine Spielversion aus.",
+      allPokemonAndItemsLabel: "Versionsbeschränkung aufheben",
+      allPokemonAndItemsDescription:
+        "Standardmäßig schlägt ein Tracker nur Pokémon und Items bis zur ausgewählten Spielversion vor. Diese Einstellung ermöglicht es alle Pokémon und Items, sowie Entwicklungen bis zur neusten Gen auszuwählen.",
+      allPokemonAndItemsTooltipLabel: "Info zu Vorschlägen und Entwicklungen",
       rulesetLabel: "Regeln",
       rulesetButton: "Regeln auswählen",
       rulesetPlaceholder: "Standard-Regeln",
@@ -136,7 +140,7 @@ export const de = {
     },
     selectLoss: {
       title: "Link töten?",
-      routeLabel: "Gebiet: {{route}}",
+      locationLabel: "Gebiet: {{location}}",
       description:
         "Diese Funktion ist dazu gedacht, gestorbene Links in den Friedhof zu verschieben.",
       tooltipLabel: "Info zum Link töten",
@@ -150,7 +154,7 @@ export const de = {
       description:
         "Diese Funktion ist dazu gedacht Links zu löschen, welche versehentlich erstellt worden sind.",
       tooltipLabel: "Info zum Link löschen",
-      routeLabel: "Gebiet: {{route}}",
+      locationLabel: "Gebiet: {{location}}",
       warning: "Link wird endgültig gelöscht!",
       confirm: "Endgültig löschen",
     },
@@ -170,19 +174,17 @@ export const de = {
       title: "Entwicklungsstein hinzufügen",
       itemTitle: "Item hinzufügen",
       megaTitle: "Mega-Stein hinzufügen",
-      tabStones: "Steine",
+      tabStones: "Entwicklungssteine",
       tabItems: "Items",
       tabMegaStones: "Mega-Steine",
       stoneLabel: "Stein auswählen",
       megaStoneLabel: "Mega-Stein auswählen",
-      spritePokemon: "Pokémon",
-      spriteItem: "Steine",
       showPokemon: "Pokémon zeigen?",
-      itemLabel: "Item suchen",
+      itemLabel: "Item-Name",
       itemSearchPlaceholder: "Nach Name suchen…",
       locationLabel: "Fundort",
       locationTooltip:
-        "Falls ein Entwicklungsstein gefunden wurde, aber noch nicht erworben wurde, kann hier der Fundort notiert werden. Später lässt er sich mit einem Klick in den Beutel verschieben.",
+        "Falls ein Item gefunden wurde, aber noch nicht erworben wurde, kann hier der Fundort notiert werden. Später lässt er sich mit einem Klick in den Beutel verschieben.",
       locationTooltipLabel: "Info zum Fundort",
       inBagLabel: "Bereits im Beutel",
       submit: "Hinzufügen",
@@ -228,7 +230,7 @@ export const de = {
     footer: {
       github: "Auf GitHub ansehen",
     },
-    routes: {
+    locations: {
       title: "Abgegraste Gebiete",
       empty: "Noch keine Gebiete eingetragen.",
     },
@@ -237,11 +239,9 @@ export const de = {
       open: "Suche öffnen",
       openWithShortcut: "Suche öffnen (Strg + F)",
       modePokemon: "Pokémon",
-      modeRoutes: "Gebiete",
       modeItems: "Items",
       fieldLabel: "Tracker durchsuchen",
       emptyPokemon: "Noch keine Pokémon eingetragen.",
-      emptyRoutes: "Noch keine Gebiete eingetragen.",
       emptyItems: "Noch keine Items eingetragen.",
       categoryStones: "Entwicklungssteine",
       categoryMegaStones: "Mega-Steine",
@@ -391,7 +391,7 @@ export const de = {
     pokemonColumn: "Pokémon",
     nameColumn: "Name & Typ",
     nicknameColumn: "Spitzname",
-    routeColumn: "Gebiet",
+    locationColumn: "Gebiet",
     actionsColumn: "Aktionen",
     titleEdit: "Bearbeiten",
     titleMoveToBox: "In die Box verschieben",
@@ -421,7 +421,7 @@ export const de = {
     titleEdit: "Bearbeiten",
     statusDead: "Tot",
     statusLost: "Verloren",
-    areaLabel: "Gebiet: {{route}}",
+    areaLabel: "Gebiet: {{location}}",
     memberTitle: "{{name}}'s {{pokemon}}",
     nicknameLabel: "Spitzname: {{nickname}}",
     noNickname: "-",
@@ -492,6 +492,9 @@ export const de = {
     },
     sections: {
       options: "Tracker Optionen",
+      gameplay: "Gameplay",
+      general: "Allgemein",
+      configuration: "Tracker-Konfiguration",
       variableRivals: "Rivalen-Auswahl",
       variableRivalsDescription:
         "Wähle deinen Antagonisten für die korrekte Darstellung in den Rivalenkämpfen aus.",
@@ -503,12 +506,25 @@ export const de = {
         tooltip: `Standardmäßig orientiert sich die Level-Cap am höchsten Pokémon eines Trainers, im Hardcore Modus wird jedoch eine weitere Level-Cap hinzugefügt, welche sich am zweithöchsten Pokémon eines Trainers orientiert.\n\nEs darf nun lediglich ein Pokémon bis zur oberen Level-Cap gelevelt werden, der Rest des Teams darf die untere Level-Cap nicht überschreiten.`,
         description: "Erhöht die Schwierigkeit durch striktere Level-Caps.",
       },
+      nicknames: {
+        title: "Spitznamen deaktivieren",
+        tooltipLabel: "Info Spitznamen",
+        tooltip:
+          "Wenn aktiviert, werden Spitznamen ausgeblendet und deaktiviert. Nützlich, wenn man ohne Spitznamen spielen möchte.",
+        description:
+          "Spitznamen beim Hinzufügen und Anzeigen von Pokémon überspringen.",
+      },
       rivalCensor: {
         title: "Rivalenkämpfe zensieren",
         tooltipLabel: "Info Rivalenkämpfe zensieren",
-        tooltip: `Um Spoiler zu vermeiden und die Story besser genießen zu können, werden Rivalenkämpfe zensiert und müssen händisch aufgedeckt werden.\n\nNach einmaligem Aufdecken und auch in folgenden Runs bleiben sie dann aufgedeckt.`,
+        tooltip: `Um Spoiler zu vermeiden und die Story besser genießen zu können, werden Rivalenkämpfe zensiert und müssen händisch aufgedeckt werden.\n\nNach einmaligem Aufdecken und auch in folgenden Runs bleiben sie dann aufgedeckt. Du kannst auch nur die Level der anstehenden Rivalenkämpfen anzeigen lassen.`,
         description:
           "Verbirgt Details zu Rivalenkämpfen, bis sie aufgedeckt werden.",
+        modes: {
+          off: "Aus",
+          showLevels: "Zeige Level",
+          on: "An",
+        },
       },
       legendary: {
         title: "Legendary Tracker",
@@ -546,6 +562,14 @@ export const de = {
         tooltip:
           "Standardmäßig kann jedes Fossil pro Spieler nur einmal wiederbelebt werden. Wenn aktiviert, können Spieler das gleiche Fossil unendlich oft sammeln und wiederbeleben.",
         description: "Erlaube Spielern, Fossile mehrfach zu sammeln.",
+      },
+      allPokemonAndItems: {
+        title: "Versionsbeschränkung aufheben",
+        tooltipLabel: "Info zu Vorschlägen und Entwicklungen",
+        tooltip:
+          "Standardmäßig schlägt ein Tracker nur Pokémon und Items bis zur ausgewählten Spielversion vor. Diese Einstellung ermöglicht es alle Pokémon und Items, sowie Entwicklungen bis zur neusten Gen auszuwählen.",
+        description:
+          "Erweitert Vorschläge und Entwicklungsoptionen über die Spielversion hinaus.",
       },
       megaStoneSpriteStyle: {
         title: "Pokémon Mega-Stein Sprites",
@@ -623,6 +647,12 @@ export const de = {
       title: "Sprache",
       description:
         "Hier kannst du die Sprache der Benutzeroberfläche wechseln.",
+      multiLocaleSearch: {
+        title: "Mehrsprachige Suche",
+        description: "Erlaubt die Suche und Anzeige in verschiedenen Sprachen.",
+        tooltip:
+          "Wenn man irgendwo in Trackern, über Suchfelder nach Pokémon oder Items sucht, kann man auch nach Namen aus anderen Sprachen, als der ausgewählten suchen.",
+      },
     },
     sprites: {
       title: "Sprite-Anzeige",

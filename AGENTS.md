@@ -52,6 +52,7 @@ Reference for coding agents working on the Pokemon Soullink Tracker.
 - Custom rulesets live under `rulesets/{userId}/{rulesetId}`.
 
 When changing tracker shape, update both runtime sanitizing code and any default-state helpers. The main normalization logic currently lives in `src/services/init.ts` and `src/App.tsx`.
+Runtime sanitization should only be used as a last resort. Instead database migration scripts should be modified and used to update existing data.
 
 ## Localization Rules
 

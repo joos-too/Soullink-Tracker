@@ -6,6 +6,7 @@ import {
 } from "@/src/services/init.ts";
 import type {
   GameVersion,
+  RivalCensorMode,
   RivalGender,
   Ruleset,
   TrackerMember,
@@ -32,6 +33,7 @@ import {
   focusRingRedClasses,
 } from "@/src/styles/focusRing.ts";
 import ToggleSwitch from "@/src/components/toggles/ToggleSwitch.tsx";
+import TriStateToggle from "@/src/components/toggles/TriStateToggle.tsx";
 import Tooltip from "@/src/components/other/Tooltip.tsx";
 import { useTranslation } from "react-i18next";
 import { getLocalizedRivalEntry } from "@/src/services/gameLocalization.ts";
@@ -49,12 +51,16 @@ interface SettingsPageProps {
   onBack: () => void;
   legendaryTrackerEnabled: boolean;
   onlegendaryTrackerToggle: (enabled: boolean) => void;
-  rivalCensorEnabled: boolean;
-  onRivalCensorToggle: (enabled: boolean) => void;
+  rivalCensorMode: RivalCensorMode;
+  onRivalCensorModeChange: (mode: RivalCensorMode) => void;
   hardcoreModeEnabled: boolean;
   onHardcoreModeToggle: (enabled: boolean) => void;
+  nicknamesEnabled: boolean;
+  onNicknamesToggle: (enabled: boolean) => void;
   infiniteFossilsEnabled: boolean;
   onInfiniteFossilsToggle: (enabled: boolean) => void;
+  allPokemonAndItems: boolean;
+  onAllPokemonAndItemsToggle: (enabled: boolean) => void;
   isPublic: boolean;
   onPublicToggle: (enabled: boolean) => void;
   members: TrackerMember[];
@@ -86,12 +92,16 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
   onBack,
   legendaryTrackerEnabled,
   onlegendaryTrackerToggle,
-  rivalCensorEnabled,
-  onRivalCensorToggle,
+  rivalCensorMode,
+  onRivalCensorModeChange,
   hardcoreModeEnabled,
   onHardcoreModeToggle,
+  nicknamesEnabled,
+  onNicknamesToggle,
   infiniteFossilsEnabled,
   onInfiniteFossilsToggle,
+  allPokemonAndItems,
+  onAllPokemonAndItemsToggle,
   isPublic,
   onPublicToggle,
   members,
@@ -383,8 +393,56 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
 
             <section>
               <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-gray-500 mb-4">
-                {t("settings.sections.options")}
+                {t("settings.sections.gameplay")}
               </h2>
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <div className="font-medium text-gray-800 dark:text-gray-200">
+                      {t("settings.features.rivalCensor.title")}
+                    </div>
+                    <Tooltip
+                      side="top"
+                      content={t("settings.features.rivalCensor.tooltip")}
+                    >
+                      <span
+                        className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 cursor-help"
+                        aria-label={t(
+                          "settings.features.rivalCensor.tooltipLabel",
+                        )}
+                      >
+                        <FiInfo size={16} />
+                      </span>
+                    </Tooltip>
+                  </div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                    {t("settings.features.rivalCensor.description")}
+                  </div>
+                </div>
+                <TriStateToggle
+                  id="rival-censor-toggle"
+                  value={rivalCensorMode}
+                  options={[
+                    {
+                      value: "off" as const,
+                      label: t("settings.features.rivalCensor.modes.off"),
+                    },
+                    {
+                      value: "showLevels" as const,
+                      label: t(
+                        "settings.features.rivalCensor.modes.showLevels",
+                      ),
+                    },
+                    {
+                      value: "on" as const,
+                      label: t("settings.features.rivalCensor.modes.on"),
+                    },
+                  ]}
+                  onChange={onRivalCensorModeChange}
+                  ariaLabel={t("settings.features.rivalCensor.title")}
+                  disabled={isGuest}
+                />
+              </div>
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <div className="flex items-center gap-2">
@@ -417,20 +475,20 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
                   disabled={isGuest}
                 />
               </div>
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between">
                 <div>
                   <div className="flex items-center gap-2">
                     <div className="font-medium text-gray-800 dark:text-gray-200">
-                      {t("settings.features.rivalCensor.title")}
+                      {t("settings.features.infiniteFossils.title")}
                     </div>
                     <Tooltip
                       side="top"
-                      content={t("settings.features.rivalCensor.tooltip")}
+                      content={t("settings.features.infiniteFossils.tooltip")}
                     >
                       <span
                         className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 cursor-help"
                         aria-label={t(
-                          "settings.features.rivalCensor.tooltipLabel",
+                          "settings.features.infiniteFossils.tooltipLabel",
                         )}
                       >
                         <FiInfo size={16} />
@@ -438,18 +496,56 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
                     </Tooltip>
                   </div>
                   <div className="text-xs text-gray-500 dark:text-gray-400">
-                    {t("settings.features.rivalCensor.description")}
+                    {t("settings.features.infiniteFossils.description")}
                   </div>
                 </div>
                 <ToggleSwitch
-                  id="rival-censor-toggle"
-                  checked={rivalCensorEnabled}
-                  onChange={onRivalCensorToggle}
-                  ariaLabel={t("settings.features.rivalCensor.title")}
+                  id="infinite-fossils-toggle"
+                  checked={infiniteFossilsEnabled}
+                  onChange={onInfiniteFossilsToggle}
+                  ariaLabel={t("settings.features.infiniteFossils.title")}
                   disabled={isGuest}
                 />
               </div>
+            </section>
+
+            <section>
+              <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-gray-500 mb-4">
+                {t("settings.sections.general")}
+              </h2>
               <div className="flex items-center justify-between mb-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <div className="font-medium text-gray-800 dark:text-gray-200">
+                      {t("settings.features.nicknames.title")}
+                    </div>
+                    <Tooltip
+                      side="top"
+                      content={t("settings.features.nicknames.tooltip")}
+                    >
+                      <span
+                        className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 cursor-help"
+                        aria-label={t(
+                          "settings.features.nicknames.tooltipLabel",
+                        )}
+                      >
+                        <FiInfo size={16} />
+                      </span>
+                    </Tooltip>
+                  </div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                    {t("settings.features.nicknames.description")}
+                  </div>
+                </div>
+                <ToggleSwitch
+                  id="nicknames-toggle"
+                  checked={!nicknamesEnabled}
+                  onChange={(checked) => onNicknamesToggle(!checked)}
+                  ariaLabel={t("settings.features.nicknames.title")}
+                  disabled={isGuest}
+                />
+              </div>
+              <div className="flex items-center justify-between">
                 <div>
                   <div className="flex items-center gap-2">
                     <div className="font-medium text-gray-800 dark:text-gray-200">
@@ -481,20 +577,28 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
                   disabled={isGuest}
                 />
               </div>
+            </section>
+
+            <section>
+              <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-gray-500 mb-4">
+                {t("settings.sections.configuration")}
+              </h2>
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <div className="flex items-center gap-2">
                     <div className="font-medium text-gray-800 dark:text-gray-200">
-                      {t("settings.features.infiniteFossils.title")}
+                      {t("settings.features.allPokemonAndItems.title")}
                     </div>
                     <Tooltip
                       side="top"
-                      content={t("settings.features.infiniteFossils.tooltip")}
+                      content={t(
+                        "settings.features.allPokemonAndItems.tooltip",
+                      )}
                     >
                       <span
                         className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 cursor-help"
                         aria-label={t(
-                          "settings.features.infiniteFossils.tooltipLabel",
+                          "settings.features.allPokemonAndItems.tooltipLabel",
                         )}
                       >
                         <FiInfo size={16} />
@@ -502,14 +606,14 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
                     </Tooltip>
                   </div>
                   <div className="text-xs text-gray-500 dark:text-gray-400">
-                    {t("settings.features.infiniteFossils.description")}
+                    {t("settings.features.allPokemonAndItems.description")}
                   </div>
                 </div>
                 <ToggleSwitch
-                  id="infinite-fossils-toggle"
-                  checked={infiniteFossilsEnabled}
-                  onChange={onInfiniteFossilsToggle}
-                  ariaLabel={t("settings.features.infiniteFossils.title")}
+                  id="all-pokemon-and-items-toggle"
+                  checked={allPokemonAndItems}
+                  onChange={onAllPokemonAndItemsToggle}
+                  ariaLabel={t("settings.features.allPokemonAndItems.title")}
                   disabled={isGuest}
                 />
               </div>
@@ -565,20 +669,24 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
                         <input
                           type="radio"
                           name={`rival-${rival.key}`}
-                          value="male"
+                          value="female"
                           checked={
-                            (rivalPreferences?.[rival.key] || "male") === "male"
+                            (rivalPreferences?.[rival.key] ??
+                              gameVersion?.defaultRivalPreferences?.[
+                                rival.key
+                              ] ??
+                              "male") === "female"
                           }
                           onChange={() =>
-                            onRivalPreferenceChange(rival.key, "male")
+                            onRivalPreferenceChange(rival.key, "female")
                           }
                           disabled={isGuest}
                           className="h-4 w-4 accent-green-600 disabled:opacity-60"
                         />{" "}
                         {getRivalOptionLabel(
                           rival.key,
-                          "male",
-                          rival.options.male,
+                          "female",
+                          rival.options.female,
                         )}
                       </label>
                       <label
@@ -591,18 +699,24 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
                         <input
                           type="radio"
                           name={`rival-${rival.key}`}
-                          value="female"
-                          checked={rivalPreferences?.[rival.key] === "female"}
+                          value="male"
+                          checked={
+                            (rivalPreferences?.[rival.key] ??
+                              gameVersion?.defaultRivalPreferences?.[
+                                rival.key
+                              ] ??
+                              "male") === "male"
+                          }
                           onChange={() =>
-                            onRivalPreferenceChange(rival.key, "female")
+                            onRivalPreferenceChange(rival.key, "male")
                           }
                           disabled={isGuest}
                           className="h-4 w-4 accent-green-600 disabled:opacity-60"
                         />{" "}
                         {getRivalOptionLabel(
                           rival.key,
-                          "female",
-                          rival.options.female,
+                          "male",
+                          rival.options.male,
                         )}
                       </label>
                     </div>

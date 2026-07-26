@@ -14,7 +14,6 @@ interface SuggestionInputProps<TSuggestion = string> {
   required?: boolean;
   minSearchLength?: number;
   debounceMs?: number;
-  showNoMatches?: boolean;
   inputClassName?: string;
   endAdornment?: React.ReactNode;
   getSuggestionValue?: (suggestion: TSuggestion) => string;
@@ -35,7 +34,6 @@ const SuggestionInput = <TSuggestion,>({
   required = true,
   minSearchLength = 2,
   debounceMs = 250,
-  showNoMatches = false,
   inputClassName = "",
   endAdornment,
   getSuggestionValue = (suggestion) => String(suggestion),
@@ -82,7 +80,7 @@ const SuggestionInput = <TSuggestion,>({
 
       setSuggestions(res);
       setLoading(false);
-      setOpen(res.length > 0 || showNoMatches);
+      setOpen(true);
       setActiveIndex(res.length ? 0 : -1);
     }, debounceMs);
 
@@ -94,7 +92,6 @@ const SuggestionInput = <TSuggestion,>({
     focused,
     isOpen,
     minSearchLength,
-    showNoMatches,
     value,
   ]);
 
@@ -191,7 +188,7 @@ const SuggestionInput = <TSuggestion,>({
                   </div>
                 ))
               : null}
-            {!loading && suggestions.length === 0 && showNoMatches ? (
+            {!loading && suggestions.length === 0 ? (
               <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
                 {t("modals.common.noMatches")}
               </div>

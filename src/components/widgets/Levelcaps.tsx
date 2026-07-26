@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from "react";
-import type { GameVersion, LevelCap, RivalCap, UserSettings } from "@/types.ts";
+import type {
+  GameVersion,
+  LevelCap,
+  RivalCap,
+  RivalCensorMode,
+  UserSettings,
+} from "@/types.ts";
 import { BadgeImage, RivalImage } from "@/src/components/other/GameImages.tsx";
 import { FiEye, FiEyeOff, FiRefreshCw } from "react-icons/fi";
 import { useTranslation } from "react-i18next";
@@ -22,6 +28,7 @@ interface LevelcapsProps {
   onRivalCapToggleDone: (index: number) => void;
   onRivalCapReveal: (index: number) => void;
   rivalCensorEnabled: boolean;
+  rivalCensorMode?: RivalCensorMode;
   hardcoreModeEnabled: boolean;
   gameVersion?: GameVersion;
   rivalPreferences: UserSettings["rivalPreferences"];
@@ -45,6 +52,7 @@ const Levelcaps: React.FC<LevelcapsProps> = ({
   onRivalCapToggleDone,
   onRivalCapReveal,
   rivalCensorEnabled,
+  rivalCensorMode,
   hardcoreModeEnabled,
   gameVersion,
   rivalPreferences,
@@ -59,7 +67,11 @@ const Levelcaps: React.FC<LevelcapsProps> = ({
     readStoredCapsView(trackerViewStorageKey),
   );
   const [isMobile, setIsMobile] = useState(false);
-  const nextRivalToRevealIndex = rivalCensorEnabled
+  const effectiveCensorMode: RivalCensorMode =
+    rivalCensorMode ?? (rivalCensorEnabled ? "on" : "off");
+  const isCensored = effectiveCensorMode !== "off";
+  const showLevelsWhileCensored = effectiveCensorMode === "showLevels";
+  const nextRivalToRevealIndex = isCensored
     ? rivalCaps.findIndex((cap) => !cap.revealed)
     : -1;
   const versionId = gameVersion?.id;
@@ -115,7 +127,10 @@ const Levelcaps: React.FC<LevelcapsProps> = ({
     if (typeof cap.rival !== "object") {
       return baseName;
     }
-    const preference = rivalPreferences?.[cap.rival.key] || "male";
+    const preference =
+      rivalPreferences?.[cap.rival.key] ??
+      gameVersion?.defaultRivalPreferences?.[cap.rival.key] ??
+      "male";
     const localizedEntry = getLocalizedRivalEntry(t, cap.rival);
     const localizedOptions: Record<"male" | "female", string> | undefined =
       localizedEntry &&
@@ -224,7 +239,6 @@ const Levelcaps: React.FC<LevelcapsProps> = ({
             <div className="flex items-center justify-end shrink-0 px-3">
               <BadgeImage
                 arenaLabel={cap.arena}
-                displayName={arenaLabel}
                 posIndex={index}
                 badgeSet={gameVersion?.badgeSet}
               />
@@ -246,76 +260,116 @@ const Levelcaps: React.FC<LevelcapsProps> = ({
       {rivalCaps.map((cap, index) => {
         const isRivalCapActive =
           isVisible && !readOnly && canToggleRivalAtIndex(rivalCaps, index);
-        return (
-          <div key={cap.id}>
-            {rivalCensorEnabled && !cap.revealed ? (
-              <>
-                {index === nextRivalToRevealIndex && !readOnly ? (
-                  <button
-                    onClick={() => {
-                      onRivalCapReveal(index);
-                    }}
-                    tabIndex={isVisible ? 0 : -1}
-                    className="w-full flex items-center justify-center gap-2 text-sm p-3 rounded-md border bg-gray-100 dark:bg-gray-700/50 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-600"
-                  >
-                    <FiEye size={16} /> {t("tracker.infoPanel.nextRival")}
-                  </button>
+        const isHidden = isCensored && !cap.revealed;
+        const canReveal =
+          isHidden && index === nextRivalToRevealIndex && !readOnly;
+
+        if (isHidden) {
+          const bgClasses = canReveal
+            ? "bg-gray-100 dark:bg-gray-700/50 hover:bg-gray-200 dark:hover:bg-gray-700 border-gray-200 dark:border-gray-600"
+            : "bg-gray-50 dark:bg-gray-800 border-dashed border-gray-300 dark:border-gray-600";
+
+          const content = (
+            <>
+              <div className="flex items-center gap-3 grow min-w-0 h-8">
+                {canReveal ? (
+                  <FiEye
+                    size={16}
+                    className="shrink-0 text-gray-600 dark:text-gray-300"
+                  />
                 ) : (
-                  <div className="w-full flex items-center justify-center gap-2 text-sm p-3 rounded-md bg-gray-50 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed border border-dashed border-gray-300 dark:border-gray-600">
-                    <FiEyeOff size={16} /> {t("tracker.infoPanel.futureBattle")}
-                  </div>
+                  <FiEyeOff
+                    size={16}
+                    className="shrink-0 text-gray-400 dark:text-gray-500"
+                  />
                 )}
-              </>
-            ) : (
-              <div
-                className={`flex items-center justify-between pl-2 py-1.5 border rounded-md ${cap.done ? "bg-green-100 dark:bg-green-900/50 border-green-200 dark:border-green-800" : "bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600"}`}
-              >
-                <div className="flex items-center gap-3 grow min-w-0">
-                  <input
-                    id={`rivalcap-done-${cap.id}`}
-                    type="checkbox"
-                    checked={!!cap.done}
-                    tabIndex={isRivalCapActive ? 0 : -1}
-                    onChange={() => attemptRivalToggle(index)}
-                    onClick={(event) => {
-                      if (
-                        readOnly ||
-                        !canToggleRivalAtIndex(rivalCaps, index)
-                      ) {
-                        event.preventDefault();
-                      }
-                    }}
-                    aria-label={t("tracker.infoPanel.completedArena", {
-                      target: resolvePreferredRivalName(cap),
-                    })}
-                    className={`h-5 w-5 accent-green-600 shrink-0 ${
-                      isRivalCapActive ? "cursor-pointer" : "cursor opacity-70"
-                    }`}
-                  />
-                  <span
-                    onClick={(event) => event.stopPropagation()}
-                    className="text-sm text-gray-800 dark:text-gray-300 wrap-break-word"
-                  >
-                    {getLocalizedRivalLocation(
-                      t,
-                      versionId,
-                      cap.id,
-                      cap.location,
-                    )}
-                  </span>
-                </div>
+                <span
+                  className={`text-sm ${canReveal ? "text-gray-600 dark:text-gray-300" : "text-gray-400 dark:text-gray-500"}`}
+                >
+                  {canReveal
+                    ? t("tracker.infoPanel.nextRival")
+                    : t("tracker.infoPanel.futureBattle")}
+                </span>
+              </div>
+              {showLevelsWhileCensored && (
                 <div className="flex items-center justify-end shrink-0 px-3">
-                  <RivalImage
-                    rival={cap.rival}
-                    preferences={rivalPreferences}
-                    displayName={resolvePreferredRivalName(cap)}
-                  />
                   <span className="font-bold text-lg text-gray-800 dark:text-gray-200 text-center">
                     {renderLevelCaps(cap.level)}
                   </span>
                 </div>
+              )}
+            </>
+          );
+
+          return (
+            <div key={cap.id}>
+              {canReveal ? (
+                <button
+                  onClick={() => onRivalCapReveal(index)}
+                  tabIndex={isVisible ? 0 : -1}
+                  className={`w-full flex items-center justify-between pl-2 py-1.5 border rounded-md ${bgClasses}`}
+                >
+                  {content}
+                </button>
+              ) : (
+                <div
+                  className={`flex items-center justify-between pl-2 py-1.5 border rounded-md cursor-not-allowed ${bgClasses}`}
+                >
+                  {content}
+                </div>
+              )}
+            </div>
+          );
+        }
+
+        return (
+          <div key={cap.id}>
+            <div
+              className={`flex items-center justify-between pl-2 py-1.5 border rounded-md ${cap.done ? "bg-green-100 dark:bg-green-900/50 border-green-200 dark:border-green-800" : "bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600"}`}
+            >
+              <div className="flex items-center gap-3 grow min-w-0">
+                <input
+                  id={`rivalcap-done-${cap.id}`}
+                  type="checkbox"
+                  checked={!!cap.done}
+                  tabIndex={isRivalCapActive ? 0 : -1}
+                  onChange={() => attemptRivalToggle(index)}
+                  onClick={(event) => {
+                    if (readOnly || !canToggleRivalAtIndex(rivalCaps, index)) {
+                      event.preventDefault();
+                    }
+                  }}
+                  aria-label={t("tracker.infoPanel.completedArena", {
+                    target: resolvePreferredRivalName(cap),
+                  })}
+                  className={`h-5 w-5 accent-green-600 shrink-0 ${
+                    isRivalCapActive ? "cursor-pointer" : "cursor opacity-70"
+                  }`}
+                />
+                <span
+                  onClick={(event) => event.stopPropagation()}
+                  className="text-sm text-gray-800 dark:text-gray-300 wrap-break-word"
+                >
+                  {getLocalizedRivalLocation(
+                    t,
+                    versionId,
+                    cap.id,
+                    cap.location,
+                  )}
+                </span>
               </div>
-            )}
+              <div className="flex items-center justify-end shrink-0 px-3">
+                <RivalImage
+                  rival={cap.rival}
+                  preferences={rivalPreferences}
+                  defaultPreferences={gameVersion?.defaultRivalPreferences}
+                  displayName={resolvePreferredRivalName(cap)}
+                />
+                <span className="font-bold text-lg text-gray-800 dark:text-gray-200 text-center">
+                  {renderLevelCaps(cap.level)}
+                </span>
+              </div>
+            </div>
           </div>
         );
       })}

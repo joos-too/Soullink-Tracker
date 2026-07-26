@@ -90,11 +90,13 @@ export const INITIAL_STATE: AppState = {
   stats: ensureStatsForPlayers(undefined, DEFAULT_PLAYER_NAME_SET.length),
   legendaryTrackerEnabled: true,
   rivalCensorEnabled: true,
-  hardcoreModeEnabled: true,
+  rivalCensorMode: "on",
+  hardcoreModeEnabled: false,
+  nicknamesEnabled: true,
   infiniteFossilsEnabled: false,
   megaStoneSpriteStyle: "item",
   fossils: [],
-  stones: [],
+  items: [],
   runStartedAt: Date.now(),
 };
 
@@ -125,7 +127,7 @@ export const createInitialState = (
     revealed: false,
   }));
   base.fossils = normalizedNames.map(() => []);
-  base.stones = normalizedNames.map(() => []);
+  base.items = normalizedNames.map(() => []);
   base.runStartedAt = Date.now();
   return base;
 };

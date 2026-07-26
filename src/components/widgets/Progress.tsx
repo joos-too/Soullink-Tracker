@@ -57,7 +57,6 @@ const Progress: React.FC<ProgressProps> = ({
               <div className="flex items-center justify-center px-3 gap-x-4">
                 <BadgeImage
                   arenaLabel={next.arena}
-                  displayName={arenaLabel}
                   posIndex={Math.max(
                     levelCaps.findIndex((cap) => cap.id === next.id),
                     0,

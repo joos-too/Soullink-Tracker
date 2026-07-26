@@ -1,28 +1,10 @@
-import {
-  POKEMON_PAST_TYPES,
-  POKEMON_TYPES,
-  TYPE_NAMES_DE,
-  TYPE_NAMES_EN,
-} from "@/src/data/pokemon-types";
-import { findPokemonIdByName } from "@/src/services/pokemonSearch";
+import { POKEMON_DATA, POKEMON_TYPE_NAMES } from "@/src/data/pokemon";
 import type { SupportedLanguage } from "@/src/utils/language";
 
 const TYPE_NAMES: Record<SupportedLanguage, Record<string, string>> = {
-  de: TYPE_NAMES_DE,
-  en: TYPE_NAMES_EN,
+  de: POKEMON_TYPE_NAMES.de,
+  en: POKEMON_TYPE_NAMES.en,
 };
-
-function getResolvedTypeSlugsForGeneration(
-  id: number,
-  generation?: number | null,
-): string[] {
-  const currentTypes = POKEMON_TYPES[id] ?? [];
-  if (typeof generation !== "number") return currentTypes;
-  const matchingPastEntry = (POKEMON_PAST_TYPES[id] ?? []).find(
-    (entry) => generation <= entry.generation,
-  );
-  return matchingPastEntry?.types ?? currentTypes;
-}
 
 /**
  * Returns the raw type slugs (e.g. ["grass", "poison"]) for a Pokémon id.
@@ -31,19 +13,13 @@ export function getPokemonTypeSlugsById(
   id: number,
   generation?: number | null,
 ): string[] {
-  return getResolvedTypeSlugsForGeneration(id, generation);
-}
-
-/**
- * Returns the raw type slugs for a Pokemon by its localized display name.
- */
-export function getPokemonTypeSlugsForName(
-  name: string | undefined | null,
-  generation?: number | null,
-): string[] {
-  const match = findPokemonIdByName(name);
-  if (!match) return [];
-  return getPokemonTypeSlugsById(match.id, generation);
+  const pokemon = POKEMON_DATA[id];
+  const currentTypes = pokemon?.types ?? [];
+  if (typeof generation !== "number") return currentTypes;
+  const matchingPastEntry = (pokemon?.pastTypes ?? []).find(
+    (entry) => generation <= entry.generation,
+  );
+  return matchingPastEntry?.types ?? currentTypes;
 }
 
 /**

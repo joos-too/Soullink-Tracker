@@ -17,7 +17,7 @@ function stripDiacritics(s: string): string {
   return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
-interface ItemEntry {
+interface ItemDataEntry {
   slug: string;
   de: string;
   en: string;
@@ -26,7 +26,7 @@ interface ItemEntry {
   normEn: string;
 }
 
-const ITEM_ENTRIES: ItemEntry[] = ITEMS.map((item) => ({
+const ITEM_ENTRIES: ItemDataEntry[] = ITEMS.map((item) => ({
   ...item,
   normDe: stripDiacritics(item.de.toLowerCase()),
   normEn: stripDiacritics(item.en.toLowerCase()),
@@ -48,6 +48,7 @@ export function searchItems(
   locale: SupportedLanguage = "de",
   gameVersionId?: string,
   max = 10,
+  multiLocaleSearch = false,
 ): ItemSearchResult[] {
   const q = stripDiacritics(query.trim().toLowerCase());
   if (q.length < 1) return [];
@@ -59,14 +60,37 @@ export function searchItems(
   const field = locale === "de" ? "normDe" : "normEn";
   const nameField = locale === "de" ? "de" : "en";
 
-  return ITEM_ENTRIES.filter(
+  const isAvailable = (entry: ItemDataEntry) =>
+    !STONE_SLUGS.has(entry.slug) &&
+    !FOSSIL_SLUGS.has(entry.slug) &&
+    !MEGA_STONE_SLUGS.has(entry.slug) &&
+    (!allowedSlugs || allowedSlugs.has(entry.slug));
+
+  const localResults = ITEM_ENTRIES.filter(
+    (entry) => isAvailable(entry) && entry[field].includes(q),
+  );
+
+  if (!multiLocaleSearch || localResults.length >= max) {
+    return localResults
+      .sort((a, b) => a[nameField].localeCompare(b[nameField]))
+      .slice(0, max)
+      .map((entry) => ({
+        slug: entry.slug,
+        name: entry[nameField],
+        spriteUrl: getSpriteUrl(entry.slug),
+      }));
+  }
+
+  const localSlugs = new Set(localResults.map((entry) => entry.slug));
+  const fallbackField = locale === "de" ? "normEn" : "normDe";
+  const crossResults = ITEM_ENTRIES.filter(
     (entry) =>
-      !STONE_SLUGS.has(entry.slug) &&
-      !FOSSIL_SLUGS.has(entry.slug) &&
-      !MEGA_STONE_SLUGS.has(entry.slug) &&
-      entry[field].includes(q) &&
-      (!allowedSlugs || allowedSlugs.has(entry.slug)),
-  )
+      isAvailable(entry) &&
+      !localSlugs.has(entry.slug) &&
+      entry[fallbackField].includes(q),
+  );
+
+  return [...localResults, ...crossResults]
     .sort((a, b) => a[nameField].localeCompare(b[nameField]))
     .slice(0, max)
     .map((entry) => ({
@@ -74,6 +98,48 @@ export function searchItems(
       name: entry[nameField],
       spriteUrl: getSpriteUrl(entry.slug),
     }));
+}
+
+export function findItemByName(
+  name: string,
+  locale: SupportedLanguage = "de",
+  gameVersionId?: string,
+  multiLocaleSearch = true,
+): ItemSearchResult | null {
+  const normalizedName = stripDiacritics(name.trim().toLowerCase());
+  if (!normalizedName) return null;
+
+  const allowedSlugs = gameVersionId
+    ? new Set(getItemsForVersion(gameVersionId).map((i) => i.slug))
+    : null;
+
+  const nameField = locale === "de" ? "de" : "en";
+  const preferredField = locale === "de" ? "normDe" : "normEn";
+  const fallbackField = locale === "de" ? "normEn" : "normDe";
+  const isAvailableEntry = (entry: ItemDataEntry) =>
+    !STONE_SLUGS.has(entry.slug) &&
+    !FOSSIL_SLUGS.has(entry.slug) &&
+    !MEGA_STONE_SLUGS.has(entry.slug) &&
+    (!allowedSlugs || allowedSlugs.has(entry.slug));
+  const entry =
+    ITEM_ENTRIES.find(
+      (entry) =>
+        isAvailableEntry(entry) && entry[preferredField] === normalizedName,
+    ) ??
+    (multiLocaleSearch
+      ? ITEM_ENTRIES.find(
+          (entry) =>
+            isAvailableEntry(entry) && entry[fallbackField] === normalizedName,
+        )
+      : undefined);
+
+  return entry
+    ? {
+        slug: entry.slug,
+        name: entry[nameField],
+        spriteUrl: getSpriteUrl(entry.slug),
+      }
+    : null;
 }
 
 export function getItemName(

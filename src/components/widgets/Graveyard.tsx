@@ -1,29 +1,29 @@
 import React, { useEffect, useMemo, useState } from "react";
-import type { Pokemon, PokemonLink } from "@/types.ts";
-import { getSpriteUrlForPokemonName } from "@/src/services/sprites.ts";
+import type { LinkEditPayload, PokemonLink } from "@/types.ts";
 import { PLAYER_COLORS } from "@/src/services/init.ts";
 import { useTranslation } from "react-i18next";
 import { focusRingClasses } from "@/src/styles/focusRing.ts";
 import { FiEdit, FiTrash } from "react-icons/fi";
 import AddLostPokemonModal from "@/src/components/modals/AddLostPokemonModal.tsx";
 import EditPairModal from "@/src/components/modals/EditPairModal.tsx";
-import { getWikiUrl, type WikiId } from "@/src/utils/wiki.ts";
+import { getWikiUrlById, type WikiId } from "@/src/utils/wiki.ts";
+import { resolvePokemonDisplay } from "@/src/services/pokemonDisplay.ts";
+import { resolvePokemonLocationDisplay } from "@/src/services/locationSearch.ts";
+import { normalizeLanguage } from "@/src/utils/language.ts";
 
 interface GraveyardProps {
   graveyard?: PokemonLink[];
   playerNames: string[];
   playerColors?: string[];
   onManualAddClick?: () => void;
-  onEditPair: (
-    pairId: number,
-    payload: { route: string; members: Pokemon[] },
-  ) => void;
+  onEditPair: (pairId: number, payload: LinkEditPayload) => void;
   onDeleteLink?: (pair: PokemonLink) => void;
   readOnly?: boolean;
   generationSpritePath?: string | null;
   pokemonGenerationLimit?: number;
   gameVersionId?: string;
   wikiId?: WikiId | string | null;
+  nicknamesEnabled?: boolean;
 }
 
 const Graveyard: React.FC<GraveyardProps> = ({
@@ -38,8 +38,10 @@ const Graveyard: React.FC<GraveyardProps> = ({
   gameVersionId,
   readOnly = false,
   wikiId,
+  nicknamesEnabled = true,
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const locale = normalizeLanguage(i18n.language);
   const names = useMemo(() => {
     const list = playerNames.length
       ? playerNames
@@ -73,14 +75,16 @@ const Graveyard: React.FC<GraveyardProps> = ({
   const editInitial = useMemo(() => {
     if (!activePair) return null;
     return {
-      route: activePair.route ?? "",
+      location: activePair.location ?? "",
+      locationSlug: activePair.locationSlug,
+      fossilSlugs: activePair.fossilSlugs,
       members: names.map(
-        (_, index) => activePair.members?.[index] ?? { name: "", nickname: "" },
+        (_, index) => activePair.members?.[index] ?? { id: null, nickname: "" },
       ),
     };
   }, [activePair, names]);
 
-  const handleSave = (payload: { route: string; members: Pokemon[] }) => {
+  const handleSave = (payload: LinkEditPayload) => {
     if (!activePair) return;
     onEditPair(activePair.id, payload);
     setEditIndex(null);
@@ -119,9 +123,14 @@ const Graveyard: React.FC<GraveyardProps> = ({
         {graveyard && graveyard.length > 0 ? (
           <div className="space-y-3">
             {[...graveyard].reverse().map((pair) => {
+              const locationLabel = resolvePokemonLocationDisplay(pair, locale);
               const canEdit =
                 !readOnly &&
-                (pair.route || pair.members.some((member) => member?.name));
+                (locationLabel ||
+                  pair.members.some(
+                    (member) =>
+                      typeof member?.id === "number" || Boolean(member?.name),
+                  ));
               const canDelete = !readOnly && onDeleteLink;
               const isLost = Boolean(pair.isLost);
               const statusLabel = isLost
@@ -169,7 +178,7 @@ const Graveyard: React.FC<GraveyardProps> = ({
                   )}
                   <p className="text-center font-bold text-gray-600 dark:text-gray-300 mb-1">
                     {t("graveyard.areaLabel", {
-                      route: pair.route || t("common.unknownRoute"),
+                      location: locationLabel || t("common.unknownLocation"),
                     })}
                   </p>
                   <div
@@ -180,16 +189,18 @@ const Graveyard: React.FC<GraveyardProps> = ({
                   >
                     {names.map((name, index) => {
                       const member = pair.members?.[index] ?? {
-                        name: "",
+                        id: null,
                         nickname: "",
                       };
-                      const spriteUrl = getSpriteUrlForPokemonName(
-                        member.name,
+                      const pokemonId = member.id;
+                      const { displayName, spriteUrl } = resolvePokemonDisplay(
+                        member,
+                        locale,
                         generationSpritePath,
                       );
                       const wikiUrl =
-                        member.name && wikiId
-                          ? getWikiUrl(member.name, wikiId as WikiId)
+                        pokemonId && wikiId
+                          ? getWikiUrlById(pokemonId, wikiId as WikiId)
                           : null;
                       return (
                         <div
@@ -197,14 +208,14 @@ const Graveyard: React.FC<GraveyardProps> = ({
                           className="flex justify-center w-full"
                         >
                           <div className="inline-flex items-center gap-2 text-left mb-2">
-                            {spriteUrl ? (
+                            {spriteUrl && (
                               <img
                                 src={spriteUrl}
-                                alt={member.name || "Pokémon"}
+                                alt=""
                                 className="w-16 h-16 -my-3"
                                 loading="lazy"
                               />
-                            ) : null}
+                            )}
                             <div className="flex flex-col items-start">
                               <p
                                 className="font-bold"
@@ -212,7 +223,7 @@ const Graveyard: React.FC<GraveyardProps> = ({
                               >
                                 {name}
                                 {"'s "}
-                                {member.name ? (
+                                {displayName ? (
                                   wikiUrl ? (
                                     <a
                                       href={wikiUrl}
@@ -220,22 +231,24 @@ const Graveyard: React.FC<GraveyardProps> = ({
                                       rel="noopener noreferrer"
                                       className="hover:underline"
                                     >
-                                      {member.name}
+                                      {displayName}
                                     </a>
                                   ) : (
-                                    member.name
+                                    displayName
                                   )
                                 ) : (
                                   t("graveyard.unknownPokemon")
                                 )}
                               </p>
-                              <p className="text-gray-700 dark:text-gray-400">
-                                {t("graveyard.nicknameLabel", {
-                                  nickname:
-                                    member.nickname ||
-                                    t("graveyard.noNickname"),
-                                })}
-                              </p>
+                              {nicknamesEnabled && (
+                                <p className="text-gray-700 dark:text-gray-400">
+                                  {t("graveyard.nicknameLabel", {
+                                    nickname:
+                                      member.nickname ||
+                                      t("graveyard.noNickname"),
+                                  })}
+                                </p>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -260,18 +273,20 @@ const Graveyard: React.FC<GraveyardProps> = ({
         mode="edit"
         initial={
           editInitial || {
-            route: "",
-            members: names.map(() => ({ name: "", nickname: "" })),
+            location: "",
+            fossilSlugs: [],
+            members: names.map(() => ({ id: null, nickname: "" })),
           }
         }
         generationLimit={pokemonGenerationLimit}
         gameVersionId={gameVersionId}
         generationSpritePath={generationSpritePath}
+        nicknamesEnabled={nicknamesEnabled}
       />
       <AddLostPokemonModal
         isOpen={!readOnly && editIndex !== null && isLostPair}
         onClose={() => setEditIndex(null)}
-        onAdd={(route, members) => handleSave({ route, members })}
+        onAdd={handleSave}
         playerNames={names}
         generationLimit={pokemonGenerationLimit}
         generationSpritePath={generationSpritePath}
@@ -279,8 +294,8 @@ const Graveyard: React.FC<GraveyardProps> = ({
         mode="edit"
         initial={
           editInitial || {
-            route: "",
-            members: names.map(() => ({ name: "", nickname: "" })),
+            location: "",
+            members: names.map(() => ({ id: null, nickname: "" })),
           }
         }
       />

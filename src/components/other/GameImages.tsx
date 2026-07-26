@@ -6,8 +6,9 @@ import { getSpriteUrlForPokemonName } from "@/src/services/sprites.ts";
 export const RivalImage: React.FC<{
   rival: string | VariableRival;
   preferences: UserSettings["rivalPreferences"];
+  defaultPreferences?: Record<string, string>;
   displayName?: string;
-}> = ({ rival, preferences, displayName }) => {
+}> = ({ rival, preferences, defaultPreferences, displayName }) => {
   let spriteName: string;
   let fallbackDisplayName: string;
 
@@ -19,7 +20,8 @@ export const RivalImage: React.FC<{
       .replace(/[^a-z0-9_]/g, "");
     fallbackDisplayName = rival;
   } else {
-    const preference = preferences?.[rival.key] || "male";
+    const preference =
+      preferences?.[rival.key] ?? defaultPreferences?.[rival.key] ?? "male";
     spriteName = rival.options[preference];
     fallbackDisplayName = rival.key;
   }
@@ -29,7 +31,7 @@ export const RivalImage: React.FC<{
   return (
     <img
       src={imagePath}
-      alt={resolvedDisplayName}
+      alt=""
       title={resolvedDisplayName}
       className="w-8 h-8 object-contain mx-auto"
       style={{ imageRendering: "pixelated" }}
@@ -65,22 +67,19 @@ export const BadgeImage: React.FC<{
   posIndex: number;
   badgeSet?: string;
   className?: string;
-  displayName?: string;
 }> = ({
   arenaLabel,
   posIndex,
   badgeSet,
   className = "w-8 h-8 object-contain",
-  displayName,
 }) => {
   const badgeUrl = getBadgeUrl(arenaLabel, posIndex, badgeSet);
-  const altText = displayName ?? arenaLabel;
   const isPixelated = !arenaLabel.toLowerCase().includes("gym");
 
   return (
     <img
       src={badgeUrl}
-      alt={`${altText} Badge`}
+      alt=""
       className={className}
       style={{ imageRendering: isPixelated ? "pixelated" : "inherit" }}
     />

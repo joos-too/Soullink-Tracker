@@ -111,3 +111,33 @@ _Have an idea or found a bug? [Open an issue!](https://github.com/joos-too/pokem
 <p align="center">
   <sub>Pokémon and all related names are trademarks of Nintendo / Creatures Inc. / GAME FREAK Inc.<br>This project is a fan-made tool and is not affiliated with or endorsed by any of these companies.</sub>
 </p>
+
+## Pokémon data cache (names + evolutions)
+
+- The app ships with generated datasets under `src/data/` (`pokemon.ts`, `locations.ts`, `items.ts`) that power localized autocomplete, as well as Pokémon types & evolutions (generation + version-aware).
+- The generators read the static JSON mirror from `PokeAPI/api-data` directly.
+- Clone the data mirror once:
+
+```
+git clone --depth 1 https://github.com/PokeAPI/api-data.git scripts/pokeapi-data
+```
+
+- To use a checkout elsewhere, set `POKEAPI_DATA_DIR` to either the `api-data` repo root or its `data/api/v2` directory.
+- To refresh generated data from the static mirror, run:
+
+```
+npm run generate-items
+npm run generate-pokemon
+```
+
+The script fetches all supported Pokémon species and evolution chains (up to Gen 9), translates the names, stores IDs/generation metadata, and persists the evolutions so the app can apply generation/version filters offline.
+
+## Image caching
+
+The app uses a service worker to cache Pokémon sprite images from the PokeAPI GitHub repository. This improves performance by:
+
+- Reducing network requests for frequently viewed Pokémon
+- Enabling offline access to previously loaded images
+- Speeding up page load times
+
+The service worker (`public/pokeapi-js-wrapper-sw.js`) is automatically registered when the app loads and intercepts requests to `https://raw.githubusercontent.com/PokeAPI/sprites/`. Images are cached in the browser's Cache Storage and served from cache on subsequent requests.

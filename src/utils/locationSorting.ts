@@ -8,7 +8,7 @@ export const parseRouteNumber = (value: string): number | null => {
   return Number.isFinite(routeNumber) ? routeNumber : null;
 };
 
-export const compareRoutes = (a: string, b: string): number => {
+export const compareLocations = (a: string, b: string): number => {
   const aRoute = parseRouteNumber(a);
   const bRoute = parseRouteNumber(b);
   if (aRoute !== null && bRoute !== null) {

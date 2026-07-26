@@ -5,6 +5,8 @@ import { FiX, FiInfo } from "react-icons/fi";
 import LocationSuggestionInput from "@/src/components/inputs/LocationSuggestionInput.tsx";
 import Tooltip from "@/src/components/other/Tooltip.tsx";
 import { useFocusTrap } from "@/src/hooks/useFocusTrap.ts";
+import { findLocationByName } from "@/src/services/locationSearch.ts";
+import { normalizeLanguage } from "@/src/utils/language.ts";
 import {
   focusRingCardClasses,
   focusRingClasses,
@@ -13,7 +15,12 @@ import {
 interface AddFossilModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (fossilId: string, location: string, inBag: boolean) => void;
+  onAdd: (
+    fossilId: string,
+    location: string,
+    inBag: boolean,
+    locationSlug?: string,
+  ) => void;
   maxGeneration: number;
   alreadyOwnedIds: string[];
   infiniteFossilsEnabled: boolean;
@@ -29,10 +36,12 @@ const AddFossilModal: React.FC<AddFossilModalProps> = ({
   infiniteFossilsEnabled,
   gameVersionId,
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { containerRef } = useFocusTrap(isOpen);
+  const locale = normalizeLanguage(i18n.language);
   const [selectedFossilId, setSelectedFossilId] = useState("");
   const [location, setLocation] = useState("");
+  const [locationSlug, setLocationSlug] = useState("");
   const [inBag, setInBag] = useState(true);
 
   const availableFossils = useMemo(() => {
@@ -50,9 +59,25 @@ const AddFossilModal: React.FC<AddFossilModalProps> = ({
   const handleSubmit = (e: React.SubmitEvent) => {
     e.preventDefault();
     if (!selectedFossilId) return;
-    onAdd(selectedFossilId, inBag ? "" : location, inBag);
+    const trimmedLocation = location.trim();
+    const resolvedLocation =
+      !inBag && locationSlug
+        ? { slug: locationSlug }
+        : !inBag
+          ? findLocationByName(trimmedLocation, {
+              locale: locale,
+              gameVersionId,
+            })
+          : null;
+    onAdd(
+      selectedFossilId,
+      inBag || resolvedLocation ? "" : trimmedLocation,
+      inBag,
+      resolvedLocation?.slug,
+    );
     setSelectedFossilId("");
     setLocation("");
+    setLocationSlug("");
     setInBag(true);
   };
 
@@ -98,7 +123,7 @@ const AddFossilModal: React.FC<AddFossilModalProps> = ({
                   >
                     <img
                       src={`/fossil-sprites/${f.sprite}`}
-                      alt={f.id}
+                      alt=""
                       className="w-10 h-10 object-contain"
                       style={{ imageRendering: "pixelated" }}
                     />
@@ -122,7 +147,10 @@ const AddFossilModal: React.FC<AddFossilModalProps> = ({
               checked={inBag}
               onChange={(e) => {
                 setInBag(e.target.checked);
-                if (e.target.checked) setLocation("");
+                if (e.target.checked) {
+                  setLocation("");
+                  setLocationSlug("");
+                }
               }}
               disabled={availableFossils.length === 0}
               className="h-4 w-4 accent-green-600 cursor-pointer disabled:cursor-not-allowed"
@@ -161,10 +189,12 @@ const AddFossilModal: React.FC<AddFossilModalProps> = ({
               label=""
               value={inBag ? "" : location}
               onChange={setLocation}
+              selectedSlug={locationSlug}
+              onSelectedSlugChange={setLocationSlug}
               isOpen={isOpen}
               gameVersionId={gameVersionId}
               disabled={inBag || availableFossils.length === 0}
-              placeholder={inBag ? "" : t("common.routePlaceholder")}
+              placeholder={inBag ? "" : t("common.locationPlaceholder")}
             />
           </div>
 

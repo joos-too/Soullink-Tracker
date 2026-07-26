@@ -30,6 +30,8 @@ interface UserSettingsPageProps {
   onSpritesInTeamTableToggle: (enabled: boolean) => void;
   wikiId?: string | null;
   onWikiChange: (id: WikiId) => void;
+  multiLocaleSearch?: boolean;
+  onMultiLocaleSearchToggle: (enabled: boolean) => void;
 }
 
 const UserSettingsPage: React.FC<UserSettingsPageProps> = ({
@@ -42,6 +44,8 @@ const UserSettingsPage: React.FC<UserSettingsPageProps> = ({
   onSpritesInTeamTableToggle,
   wikiId,
   onWikiChange,
+  multiLocaleSearch,
+  onMultiLocaleSearchToggle,
 }) => {
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
   const [message, setMessage] = useState<string | null>(null);
@@ -163,6 +167,40 @@ const UserSettingsPage: React.FC<UserSettingsPageProps> = ({
             </p>
             <div className="flex justify-start">
               <LanguageToggle />
+            </div>
+
+            <div className="flex items-center justify-between pt-3">
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <div className="font-medium text-gray-800 dark:text-gray-200">
+                    {t("userSettings.language.multiLocaleSearch.title")}
+                  </div>
+                  <Tooltip
+                    side="top"
+                    content={t(
+                      "userSettings.language.multiLocaleSearch.tooltip",
+                    )}
+                  >
+                    <span
+                      className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 cursor-help"
+                      aria-label={t(
+                        "userSettings.language.multiLocaleSearch.title",
+                      )}
+                    >
+                      <FiInfo size={16} />
+                    </span>
+                  </Tooltip>
+                </div>
+                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  {t("userSettings.language.multiLocaleSearch.description")}
+                </div>
+              </div>
+              <ToggleSwitch
+                id="multi-locale-search-toggle"
+                checked={multiLocaleSearch ?? false}
+                onChange={onMultiLocaleSearchToggle}
+                ariaLabel={t("userSettings.language.multiLocaleSearch.title")}
+              />
             </div>
           </section>
 

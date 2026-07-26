@@ -1,12 +1,15 @@
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  findItemByName,
   getItemSpriteUrl,
   searchItems,
   type ItemSearchResult,
 } from "@/src/services/itemSearch";
 import { normalizeLanguage } from "@/src/utils/language";
 import SuggestionInput from "@/src/components/inputs/SuggestionInput.tsx";
+import ItemSprite from "@/src/components/other/ItemSprite.tsx";
+import { useMultiLocaleSearch } from "@/src/hooks/useMultiLocaleSearch.ts";
 
 interface ItemSuggestionInputProps {
   label?: React.ReactNode;
@@ -16,8 +19,9 @@ interface ItemSuggestionInputProps {
   onSelectedSlugChange: (slug: string) => void;
   isOpen: boolean;
   gameVersionId?: string;
+  allPokemonAndItems?: boolean;
   placeholder?: string;
-  showNoMatches?: boolean;
+  multiLocaleSearch?: boolean;
 }
 
 const ItemSuggestionInput: React.FC<ItemSuggestionInputProps> = ({
@@ -28,21 +32,48 @@ const ItemSuggestionInput: React.FC<ItemSuggestionInputProps> = ({
   onSelectedSlugChange,
   isOpen,
   gameVersionId,
+  allPokemonAndItems = false,
   placeholder,
-  showNoMatches = true,
+  multiLocaleSearch: multiLocaleSearchProp,
 }) => {
   const { t, i18n } = useTranslation();
   const language = useMemo(
     () => normalizeLanguage(i18n.language),
     [i18n.language],
   );
-  const spriteUrl = selectedSlug ? getItemSpriteUrl(selectedSlug) : null;
+  const contextMultiLocaleSearch = useMultiLocaleSearch();
+  const multiLocaleSearch = multiLocaleSearchProp ?? contextMultiLocaleSearch;
+  const typedItemMatch = useMemo(
+    () =>
+      findItemByName(
+        value,
+        language,
+        allPokemonAndItems ? undefined : gameVersionId,
+        multiLocaleSearch,
+      ),
+    [allPokemonAndItems, gameVersionId, language, multiLocaleSearch, value],
+  );
+  const resolvedSlug = selectedSlug || typedItemMatch?.slug || "";
+  const spriteUrl = resolvedSlug ? getItemSpriteUrl(resolvedSlug) : null;
 
   const fetchSuggestions = useCallback(
     (term: string) =>
-      Promise.resolve(searchItems(term, language, gameVersionId, 20)),
-    [gameVersionId, language],
+      Promise.resolve(
+        searchItems(
+          term,
+          language,
+          allPokemonAndItems ? undefined : gameVersionId,
+          20,
+          multiLocaleSearch,
+        ),
+      ),
+    [allPokemonAndItems, gameVersionId, language, multiLocaleSearch],
   );
+
+  useEffect(() => {
+    if (!typedItemMatch || selectedSlug === typedItemMatch.slug) return;
+    onSelectedSlugChange(typedItemMatch.slug);
+  }, [onSelectedSlugChange, selectedSlug, typedItemMatch]);
 
   return (
     <SuggestionInput<ItemSearchResult>
@@ -58,31 +89,24 @@ const ItemSuggestionInput: React.FC<ItemSuggestionInputProps> = ({
       minSearchLength={1}
       debounceMs={150}
       inputClassName="pr-14"
-      showNoMatches={showNoMatches}
       getSuggestionValue={(suggestion) => suggestion.name}
       getSuggestionKey={(suggestion) => suggestion.slug}
       onSelectSuggestion={(suggestion) => onSelectedSlugChange(suggestion.slug)}
       renderSuggestion={(suggestion) => (
         <div className="flex items-center gap-2">
-          <img
+          <ItemSprite
             src={suggestion.spriteUrl}
-            alt=""
             className="h-5 w-5 shrink-0 object-contain"
-            style={{ imageRendering: "pixelated" }}
-            loading="lazy"
           />
           <span>{suggestion.name}</span>
         </div>
       )}
       endAdornment={
         spriteUrl ? (
-          <img
+          <ItemSprite
             src={spriteUrl}
-            alt=""
-            aria-hidden="true"
+            ariaHidden
             className="pointer-events-none absolute inset-y-0 right-2 my-auto h-10 w-10 select-none"
-            style={{ imageRendering: "pixelated" }}
-            loading="lazy"
           />
         ) : null
       }

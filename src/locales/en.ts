@@ -13,10 +13,10 @@ export const en = {
     searchPlaceholder: "Search…",
     overview: "Back to overview",
     unknownPlayers: "Unknown players",
-    unknownRoute: "Unknown area",
+    unknownLocation: "Unknown area",
     nickname: "Nickname",
     pokemonPlaceholder: "Pokémon",
-    routePlaceholder: "e.g. Route 1",
+    locationPlaceholder: "e.g. Route 1",
     logout: "Logout",
     languageToggleLabel: "Change language",
     darkModeToggleLabel: "Toggle dark mode",
@@ -74,7 +74,7 @@ export const en = {
     },
     addLost: {
       title: "Add lost Pokémon",
-      routeLabel: "Area",
+      locationLabel: "Area",
       playerPokemonLabel: "{{name}}’s Pokémon",
     },
     editLost: {
@@ -103,6 +103,10 @@ export const en = {
       versionButton: "Select game version",
       versionPlaceholder: "No version selected",
       versionRequired: "Please select a game version.",
+      allPokemonAndItemsLabel: "Version override",
+      allPokemonAndItemsDescription:
+        "By default, a tracker only suggests Pokémon and items up to the selected game version. This override allows you to select all Pokémon and items, as well as Evolutions, up to the newest Gen.",
+      allPokemonAndItemsTooltipLabel: "Info about suggestions and evolutions",
       rulesetLabel: "Ruleset",
       rulesetButton: "Select ruleset",
       rulesetPlaceholder: "Default ruleset",
@@ -134,7 +138,7 @@ export const en = {
     },
     selectLoss: {
       title: "Kill link?",
-      routeLabel: "Area: {{route}}",
+      locationLabel: "Area: {{location}}",
       description:
         "This function is intended to move dead links to the graveyard.",
       tooltipLabel: "Info about kill link",
@@ -148,7 +152,7 @@ export const en = {
       description:
         "This function is intended for deleting links, that were created accidentally.",
       tooltipLabel: "Info about delete link",
-      routeLabel: "Area: {{route}}",
+      locationLabel: "Area: {{location}}",
       warning: "Link will be permanently deleted!",
       confirm: "Delete permanently",
     },
@@ -168,19 +172,17 @@ export const en = {
       title: "Add Evolution Stone",
       itemTitle: "Add Item",
       megaTitle: "Add Mega Stone",
-      tabStones: "Stones",
+      tabStones: "Evolution Stones",
       tabItems: "Items",
       tabMegaStones: "Mega Stones",
       stoneLabel: "Select Stone",
       megaStoneLabel: "Select Mega Stone",
-      spritePokemon: "Pokémon",
-      spriteItem: "Stones",
       showPokemon: "Show Pokémon?",
-      itemLabel: "Search Item",
+      itemLabel: "Item name",
       itemSearchPlaceholder: "Search by name…",
       locationLabel: "Location",
       locationTooltip:
-        "If an evolution stone has been discovered but not yet obtained, you can note its location here. You can then move it to your bag later with a single click.",
+        "If an item has been discovered but not yet obtained, you can note its location here. You can then move it to your bag later with a single click.",
       locationTooltipLabel: "Location Info",
       inBagLabel: "Already in bag",
       submit: "Add",
@@ -226,7 +228,7 @@ export const en = {
     footer: {
       github: "View on GitHub",
     },
-    routes: {
+    locations: {
       title: "Cleared areas",
       empty: "No areas have been logged yet.",
     },
@@ -235,11 +237,9 @@ export const en = {
       open: "Open search",
       openWithShortcut: "Open search (Ctrl + F)",
       modePokemon: "Pokémon",
-      modeRoutes: "Areas",
       modeItems: "Items",
       fieldLabel: "Search tracker",
       emptyPokemon: "No Pokémon have been logged yet.",
-      emptyRoutes: "No routes have been logged yet.",
       emptyItems: "No items have been logged yet.",
       categoryStones: "Evolution Stones",
       categoryMegaStones: "Mega Stones",
@@ -390,7 +390,7 @@ export const en = {
     pokemonColumn: "Pokémon",
     nameColumn: "Name & Type",
     nicknameColumn: "Nickname",
-    routeColumn: "Area",
+    locationColumn: "Area",
     actionsColumn: "Actions",
     titleEdit: "Edit",
     titleMoveToBox: "Move to box",
@@ -418,7 +418,7 @@ export const en = {
     titleEdit: "Edit",
     statusDead: "Dead",
     statusLost: "Lost",
-    areaLabel: "Area: {{route}}",
+    areaLabel: "Area: {{location}}",
     memberTitle: "{{name}}’s {{pokemon}}",
     nicknameLabel: "Nickname: {{nickname}}",
     noNickname: "-",
@@ -488,6 +488,9 @@ export const en = {
     },
     sections: {
       options: "Tracker options",
+      gameplay: "Gameplay",
+      general: "General",
+      configuration: "Tracker configuration",
       variableRivals: "Rival selector",
       variableRivalsDescription:
         "Choose your antagonist for the correct presentation in the rival battles.",
@@ -499,11 +502,23 @@ export const en = {
         tooltip: `By default the level cap is based on each trainer’s highest Pokémon. Hardcore mode adds a second cap tied to the second-highest Pokémon.\n\nOnly one Pokémon may match the upper cap, the rest must stay under the lower cap.`,
         description: "Raises the difficulty by enforcing tighter level caps.",
       },
+      nicknames: {
+        title: "Disable nicknames",
+        tooltipLabel: "Nicknames info",
+        tooltip:
+          "When enabled, nicknames are no longer required or displayed. Useful if you prefer to play without nicknames.",
+        description: "Skip nicknames when adding and displaying Pokémon.",
+      },
       rivalCensor: {
         title: "Censor rival battles",
         tooltipLabel: "Rival info",
-        tooltip: `To avoid spoilers and keep the story fresh, rival battles are hidden and must be revealed manually.\n\nOnce uncovered they stay visible, even on future runs.`,
+        tooltip: `To avoid spoilers and keep the story fresh, rival battles are hidden and must be revealed manually.\n\nOnce uncovered they stay visible, even on future runs. You can also decide to only show the level of upcoming rival battles.`,
         description: "Hides rival battles until you reveal them manually.",
+        modes: {
+          off: "Off",
+          showLevels: "Show Levels",
+          on: "On",
+        },
       },
       legendary: {
         title: "Legendary tracker",
@@ -542,6 +557,14 @@ export const en = {
           "By default, each fossil can only be owned once per player. When enabled, players can collect and revive the same fossil multiple times.",
         description:
           "Allow players to collect the same fossils multiple times.",
+      },
+      allPokemonAndItems: {
+        title: "Version override",
+        tooltipLabel: "Info about suggestions and evolutions",
+        tooltip:
+          "By default, a tracker only suggests Pokémon and items up to the selected game version. This override allows you to select all Pokémon and items, as well as Evolutions, up to the newest Gen.",
+        description:
+          "Expands suggestions and evolution options beyond the game version.",
       },
       megaStoneSpriteStyle: {
         title: "Pokémon Mega Stone Sprites",
@@ -616,6 +639,12 @@ export const en = {
     language: {
       title: "Language",
       description: "Choose your preferred interface language below.",
+      multiLocaleSearch: {
+        title: "Multi-language search",
+        description: "Allows searching and resolving in multiple languages.",
+        tooltip:
+          "Whenever you search for Pokémon and Items, anywhere in a tracker, you can search in all languages, in addition to your selected language.",
+      },
     },
     sprites: {
       title: "Sprite Display",

@@ -1,10 +1,41 @@
 import { SupportedLanguage } from "@/src/utils/language.ts";
 import { TFunction } from "i18next";
-import { EVOLUTIONS_DE, EVOLUTIONS_EN } from "@/src/data/pokemon-evolutions";
-import { POKEMON_ID_TO_GENERATION } from "@/src/data/pokemon-map";
+import { POKEMON_DATA, PokemonDataEntry } from "@/src/data/pokemon";
+
+interface EvolutionMethodRecord {
+  slug: string;
+  names: Record<SupportedLanguage, string>;
+}
+
+interface EvolutionMethodInfo {
+  slug: string;
+  label: string;
+}
+
+const getEvolutionMethods = (
+  methods: unknown,
+  language: SupportedLanguage,
+): EvolutionMethodInfo[] => {
+  if (!Array.isArray(methods)) return [];
+  return (methods as EvolutionMethodRecord[])
+    .map((method) => ({
+      slug: method.slug,
+      label: method.names[language] ?? method.names.de ?? method.names.en ?? "",
+    }))
+    .filter((method) => method.slug && method.label);
+};
+
+const getEvolutionEntries = (
+  pokemon: PokemonDataEntry,
+  language: SupportedLanguage,
+) =>
+  (pokemon.evolutions ?? []).map((entry) => ({
+    id: entry.id,
+    methods: getEvolutionMethods(entry.methods, language),
+  }));
 
 export interface MethodGenerationRule {
-  methods: string[];
+  method_slugs: string[];
   minGeneration?: number;
   exactGeneration?: number;
   maxGeneration?: number;
@@ -12,117 +43,138 @@ export interface MethodGenerationRule {
 
 const EVOLUTION_TABLES: Record<
   SupportedLanguage,
-  Record<number, { id: number; methods: string[] }[]>
+  Record<number, { id: number; methods: EvolutionMethodInfo[] }[]>
 > = {
-  de: EVOLUTIONS_DE,
-  en: EVOLUTIONS_EN,
+  de: Object.fromEntries(
+    Object.entries(POKEMON_DATA).map(([id, pokemon]) => [
+      Number(id),
+      getEvolutionEntries(pokemon, "de"),
+    ]),
+  ),
+  en: Object.fromEntries(
+    Object.entries(POKEMON_DATA).map(([id, pokemon]) => [
+      Number(id),
+      getEvolutionEntries(pokemon, "en"),
+    ]),
+  ),
 };
 
 // id = pokemon which evolution results in
 const METHOD_GENERATION_RULES: Record<number, MethodGenerationRule[]> = {
   20: [
     {
-      methods: [
-        "Level-Up - Level 20, Tageszeit: Nacht",
-        "Level-Up - Level 20, Time of day: Night",
-      ],
+      method_slugs: ["level-up-min-level-20-time-night"],
       minGeneration: 7,
     },
   ],
   28: [
     {
-      methods: ["Item: Eisstein", "Item: Ice Stone"],
+      method_slugs: ["use-item-ice-stone"],
       minGeneration: 7,
     },
   ],
   38: [
     {
-      methods: ["Item: Eisstein", "Item: Ice Stone"],
+      method_slugs: ["use-item-ice-stone"],
       minGeneration: 7,
     },
   ],
   53: [
     {
-      methods: ["Level-Up - Freundschaft ≥ 160", "Level-Up - Friendship ≥ 160"],
+      method_slugs: ["level-up-min-happiness-160"],
       minGeneration: 7,
     },
   ],
   80: [
     {
-      methods: ["Item: Galarnuss-Reif", "Item: Galarica Cuff"],
+      method_slugs: ["use-item-galarica-cuff"],
+      minGeneration: 7,
+    },
+  ],
+  101: [
+    {
+      method_slugs: ["use-item-leaf-stone"],
       minGeneration: 7,
     },
   ],
   105: [
     {
-      methods: [
-        "Level-Up - Level 28, Tageszeit: Nacht",
-        "Level-Up - Level 28, Time of day: Night",
-      ],
+      method_slugs: ["level-up-min-level-28-time-night"],
       minGeneration: 7,
     },
   ],
   199: [
     {
-      methods: ["Item: Galarnuss-Kranz", "Item: Galarica Wreath"],
+      method_slugs: ["use-item-galarica-wreath"],
       minGeneration: 7,
     },
   ],
   350: [
     {
-      methods: ["Tausch - Trägt Schönschuppe", "Trade - Holds Prism Scale"],
+      method_slugs: ["trade-held-item-prism-scale"],
       minGeneration: 5,
     },
   ],
   462: [
     {
-      methods: ["Item: Donnerstein", "Item: Thunder Stone"],
+      method_slugs: ["use-item-thunder-stone"],
+      minGeneration: 8,
+    },
+  ],
+  476: [
+    {
+      method_slugs: ["use-item-thunder-stone"],
       minGeneration: 8,
     },
   ],
   470: [
     {
-      methods: ["Item: Blattstein", "Item: Leaf Stone"],
+      method_slugs: ["use-item-leaf-stone"],
       minGeneration: 8,
     },
   ],
   471: [
     {
-      methods: ["Item: Eisstein", "Item: Ice Stone"],
+      method_slugs: ["use-item-ice-stone"],
       minGeneration: 8,
     },
   ],
   700: [
     {
-      methods: [
-        "Level-Up - Freundschaft ≥ 160, Kennt Attacke vom Typ Fee",
-        "Level-Up - Friendship ≥ 160, Knows move of type Fairy",
-      ],
+      method_slugs: ["level-up-min-happiness-160-known-move-type-fairy"],
       minGeneration: 8,
+    },
+  ],
+  738: [
+    {
+      method_slugs: ["use-item-thunder-stone"],
+      minGeneration: 8,
+    },
+  ],
+  904: [
+    {
+      method_slugs: ["level-up-known-move-barb-barrage"],
+      minGeneration: 9,
     },
   ],
 };
 
-const LOCATION_METHOD_VERSION_RULES: Record<string, string[]> = {
-  "Level-Up - Ort: Kraterberg": ["gen4_dp", "gen4_pt"],
-  "Level-Up - Location: Mt. Coronet": ["gen4_dp", "gen4_pt"],
-  "Level-Up - Ort: Elektrolithhöhle": ["gen5_bw", "gen5_b2w2"],
-  "Level-Up - Location: Chargestone Cave": ["gen5_bw", "gen5_b2w2"],
-  "Level-Up - Ort: Route 13": ["gen6_xy"],
-  "Level-Up - Location: Route 13": ["gen6_xy"],
-  "Level-Up - Ort: Ewigenwald": ["gen5_bw", "gen5_b2w2"],
-  "Level-Up - Location: Pinwheel Forest": ["gen5_bw", "gen5_b2w2"],
-  "Level-Up - Ort: Ewigwald": ["gen4_dp", "gen4_pt"],
-  "Level-Up - Location: Eterna Forest": ["gen4_dp", "gen4_pt"],
-  "Level-Up - Ort: Route 20": ["gen6_xy"],
-  "Level-Up - Location: Route 20": ["gen6_xy"],
-  "Level-Up - Ort: Route 217": ["gen4_dp", "gen4_pt"],
-  "Level-Up - Location: Route 217": ["gen4_dp", "gen4_pt"],
-  "Level-Up - Ort: Wendelberg": ["gen5_bw", "gen5_b2w2"],
-  "Level-Up - Location: Twist Mountain": ["gen5_bw", "gen5_b2w2"],
-  "Level-Up - Ort: Frosthöhle": ["gen6_xy"],
-  "Level-Up - Location: Frost Cavern": ["gen6_xy"],
-  "Level-Up - Schönheit ≥ 170": [
+const METHOD_VERSION_RULES: Record<string, string[]> = {
+  "level-up-location-mt-coronet": ["gen4_dp", "gen4_pt"],
+  "level-up-location-chargestone-cave": ["gen5_bw", "gen5_b2w2"],
+  "level-up-location-kalos-route-13": ["gen6_xy"],
+  "level-up-location-pinwheel-forest": ["gen5_bw", "gen5_b2w2"],
+  "level-up-location-eterna-forest": ["gen4_dp", "gen4_pt"],
+  "level-up-location-kalos-route-20": ["gen6_xy"],
+  "level-up-location-petalburg-woods": ["gen6_oras"],
+  "level-up-location-sinnoh-route-217": ["gen4_dp", "gen4_pt"],
+  "level-up-location-twist-mountain": ["gen5_bw", "gen5_b2w2"],
+  "level-up-location-frost-cavern": ["gen6_xy"],
+  "level-up-location-shoal-cave": ["gen6_oras"],
+  "level-up-location-vast-poni-canyon": ["gen7_sm", "gen7_usum"],
+  "level-up-location-blush-mountain": ["gen7_sm", "gen7_usum"],
+  "level-up-location-mount-lanakila": ["gen7_sm", "gen7_usum"],
+  "level-up-min-beauty-170": [
     "gen3_rusa",
     "gen3_em",
     "gen4_dp",
@@ -130,29 +182,23 @@ const LOCATION_METHOD_VERSION_RULES: Record<string, string[]> = {
     "gen4_hgss",
     "gen6_oras",
   ],
-  "Level-Up - Beauty ≥ 170": [
-    "gen3_rusa",
-    "gen3_em",
-    "gen4_dp",
-    "gen4_pt",
-    "gen4_hgss",
-    "gen6_oras",
-  ],
+  "strong-style-move-used-move-barb-barrage-min-move-count-20": ["gen8_pla"],
+  "use-move-barb-barrage-20-times": ["gen9_plza"],
 };
 
 export function methodAllowedForVersion(
-  method: string,
+  methodSlug: string,
   gameVersionId?: string,
 ) {
   if (!gameVersionId) return true;
-  const allowedVersions = LOCATION_METHOD_VERSION_RULES[method];
+  const allowedVersions = METHOD_VERSION_RULES[methodSlug];
   if (!allowedVersions) return true;
   return allowedVersions.includes(gameVersionId);
 }
 
 export function filterMethodsForConstraints(
   pokemonId: number,
-  methods: string[] | undefined,
+  methods: EvolutionMethodInfo[] | undefined,
   generation?: number | null,
   gameVersionId?: string,
 ) {
@@ -162,7 +208,7 @@ export function filterMethodsForConstraints(
     const rules = METHOD_GENERATION_RULES[pokemonId];
     if (rules && rules.length) {
       filtered = filtered.filter((method) => {
-        const rule = rules.find((r) => r.methods?.includes(method));
+        const rule = rules.find((r) => r.method_slugs?.includes(method.slug));
         if (!rule) return true;
         if (
           typeof rule.minGeneration === "number" &&
@@ -185,7 +231,7 @@ export function filterMethodsForConstraints(
   }
   if (gameVersionId) {
     filtered = filtered.filter((method) =>
-      methodAllowedForVersion(method, gameVersionId),
+      methodAllowedForVersion(method.slug, gameVersionId),
     );
   }
   return filtered;
@@ -205,7 +251,7 @@ export function getFilteredEvolutionEntriesForPokemon(
     generationLimit === null
       ? evoEntries
       : evoEntries.filter((entry) => {
-          const gen = POKEMON_ID_TO_GENERATION[entry.id];
+          const gen = POKEMON_DATA[entry.id]?.generation;
           if (typeof gen !== "number") return true;
           return gen <= generationLimit;
         });
@@ -216,7 +262,7 @@ export function getFilteredEvolutionEntriesForPokemon(
       const baseMethods =
         entry.methods && entry.methods.length
           ? entry.methods
-          : [defaultUnknown];
+          : [{ slug: "unknown", label: defaultUnknown }];
       const methodsForConstraints = filterMethodsForConstraints(
         entry.id,
         baseMethods,
@@ -225,7 +271,7 @@ export function getFilteredEvolutionEntriesForPokemon(
       );
       return {
         id: entry.id,
-        methods: methodsForConstraints,
+        methods: methodsForConstraints.map((method) => method.label),
       };
     })
     .filter((entry) => entry.methods.length > 0);
