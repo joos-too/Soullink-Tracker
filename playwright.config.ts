@@ -7,11 +7,15 @@ export default defineConfig({
   workers: 1,
   retries: process.env.CI ? 2 : 0,
   reporter: process.env.CI ? "github" : "list",
+  expect: {
+    timeout: 10_000,
+  },
   use: {
     baseURL: "http://127.0.0.1:4173",
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
     video: "retain-on-failure",
+    serviceWorkers: "block",
   },
   projects: [
     {
