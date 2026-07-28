@@ -30,7 +30,6 @@ export default defineConfig({
     timeout: 120_000,
     env: {
       ...process.env,
-      VITE_BACKEND: "supabase",
       VITE_SUPABASE_URL: "http://127.0.0.1:54321",
     },
   },

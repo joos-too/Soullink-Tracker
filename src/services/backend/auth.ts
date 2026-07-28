@@ -1,16 +1,4 @@
-import {
-  confirmPasswordReset,
-  createUserWithEmailAndPassword,
-  onAuthStateChanged,
-  sendPasswordResetEmail,
-  signInWithEmailAndPassword,
-  signOut,
-  verifyPasswordResetCode,
-} from "firebase/auth";
-import { auth as firebaseAuth } from "@/src/firebaseConfig.ts";
-import { BACKEND } from "@/src/services/backend/backend.ts";
 import { getSupabaseClient } from "@/src/services/backend/supabase.ts";
-import { updateUserDisplayName } from "@/src/services/repos/profileRepository.ts";
 
 export interface AuthenticatedUser {
   uid: string;
@@ -24,7 +12,7 @@ export type AuthErrorCode =
   | "weak-password"
   | "unknown";
 
-export const passwordResetRequiresCode = BACKEND === "firebase";
+export const passwordResetRequiresCode = false;
 
 const normalizeEmail = (email?: string | null): string =>
   email?.trim().toLowerCase() ?? "";
@@ -32,13 +20,11 @@ const normalizeEmail = (email?: string | null): string =>
 const toAuthenticatedUser = (
   user: {
     id?: string;
-    uid?: string;
     email?: string | null;
   } | null,
 ): AuthenticatedUser | null => {
   if (!user) return null;
-  const uid = user.uid ?? user.id;
-  return uid ? { uid, email: user.email ?? null } : null;
+  return user.id ? { uid: user.id, email: user.email ?? null } : null;
 };
 
 const getRecoveryRedirectUrl = (): string =>
@@ -75,12 +61,6 @@ export const getAuthErrorCode = (error: unknown): AuthErrorCode => {
 export const onCurrentAuthStateChange = (
   callback: (user: AuthenticatedUser | null) => void,
 ): (() => void) => {
-  if (BACKEND === "firebase") {
-    return onAuthStateChanged(firebaseAuth, (user) => {
-      callback(toAuthenticatedUser(user));
-    });
-  }
-
   const supabase = getSupabaseClient();
   const { data } = supabase.auth.onAuthStateChange((_event, session) => {
     callback(toAuthenticatedUser(session?.user ?? null));
@@ -92,11 +72,6 @@ export const signIn = async (
   email: string,
   password: string,
 ): Promise<void> => {
-  if (BACKEND === "firebase") {
-    await signInWithEmailAndPassword(firebaseAuth, email, password);
-    return;
-  }
-
   const { error } = await getSupabaseClient().auth.signInWithPassword({
     email: normalizeEmail(email),
     password,
@@ -113,16 +88,6 @@ export const signUp = async (
   password: string,
   displayName: string,
 ): Promise<SignUpResult> => {
-  if (BACKEND === "firebase") {
-    const credential = await createUserWithEmailAndPassword(
-      firebaseAuth,
-      email,
-      password,
-    );
-    await updateUserDisplayName(credential.user.uid, displayName);
-    return { confirmationRequired: false };
-  }
-
   const { data, error } = await getSupabaseClient().auth.signUp({
     email: normalizeEmail(email),
     password,
@@ -150,11 +115,6 @@ export const verifyEmailOtp = async (
 };
 
 export const signOutCurrentUser = async (): Promise<void> => {
-  if (BACKEND === "firebase") {
-    await signOut(firebaseAuth);
-    return;
-  }
-
   const { error } = await getSupabaseClient().auth.signOut();
   if (error) throw error;
 };
@@ -167,11 +127,6 @@ export const requestPasswordReset = async (
     throw new Error("Dein Account besitzt keine gültige Email-Adresse.");
   }
 
-  if (BACKEND === "firebase") {
-    await sendPasswordResetEmail(firebaseAuth, email);
-    return;
-  }
-
   const { error } = await getSupabaseClient().auth.resetPasswordForEmail(
     email,
     {
@@ -182,28 +137,17 @@ export const requestPasswordReset = async (
 };
 
 export const verifyPasswordReset = async (
-  recoveryCode: string | null,
+  _recoveryCode: string | null,
 ): Promise<string> => {
-  if (BACKEND === "firebase") {
-    if (!recoveryCode) throw new Error("missing_recovery_code");
-    return verifyPasswordResetCode(firebaseAuth, recoveryCode);
-  }
-
   const { data, error } = await getSupabaseClient().auth.getUser();
   if (error || !data.user.email) throw error ?? new Error("invalid_recovery");
   return data.user.email;
 };
 
 export const completePasswordReset = async (
-  recoveryCode: string | null,
+  _recoveryCode: string | null,
   password: string,
 ): Promise<void> => {
-  if (BACKEND === "firebase") {
-    if (!recoveryCode) throw new Error("missing_recovery_code");
-    await confirmPasswordReset(firebaseAuth, recoveryCode, password);
-    return;
-  }
-
   const { error } = await getSupabaseClient().auth.updateUser({ password });
   if (error) throw error;
 };

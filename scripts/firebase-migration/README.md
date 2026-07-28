@@ -1,6 +1,8 @@
 # Firebase JSON migration tool
 
 These server-side tools first migrate Firebase Auth and then transform a Firebase Realtime Database root export into the relational Supabase schema.
+They are retained exclusively for offline migration and audit workflows; the
+application has no Firebase runtime dependency.
 
 ## 1. Import Firebase Auth and create the UID mapping
 

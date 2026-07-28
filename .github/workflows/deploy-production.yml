@@ -68,7 +68,6 @@ jobs:
       cleanup: true
       keep-versions: 3
       build-args: |
-        VITE_BACKEND=supabase
         VITE_SUPABASE_URL=${{ needs.build-config.outputs.supabase_url }}
         VITE_SUPABASE_ANON_KEY=${{ needs.build-config.outputs.supabase_anon_key }}
 
