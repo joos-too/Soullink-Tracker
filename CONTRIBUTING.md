@@ -72,8 +72,7 @@ To use a checkout elsewhere, set `POKEAPI_DATA_DIR` to either the `api-data` rep
 | `generate-pokemon.mjs` | `npm run generate-pokemon` | Reads species, evolutions, types, and locations etc. from the local PokéAPI data and writes the localized (EN/DE) files (`src/data/pokemon.ts`, `src/data/locations.ts`).                                        |
 | `generate-items.mjs`   | `npm run generate-items`   | Parses raw PokéWiki `.txt` files in `scripts/itemlists-source/version-files/`, cross-references them with the local PokéAPI data to determine each item's earliest game version, and writes `src/data/items.ts`. |
 
-**Why these exist:** PokéAPI provides comprehensive Pokémon data but lacks version-introduction metadata for items and
-would be a pain to query at runtime. The scripts combinine local API data with hand-curated item lists from
+**Why these exist:** PokéAPI provides comprehensive Pokémon data but lacks version-introduction metadata for items and translations for evolution methods. The scripts combinine local API data with hand-curated item lists from
 [PokéWiki](https://www.pokewiki.de/), producing static datasets.
 
 Generated datasets should be refreshed through their npm scripts rather than
@@ -88,11 +87,13 @@ edited by hand. Review generated diffs before committing them.
 
 ## 🌍 Localization
 
-The UI supports **English** and **German**.
+The UI currently supports **English** and **German**.
 
 - Use translation keys over inline user-facing strings
 - When adding or changing UI-text-elements, update both `src/locales/en.ts` and `src/locales/de.ts`
 - Keep labels, button text, and validation messages aligned across both languages
+
+If you want to add another language, you need to create and register a new locale file, as well as evaluate available PokéAPI and PokéWiki data.
 
 ## 🎨 Code Formatting
 
