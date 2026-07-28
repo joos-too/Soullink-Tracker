@@ -1,4 +1,5 @@
--- Local development fixtures only. Never apply this file to staging or production.
+-- Deterministic fixtures for local development and the staging deployment.
+-- Never apply this file to production.
 begin;
 
 insert into auth.users (

@@ -10,7 +10,6 @@
     "generate-pokemon": "node scripts/generate-pokemon.mjs",
     "generate-items": "node scripts/generate-items.mjs",
     "migrate-pokemon-ids": "node scripts/migrate-pokemon-names-to-ids.mjs",
-    "emulators": "firebase emulators:start",
     "supabase:start": "supabase start",
     "supabase:stop": "supabase stop",
     "supabase:status": "supabase status",
@@ -42,7 +41,6 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.110.7",
     "@tailwindcss/vite": "^4.2.4",
-    "firebase": "^12.12.1",
     "i18next": "^25.10.10",
     "pokeapi-js-wrapper": "^1.2.8",
     "react": "^19.2.5",

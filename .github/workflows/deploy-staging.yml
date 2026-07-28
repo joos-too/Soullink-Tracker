@@ -1,4 +1,5 @@
 name: Deploy staging
+run-name: Deploy staging from ${{ github.ref_name }}
 
 on:
   push:
@@ -11,21 +12,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  validate-ref:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - name: Require staging branch
-        shell: bash
-        run: |
-          if [[ "$GITHUB_REF" != "refs/heads/staging" ]]; then
-            echo "The staging deployment workflow must run from the staging branch." >&2
-            exit 1
-          fi
-
   build-config:
-    needs: validate-ref
     runs-on: ubuntu-latest
     environment:
       name: staging
@@ -58,7 +45,7 @@ jobs:
           printf 'supabase_anon_key=%s\n' "$SUPABASE_ANON_KEY" >> "$GITHUB_OUTPUT"
 
   build:
-    needs: [validate-ref, build-config]
+    needs: [build-config]
     permissions:
       contents: read
       packages: write
@@ -68,7 +55,6 @@ jobs:
       cleanup: true
       keep-versions: 3
       build-args: |
-        VITE_BACKEND=supabase
         VITE_SUPABASE_URL=${{ needs.build-config.outputs.supabase_url }}
         VITE_SUPABASE_ANON_KEY=${{ needs.build-config.outputs.supabase_anon_key }}
 
@@ -86,10 +72,9 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v5
 
-      - name: Deploy staging database migrations
-        uses: ./.github/actions/deploy-supabase-migrations
+      - name: Reset staging database and load seed
+        uses: ./.github/actions/reset-staging-database
         with:
-          environment: staging
           ssh-host: ${{ secrets.SSH_HOST }}
           ssh-username: ${{ secrets.SSH_USERNAME }}
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}

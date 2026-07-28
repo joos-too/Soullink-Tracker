@@ -1,0 +1,224 @@
+{{Item-Liste/Kopf|colorlight={{Spiel/Color|Pokémon Kristall-Edition-light}}|colordark={{Spiel/Color|Pokémon Kristall-Edition-dark}}|noImage=1}}
+{{Item-Liste/Zeile|de=MEISTERBALL|en=MASTER BALL|es=MASTER BALL|fr=MASTER BALL|it=MASTER BALL|ja=マスターボール|link=Meisterball}}
+{{Item-Liste/Zeile|de=HYPERBALL|en=ULTRA BALL|es=ULTRA BALL|fr=HYPER BALL|it=ULTRA BALL|ja=ハイパーボール|link=Hyperball}}
+{{Item-Liste/Zeile|de=BLENDPUDER|en=BRIGHTPOWDER|es=POLVO BRILLO|fr=POUDRECLAIRE|it=LUMINPOLVERE|ja=ひかリのこな|link=Blendpuder}}
+{{Item-Liste/Zeile|de=SUPERBALL|en=GREAT BALL|es=SÚPER BALL|fr=SUPER BALL|it=MEGA BALL|ja=スーパーボール|link=Superball}}
+{{Item-Liste/Zeile|de=POKéBALL|en=POKé BALL|es=POKé BALL|fr=POKé BALL|it=POKé BALL|ja=モンスターボール|link=Pokéball}}
+{{Item-Liste/Zeile|de=FAHRRAD|en=BICYCLE|es=BICICLETA|fr=BICYCLETTE|it=BICICLETTA|ja=じてんしゃ|link=Fahrrad}}
+{{Item-Liste/Zeile|de=MONDSTEIN|en=MOON STONE|es=PIEDRA LUNAR|fr=PIERRE LUNE|it=PIETRALUNARE|ja=つきのいし|link=Mondstein}}
+{{Item-Liste/Zeile|de=GEGENGIFT|en=ANTIDOTE|es=ANTÍDOTO|fr=ANTIDOTE|it=ANTIDOTO|ja=どくけし|link=Gegengift}}
+{{Item-Liste/Zeile|de=FEUERHEILER|en=BURN HEAL|es=ANTIQUEMAR|fr=ANTI-BRULE|it=ANTISCOTTAT.|ja=やけどなおし|link=Feuerheiler}}
+{{Item-Liste/Zeile|de=EISHEILER|en=ICE HEAL|es=ANTIHIELO|fr=ANTIGEL|it=ANTIGELO|ja=こおリなおし|link=Eisheiler}}
+{{Item-Liste/Zeile|de=AUFWECKER|en=AWAKENING|es=DESPERTAR|fr=REVEIL|it=SVEGLIA|ja=ねむけざまし|link=Aufwecker}}
+{{Item-Liste/Zeile|de=PARA-HEILER|en=PARLYZ HEAL|es=ANTIPARALIZ|fr=ANTI-PARA|it=ANTIPARALISI|ja=まひなおし|link=Para-Heiler}}
+{{Item-Liste/Zeile|de=TOP-GENESUNG|en=FULL RESTORE|es=RESTAU. TODO|fr=GUERISON|it=RICARICA TOT|ja=かいふくのくすリ|link=Top-Genesung}}
+{{Item-Liste/Zeile|de=TOP-TRANK|en=MAX POTION|es=MÁX. POCIÓN|fr=POTION MAX|it=POZIONE MAX|ja=まんたんのくすリ|link=Top-Trank}}
+{{Item-Liste/Zeile|de=HYPERTRANK|en=HYPER POTION|es=HÍPER POCIÓN|fr=HYPER POTION|it=IPERPOZIONE|ja=すごいキズぐすリ|link=Hypertrank}}
+{{Item-Liste/Zeile|de=SUPERTRANK|en=SUPER POTION|es=SÚPER POCIÓN|fr=SUPER POTION|it=SUPERPOZIONE|ja=いいキズぐすリ|link=Supertrank}}
+{{Item-Liste/Zeile|de=TRANK|en=POTION|es=POCIÓN|fr=POTION|it=POZIONE|ja=キズぐすリ|link=Trank}}
+{{Item-Liste/Zeile|de=FLUCHTSEIL|en=ESCAPE ROPE|es=CUERDA HUIDA|fr=CORDE SORTIE|it=FUNE DI FUGA|ja=あなぬけのヒモ|link=Fluchtseil}}
+{{Item-Liste/Zeile|de=SCHUTZ|en=REPEL|es=REPELENTE|fr=REPOUSSE|it=REPELLENTE|ja=むしよけスプレー|link=Schutz}}
+{{Item-Liste/Zeile|de=TOP-ELIXIER|en=MAX ELIXER|es=ELIXIR MÁX|fr=MAX ELIXIR|it=ELISIR MAX|ja=ピーピーマックス|link=Top-Elixier}}
+{{Item-Liste/Zeile|de=FEUERSTEIN|en=FIRE STONE|es=PIEDRA FUEGO|fr=PIERRE FEU|it=PIETRAFOCAIA|ja=ほのおのいし|link=Feuerstein}}
+{{Item-Liste/Zeile|de=DONNERSTEIN|en=THUNDERSTONE|es=PIEDRATRUENO|fr=PIERREFOUDRE|it=PIETRATUONO|ja=かみなリのいし|link=Donnerstein}}
+{{Item-Liste/Zeile|de=WASSERSTEIN|en=WATER STONE|es=PIEDRA AGUA|fr=PIERRE EAU|it=PIETRAIDRICA|ja=みずのいし|link=Wasserstein}}
+{{Item-Liste/Zeile|de=KP-PLUS|en=HP UP|es=MÁS PS|fr=PV PLUS|it=PS-SU|ja=マックスアップ|link=KP-Plus}}
+{{Item-Liste/Zeile|de=PROTEIN|en=PROTEIN|es=PROTEÍNAS|fr=PROTEINE|it=PROTEINA|ja=タウリン|link=Protein}}
+{{Item-Liste/Zeile|de=EISEN|en=IRON|es=HIERRO|fr=FER|it=FERRO|ja=ブロムへキシン|link=Eisen}}
+{{Item-Liste/Zeile|de=CARBON|en=CARBOS|es=CARBURANTE|fr=CARBONE|it=CARBURANTE|ja=インドメタシン|link=Carbon}}
+{{Item-Liste/Zeile|de=LUCKY PUNCH|en=LUCKY PUNCH|es=PUÑO SUERTE|fr=POING CHANCE|it=FORTUNPUGNO|ja=ラッキーパンチ|link=Lucky Punch}}
+{{Item-Liste/Zeile|de=KALZIUM|en=CALCIUM|es=CALCIO|fr=CALCIUM|it=CALCIO|ja=リゾチウム|link=Kalzium}}
+{{Item-Liste/Zeile|de=SONDERBONBON|en=RARE CANDY|es=CARAMELORARO|fr=SUPER BONBON|it=CARAM. RARA|ja=ふしぎなアメ|link=Sonderbonbon}}
+{{Item-Liste/Zeile|de=X-TREFFER|en=X ACCURACY|es=PRECISIÓN X|fr=PRECISION +|it=PRECISIONE X|ja=ヨクアタール|link=X-Treffer}}
+{{Item-Liste/Zeile|de=BLATTSTEIN|en=LEAF STONE|es=PIEDRA HOJA|fr=PIERREPLANTE|it=PIETRAFOGLIA|ja=リーフのいし|link=Blattstein}}
+{{Item-Liste/Zeile|de=METALLSTAUB|en=METAL POWDER|es=POL.METÁLICO|fr=POUDRE METAL|it=METALPOLVERE|ja=メタルパウダー|link=Metallstaub}}
+{{Item-Liste/Zeile|de=NUGGET|en=NUGGET|es=PEPITA|fr=PEPITE|it=PEPITA|ja=きんのたま|link=Nugget}}
+{{Item-Liste/Zeile|de=POKéPUPPE|en=POKé DOLL|es=POKé MUÑECO|fr=POKé POUPEE|it=POKé BAMBOLA|ja=ピッピにんぎょう|link=Poképuppe}}
+{{Item-Liste/Zeile|de=HYPERHEILER|en=FULL HEAL|es=CURA TOTAL|fr=TOTAL SOIN|it=CURA TOTALE|ja=なんでもなおし|link=Hyperheiler}}
+{{Item-Liste/Zeile|de=BELEBER|en=REVIVE|es=REVIVIR|fr=RAPPEL|it=REVITALIZ.|ja=げんきのかけら|link=Beleber}}
+{{Item-Liste/Zeile|de=TOP-BELEBER|en=MAX REVIVE|es=MÁX. REVIVIR|fr=RAPPEL MAX|it=REVITAL.MAX|ja=げんきのかたまリ|link=Top-Beleber}}
+{{Item-Liste/Zeile|de=MEGABLOCK|en=GUARD SPEC.|es=PROTEC. ESP|fr=DEFENSE SPEC|it=SUPERGUARDIA|ja=エフェクトガード|link=Megablock}}
+{{Item-Liste/Zeile|de=SUPERSCHUTZ|en=SUPER REPEL|es=SÚPER REPEL|fr=SUPEREPOUSSE|it=SUPERREPELL.|ja=シルバースプレー|link=Superschutz}}
+{{Item-Liste/Zeile|de=TOP-SCHUTZ|en=MAX REPEL|es=MÁX. REPEL|fr=MAX REPOUSSE|it=REPELL.MAX|ja=ゴールドスプレー|link=Top-Schutz}}
+{{Item-Liste/Zeile|de=ANGRIFFPLUS|en=DIRE HIT|es=DIRECTO|fr=MUSCLE +|it=SUPERCOLPO|ja=クリティカッター|link=Angriffplus}}
+{{Item-Liste/Zeile|de=TAFELWASSER|en=FRESH WATER|es=AGUA FRESCA|fr=EAU FRAICHE|it=ACQUA FRESCA|ja=おいしいみず|link=Tafelwasser}}
+{{Item-Liste/Zeile|de=SPRUDEL|en=SODA POP|es=REFRESCO|fr=SODA COOL|it=GASSOSA|ja=サイコソーダ|link=Sprudel}}
+{{Item-Liste/Zeile|de=LIMONADE|en=LEMONADE|es=LIMONADA|fr=LIMONADE|it=LEMONSUCCO|ja=ミックスオレ|link=Limonade}}
+{{Item-Liste/Zeile|de=X-ANGRIFF|en=X ATTACK|es=ATAQUE X|fr=ATTAQUE +|it=ATTACCO X|ja=プラスパワー|link=X-Angriff}}
+{{Item-Liste/Zeile|de=X-ABWEHR|en=X DEFEND|es=DEFENSA X|fr=DEFENSE +|it=DIFESA X|ja=ディフェンダー|link=X-Abwehr}}
+{{Item-Liste/Zeile|de=X-TEMPO|en=X SPEED|es=VELOCIDAD X|fr=VITESSE +|it=VELOCITÀ X|ja=スピーダー|link=X-Tempo}}
+{{Item-Liste/Zeile|de=X-SPEZIAL|en=X SPECIAL|es=ESPECIAL X|fr=SPECIAL +|it=SPECIAL X|ja=スぺシャルアップ|link=X-Spezial}}
+{{Item-Liste/Zeile|de=MÜNZKORB|en=COIN CASE|es=MONEDERO|fr=BOITE JETON|it=SALVADANAIO|ja=コインケース|link=Münzkorb}}
+{{Item-Liste/Zeile|de=DETEKTOR|en=ITEMFINDER|es=BUSCAOBJETOS|fr=CHERCH'OBJET|it=DETECTOR|ja=ダウジングマシン|link=Detektor}}
+{{Item-Liste/Zeile|de=EP-TEILER|en=EXP.SHARE|es=REPARTIR EXP|fr=MULTI EXP|it=CONDIV.ESP.|ja=がくしゅうそうち|link=EP-Teiler}}
+{{Item-Liste/Zeile|de=ANGEL|en=OLD ROD|es=CAÑA VIEJA|fr=CANNE|it=AMO VECCHIO|ja=ボロのつリざお|link=Angel (1. bis 6. Generation)}}
+{{Item-Liste/Zeile|de=PROFIANGEL|en=GOOD ROD|es=CAÑA BUENA|fr=SUPER CANNE|it=AMO BUONO|ja=いいつリざお|link=Profiangel}}
+{{Item-Liste/Zeile|de=SILBERBLATT|en=SILVER LEAF|es=HOJA PLATA|fr=FEUILLE ARG.|it=FOGLIARGENTO|ja=ぎんのはっぱ|link=Silberblatt}}
+{{Item-Liste/Zeile|de=SUPERANGEL|en=SUPER ROD|es=SÚPER CAÑA|fr=MEGA CANNE|it=SUPER AMO|ja=すごいつリざお|link=Superangel}}
+{{Item-Liste/Zeile|de=AP-PLUS|en=PP UP|es=MÁS PP|fr=PP PLUS|it=PP-SU|ja=ポイントアップ|link=AP-Plus}}
+{{Item-Liste/Zeile|de=ÄTHER|en=ETHER|es=ÉTER|fr=HUILE|it=ETERE|ja=ピーピーエイド|link=Äther}}
+{{Item-Liste/Zeile|de=TOP-ÄTHER|en=MAX ETHER|es=ÉTER MÁX|fr=HUILE MAX|it=ETERE MAX|ja=ピーピーリカバー|link=Top-Äther}}
+{{Item-Liste/Zeile|de=ELIXIER|en=ELIXER|es=ELIXIR|fr=ELIXIR|it=ELISIR|ja=ピーピーエイダー|link=Elixier}}
+{{Item-Liste/Zeile|de=ROTE HAUT|en=RED SCALE|es=ESCAMA ROJA|fr=ECAILLEROUGE|it=SQUAMA ROSSA|ja=あかいウロコ|link=Rote Haut}}
+{{Item-Liste/Zeile|de=GEHEIMTRANK|en=SECRETPOTION|es=POC. SECRETA|fr=POTIONSECRET|it=POZ.SEGRETA|ja=ひでんのくすリ|link=Geheimtrank}}
+{{Item-Liste/Zeile|de=BOOTSTICKET|en=S.S.TICKET|es=TICKET BARCO|fr=PASSE BATEAU|it=BIGL.NAVE|ja=ふねのチケット|link=Bootsticket (M.S. Aqua)}}
+{{Item-Liste/Zeile|de=RÄTSEL-EI|en=MYSTERY EGG|es=HUEVO MIST|fr=OEUF MYSTERE|it=UOVO MISTERO|ja=ふしぎなタマゴ|link=Rätsel-Ei}}
+{{Item-Liste/Zeile|de=KLARGLOCKE|en=CLEAR BELL|es=CAMP. CLARA|fr=GLAS TRANSP.|it=CAMP.CHIARA|ja=とうめいなスズ|link=Klarglocke}}
+{{Item-Liste/Zeile|de=SILBERFLÜGEL|en=SILVER WING|es=ALA PLATEADA|fr=AILE ARGENT|it=ALADARGENTO|ja=ぎんいろのはね|link=Silberflügel}}
+{{Item-Liste/Zeile|de=KUHMUH-MILCH|en=MOOMOO MILK|es=LECHE MU-MU|fr=LAIT MEUMEU|it=LATTE MUMU|ja=モーモーミルク|link=Kuhmuh-Milch}}
+{{Item-Liste/Zeile|de=FLINKKLAUE|en=QUICK CLAW|es=GARRA RÁPIDA|fr=VIVE GRIFFE|it=RAPIDARTIGLI|ja=せんせいのツメ|link=Flinkklaue}}
+{{Item-Liste/Zeile|de=GGNGIFTBEERE|en=PSNCUREBERRY|es=BAYANTÍDOTO|fr=BAIE ANTIDOT|it=BACCANTIVEL.|ja=どくけしのみ|link=Ggngiftbeere}}
+{{Item-Liste/Zeile|de=GOLDBLATT|en=GOLD LEAF|es=HOJA DORADA|fr=FEUILLE D'OR|it=FOGLIADORO|ja=きんのはっぱ|link=Goldblatt}}
+{{Item-Liste/Zeile|de=PUDERSAND|en=SOFT SAND|es=ARENA FINA|fr=SABLE DOUX|it=SABBIA SOFF.|ja=やわらかいすな|link=Pudersand}}
+{{Item-Liste/Zeile|de=HACKATTACK|en=SHARP BEAK|es=PICO AFILADO|fr=BEC POINTU|it=BECCAFFILATO|ja=するどいくちばし|link=Hackattack}}
+{{Item-Liste/Zeile|de=ANTIPARBEERE|en=PRZCUREBERRY|es=ANTIPARABAYA|fr=BAIE ANTIPAR|it=BACCANTIPAR.|ja=まひなおしのみ|link=Antiparbeere}}
+{{Item-Liste/Zeile|de=BRANDBEERE|en=BURNT BERRY|es=ANTIQUEMBAYA|fr=BAIE BRULURE|it=BACCA BRUC.|ja=やけたきのみ|link=Brandbeere}}
+{{Item-Liste/Zeile|de=EISBEERE|en=ICE BERRY|es=BAYA HIELO|fr=BAIE GEL|it=BACCA GHIAC.|ja=こおったきのみ|link=Eisbeere}}
+{{Item-Liste/Zeile|de=GIFTSTICH|en=POISON BARB|es=FLECHA VEN|fr=PIC VENIN|it=VELENACULEO|ja=どくバリ|link=Giftstich}}
+{{Item-Liste/Zeile|de=KING-STEIN|en=KING'S ROCK|es=ROCA DEL REY|fr=ROCHE ROYALE|it=ROCCIA DI RE|ja=おうじゃのしるし|link=King-Stein}}
+{{Item-Liste/Zeile|de=BITTERBEERE|en=BITTER BERRY|es=BAYAMARGA|fr=BAIE AMERE|it=BACCA AMARA|ja=にがいきのみ|link=Bitterbeere}}
+{{Item-Liste/Zeile|de=MINZBEERE|en=MINT BERRY|es=BAYA MENTA|fr=BAIE MENTHE|it=BACCA MENTA|ja=はっかのみ|link=Minzbeere}}
+{{Item-Liste/Zeile|de=APRIKOKO ROT|en=RED APRICORN|es=BONGURI ROJ|fr=NOIGRUME RGE|it=GHICOC.ROSSA|ja=あかぼんぐリ|link=Aprikoko Rot}}
+{{Item-Liste/Zeile|de=MINIPILZ|en=TINYMUSHROOM|es=MINI SETA|fr=PETIT CHAMPI|it=MINIFUNGO|ja=ちいさなキノコ|link=Minipilz}}
+{{Item-Liste/Zeile|de=RIESENPILZ|en=BIG MUSHROOM|es=SETA GRANDE|fr=GROS CHAMPI|it=GRANDE FUNGO|ja=おおきなキノコ|link=Riesenpilz}}
+{{Item-Liste/Zeile|de=SILBERSTAUB|en=SILVERPOWDER|es=POLVO PLATA|fr=POUDRE ARG.|it=ARGENPOLVERE|ja=ぎんのこな|link=Silberstaub}}
+{{Item-Liste/Zeile|de=APRIKOKO BLU|en=BLU APRICORN|es=BONGURI AZU|fr=NOIGRUME BLU|it=GHICOCCA BLU|ja=あおぼんぐリ|link=Aprikoko Blu}}
+{{Item-Liste/Zeile|de=MÜNZAMULETT|en=AMULET COIN|es=MON. AMULETO|fr=PIECE RUNE|it=MONETAMULETO|ja=おまもリこばん|link=Münzamulett}}
+{{Item-Liste/Zeile|de=APRIKOKO GLB|en=YLW APRICORN|es=BONGURI AMA|fr=NOIGRUME JNE|it=GHICOC.GIAL.|ja=きぼんぐリ|link=Aprikoko Glb}}
+{{Item-Liste/Zeile|de=APRIKOKO GRN|en=GRN APRICORN|es=BONGURI VER|fr=NOIGRUME VER|it=GHICOC.VERDE|ja=みどぼんぐリ|link=Aprikoko Grn}}
+{{Item-Liste/Zeile|de=SCHUTZBAND|en=CLEANSE TAG|es=AMULETO|fr=RUNE PURIF.|it=VELOPURO|ja=きよめのおふだ|link=Schutzband}}
+{{Item-Liste/Zeile|de=ZAUBERWASSER|en=MYSTIC WATER|es=AGUA MÍSTICA|fr=EAU MYSTIQUE|it=ACQUA MAGICA|ja=しんぴのしずく|link=Zauberwasser}}
+{{Item-Liste/Zeile|de=KRÜMMLÖFFEL|en=TWISTEDSPOON|es=CUCHARA TOR|fr=CUILLERTORDU|it=CUCCH.TORTO|ja=まがったスプーン|link=Krümmlöffel}}
+{{Item-Liste/Zeile|de=APRIKOKO WSS|en=WHT APRICORN|es=BONGURI BLA|fr=NOIGRUME BLC|it=GHICOC.BNCA|ja=しろぼんぐリ|link=Aprikoko Wss}}
+{{Item-Liste/Zeile|de=SCHWARZGURT|en=BLACKBELT|es=CINT. NEGRO|fr=CEINT.NOIRE|it=CINTURANERA|ja=くろおび|link=Schwarzgurt}}
+{{Item-Liste/Zeile|de=APRIKOKO SWZ|en=BLK APRICORN|es=BONGURI NEG|fr=NOIGRUME NOI|it=GHICOC.NERA|ja=くろぼんぐリ|link=Aprikoko Swz}}
+{{Item-Liste/Zeile|de=APRIKOKO PNK|en=PNK APRICORN|es=BONGURI ROS|fr=NOIGRUME ROS|it=GHICOC.ROSA|ja=ももぼんぐリ|link=Aprikoko Pnk}}
+{{Item-Liste/Zeile|de=SCHATTENGLAS|en=BLACKGLASSES|es=GAFAS DE SOL|fr=LUNET.NOIRES|it=OCCHIALINERI|ja=くろいメガネ|link=Schattenglas}}
+{{Item-Liste/Zeile|de=FLEGMONRUTE|en=SLOWPOKETAIL|es=COLASLOWPOKE|fr=QUEUERAMOLOS|it=CODASLOWPOKE|ja=おいしいシッポ|link=Flegmonrute}}
+{{Item-Liste/Zeile|de=ROSA BAND|en=PINK BOW|es=LAZO ROSA|fr=RUBAN ROSE|it=FIOCCO ROSA|ja=ピンクのリボン|link=Rosa Band}}
+{{Item-Liste/Zeile|de=LAUCHSTANGE|en=STICK|es=PALO|fr=BATON|it=GAMBO|ja=ながねぎ|link=Lauchstange}}
+{{Item-Liste/Zeile|de=RAUCHBALL|en=SMOKE BALL|es=BOLA HUMO|fr=BOULE FUMEE|it=PALLA FUMO|ja=けむリだま|link=Rauchball}}
+{{Item-Liste/Zeile|de=EWIGES EIS|en=NEVERMELTICE|es=ANTIDERRETIR|fr=GLACETERNEL|it=GELOMAI|ja=とけないこおリ|link=Ewiges Eis}}
+{{Item-Liste/Zeile|de=MAGNET|en=MAGNET|es=IMÁN|fr=AIMANT|it=CALAMITA|ja=じしゃく|link=Magnet}}
+{{Item-Liste/Zeile|de=WUNDERBEERE|en=MIRACLEBERRY|es=BAYA MILAGRO|fr=BAIE MIRACLE|it=BACCA MIRAC.|ja=きせきのみ|link=Wunderbeere}}
+{{Item-Liste/Zeile|de=PERLE|en=PEARL|es=PERLA|fr=PERLE|it=PERLA|ja=しんじゅ|link=Perle}}
+{{Item-Liste/Zeile|de=RIESENPERLE|en=BIG PEARL|es=PERLA GRANDE|fr=GRANDE PERLE|it=GRANDE PERLA|ja=おおきなしんじゅ|link=Riesenperle}}
+{{Item-Liste/Zeile|de=EWIGSTEIN|en=EVERSTONE|es=PIEDRAETERNA|fr=PIERRE STASE|it=PIETRASTANTE|ja=かわらずのいし|link=Ewigstein}}
+{{Item-Liste/Zeile|de=BANNSTICKER|en=SPELL TAG|es=HECHIZO|fr=RUNE SORT|it=SPETTROTARGA|ja=のろいのおふだ|link=Bannsticker}}
+{{Item-Liste/Zeile|de=WUTKEKS|en=RAGECANDYBAR|es=CARAM. FURIA|fr=BONBON RAGE|it=IRAMELLA|ja=いかリまんじゅう|link=Wutkeks}}
+{{Item-Liste/Zeile|de=GS-BALL|en=GS BALL|es=GS BALL|fr=GS BALL|it=GS BALL|ja=ジーエスボール|link=GS-Ball}}
+{{Item-Liste/Zeile|de=BLAUE KARTE|en=BLUE CARD|es=TARJETA AZUL|fr=CARTE BLEUE|it=CARTA BLU|ja=ブルーカード|link=Blaue Karte}}
+{{Item-Liste/Zeile|de=WUNDERSAAT|en=MIRACLE SEED|es=SEM. MILAGRO|fr=GRAIN MIRACL|it=MIRACOLSEME|ja=きせきのタネ|link=Wundersaat}}
+{{Item-Liste/Zeile|de=KAMPFKNOCHEN|en=THICK CLUB|es=HUESO GRUESO|fr=MASSE OS|it=OSSOSPESSO|ja=ふといホネ|link=Kampfknochen}}
+{{Item-Liste/Zeile|de=FOKUS-BAND|en=FOCUS BAND|es=CINTA-FOCUS|fr=BANDEAU +|it=BANDANA|ja=きあいのハチマキ|link=Fokus-Band}}
+{{Item-Liste/Zeile|de=ENERGIESTAUB|en=ENERGYPOWDER|es=POLVOENERGÍA|fr=POUDRENERGIE|it=POLVENERGIA|ja=ちからのこな|link=Energiestaub}}
+{{Item-Liste/Zeile|de=KRAFTWURZEL|en=ENERGY ROOT|es=RAÍZ ENERGÍA|fr=RACINENERGIE|it=RADICENERGIA|ja=ちからのねっこ|link=Kraftwurzel}}
+{{Item-Liste/Zeile|de=HEILPUDER|en=HEAL POWDER|es=POL.CURACIÓN|fr=POUDRE SOIN|it=POLVOCURA|ja=ばんのうごな|link=Heilpuder}}
+{{Item-Liste/Zeile|de=VITALKRAUT|en=REVIVAL HERB|es=HIERBA-REV|fr=HERBE RAPPEL|it=VITALERBA|ja=ふっかつそう|link=Vitalkraut}}
+{{Item-Liste/Zeile|de=GRANITSTEIN|en=HARD STONE|es=PIEDRA DURA|fr=PIERRE DURE|it=PIETRADURA|ja=かたいいし|link=Granitstein}}
+{{Item-Liste/Zeile|de=GLÜCKS-EI|en=LUCKY EGG|es=HUEVO SUERTE|fr=OEUF CHANCE|it=FORTUNUOVO|ja=しあわせタマゴ|link=Glücks-Ei}}
+{{Item-Liste/Zeile|de=TÜRÖFFNER|en=CARD KEY|es=LL.MAGNÉTICA|fr=CARTE MAGN.|it=APRIPORTA|ja=カードキー|link=Türöffner (Johto)}}
+{{Item-Liste/Zeile|de=SPULE|en=MACHINE PART|es=MAQUINARIA|fr=PARTIE MACH.|it=PEZZO MACCH.|ja=きかいのぶひん|link=Spule}}
+{{Item-Liste/Zeile|de=EI-TICKET|en=EGG TICKET|es=TICKET HUEVO|fr=TICKET OEUF|it=BIGL.UOVO|ja=タマゴけん|link=Ei-Ticket}}
+{{Item-Liste/Zeile|de=FUNDSACHE|en=LOST ITEM|es=OBJ. PERDIDO|fr=OBJET PERDU|it=STRUM.PERSO|ja=おとしもの|link=Fundsache (Kanto)}}
+{{Item-Liste/Zeile|de=STERNENSTAUB|en=STARDUST|es=POLVOESTELAR|fr=POUSS.ETOILE|it=POLVOSTELLA|ja=ほしのすな|link=Sternenstaub}}
+{{Item-Liste/Zeile|de=STERNENSTÜCK|en=STAR PIECE|es=TR. ESTRELLA|fr=MORC. ETOILE|it=PEZZO STELLA|ja=ほしのかけら|link=Sternenstück}}
+{{Item-Liste/Zeile|de=KELLERÖFFNER|en=BASEMENT KEY|es=LL. SÓTANO|fr=CLE SOUS-SOL|it=CHIAVE SOTT.|ja=ちかのカギ|link=Kelleröffner (Johto)}}
+{{Item-Liste/Zeile|de=FAHRSCHEIN|en=PASS|es=PASE|fr=PASSE|it=ABBONAMENTO|ja=ていきけん|link=Fahrschein}}
+{{Item-Liste/Zeile|de=HOLZKOHLE|en=CHARCOAL|es=CARBÓN|fr=CHARBON|it=CARBONELLA|ja=もくたん|link=Holzkohle}}
+{{Item-Liste/Zeile|de=BEERENSAFT|en=BERRY JUICE|es=ZUMO DE BAYA|fr=JUS DE BAIE|it=SUCCODIBACCA|ja=きのみジュース|link=Beerensaft}}
+{{Item-Liste/Zeile|de=SCOPE-LINSE|en=SCOPE LENS|es=PERISCOPIO|fr=LENTILSCOPE|it=MIRINO|ja=ピントレンズ|link=Scope-Linse}}
+{{Item-Liste/Zeile|de=METALLMANTEL|en=METAL COAT|es=REV.METÁLICO|fr=PEAU METAL|it=METALCOPERTA|ja=メタルコート|link=Metallmantel}}
+{{Item-Liste/Zeile|de=DRACHENZAHN|en=DRAGON FANG|es=COLMILLODRAG|fr=CROC DRAGON|it=DENTEDIDRAGO|ja=リゅうのキバ|link=Drachenzahn}}
+{{Item-Liste/Zeile|de=ÜBERRESTE|en=LEFTOVERS|es=RESTOS|fr=RESTES|it=AVANZI|ja=たべのこし|link=Überreste}}
+{{Item-Liste/Zeile|de=RÄTSELBEERE|en=MYSTERYBERRY|es=BAYAMISTERIO|fr=BAIE MYSTERE|it=BACCA MIST.|ja=ふしぎなきのみ|link=Rätselbeere}}
+{{Item-Liste/Zeile|de=DRACHENHAUT|en=DRAGON SCALE|es=ESCAMADRAGÓN|fr=ECAILLEDRACO|it=SQUAMA DRAGO|ja=リゅうのウロコ|link=Drachenhaut}}
+{{Item-Liste/Zeile|de=BERSERK-GEN|en=BERSERK GENE|es=GEN LOCO|fr=ADN BERZERK|it=GENEFURIOSO|ja=はかいのいでんし|link=Berserk-Gen}}
+{{Item-Liste/Zeile|de=ZAUBERASCHE|en=SACRED ASH|es=CEN. SAGRADA|fr=CENDRESACREE|it=CENEREMAGICA|ja=せいなるはい|link=Zauberasche}}
+{{Item-Liste/Zeile|de=SCHWERBALL|en=HEAVY BALL|es=PESO BALL|fr=MASSE BALL|it=PESO BALL|ja=へビーボール|link=Schwerball}}
+{{Item-Liste/Zeile|de=BLUMENBRIEF|en=FLOWER MAIL|es=CARTA FLOR|fr=LETR FLEUR|it=MESS.FIORE|ja=はながらメール|link=Blumenbrief}}
+{{Item-Liste/Zeile|de=LEVELBALL|en=LEVEL BALL|es=NIVEL BALL|fr=NIVEAU BALL|it=LEVEL BALL|ja=レべルボール|link=Levelball}}
+{{Item-Liste/Zeile|de=KÖDERBALL|en=LURE BALL|es=CEBO BALL|fr=APPAT BALL|it=ESCA BALL|ja=ルアーボール|link=Köderball}}
+{{Item-Liste/Zeile|de=TURBOBALL|en=FAST BALL|es=RAPID BALL|fr=SPEED BALL|it=RAPID BALL|ja=スピードボール|link=Turboball}}
+{{Item-Liste/Zeile|de=KUGELBLITZ|en=LIGHT BALL|es=BOLALUMINOSA|fr=BALLELUMIERE|it=ELETTROPALLA|ja=でんきだま|link=Kugelblitz}}
+{{Item-Liste/Zeile|de=FREUNDESBALL|en=FRIEND BALL|es=AMIGO BALL|fr=COPAIN BALL|it=FRIEND BALL|ja=フレンドボール|link=Freundesball}}
+{{Item-Liste/Zeile|de=MONDBALL|en=MOON BALL|es=LUNA BALL|fr=LUNE BALL|it=LUNA BALL|ja=ムーンボール|link=Mondball}}
+{{Item-Liste/Zeile|de=SYMPABALL|en=LOVE BALL|es=AMOR BALL|fr=LOVE BALL|it=LOVE BALL|ja=ラブラブボール|link=Sympaball}}
+{{Item-Liste/Zeile|de=SCHACHTEL|en=NORMAL BOX|es=CAJA NORMAL|fr=COFFRE NML|it=SCAT.NORMALE|ja=きのはこ|link=Schachtel}}
+{{Item-Liste/Zeile|de=SCHATULLE|en=GORGEOUS BOX|es=CAJA GRANDE|fr=COFFRE LUXE|it=SCAT.LUSSO|ja=きリのはこ|link=Schatulle}}
+{{Item-Liste/Zeile|de=SONNENSTEIN|en=SUN STONE|es=PIEDRA SOLAR|fr=PIERRESOLEIL|it=PIETRASOLARE|ja=たいようのいし|link=Sonnenstein}}
+{{Item-Liste/Zeile|de=PUNKT-BAND|en=POLKADOT BOW|es=CINTALUNARES|fr=RUBAN A POIS|it=FIOCCO POIS|ja=みずたまリボン|link=Punkt-Band}}
+{{Item-Liste/Zeile|de=UP-GRADE|en=UP-GRADE|es=MEJORA|fr=EVOLUTOR|it=UPGRADE|ja=アップグレード|link=Up-Grade}}
+{{Item-Liste/Zeile|de=BEERE|en=BERRY|es=BAYA|fr=BAIE|it=BACCA|ja=きのみ|link=Beere}}
+{{Item-Liste/Zeile|de=GOLDBEERE|en=GOLD BERRY|es=BAYA DORADA|fr=BAIE DOREE|it=BACCA ORO|ja=おうごんのみ|link=Goldbeere}}
+{{Item-Liste/Zeile|de=SCHIGGYKANNE|en=SQUIRTBOTTLE|es=REGADERA|fr=CARAPUCE A O|it=ANNAFFIATOIO|ja=ゼニガメじょうろ|link=Schiggykanne}}
+{{Item-Liste/Zeile|de=PARKBALL|en=PARK BALL|es=PARQUE BALL|fr=PARC BALL|it=PARK BALL|ja=パークボール|link=Parkball}}
+{{Item-Liste/Zeile|de=BUNTSCHWINGE|en=RAINBOW WING|es=ALA ARCOIRIS|fr=ARCENCI'AILE|it=ALA D'IRIDE|ja=にじいろのはね|link=Buntschwinge}}
+{{Item-Liste/Zeile|de=ZIEGELSTEIN|en=BRICK PIECE|es=LADRILLO|fr=MORC. BRIQUE|it=MATTONCINO|ja=かわらのかけら|link=Ziegelstein}}
+{{Item-Liste/Zeile|de=SURFERBRIEF|en=SURF MAIL|es=CARTA SURF|fr=LETR SURF|it=MESS.SURF|ja=なみのリメール|link=Surferbrief}}
+{{Item-Liste/Zeile|de=CYANBRIEF|en=LITEBLUEMAIL|es=CARTA AZUL|fr=LETRBLEUCIEL|it=MESS.AZZURRO|ja=みずいろメール|link=Cyanbrief}}
+{{Item-Liste/Zeile|de=ABBILDBRIEF|en=PORTRAITMAIL|es=CART-RETRATO|fr=LETRPORTRAIT|it=MESS.RITRAT.|ja=にがおえメール|link=Abbildbrief}}
+{{Item-Liste/Zeile|de=HERZBRIEF|en=LOVELY MAIL|es=CARTA AMOR|fr=LETRCHARM.|it=MESS.DOLCE|ja=ラブリーメール|link=Herzbrief}}
+{{Item-Liste/Zeile|de=ANARA-BRIEF|en=EON MAIL|es=CARTA EÓN|fr=LETR EVOLI|it=MESS.EON|ja=ブイブイメール|link=Anara-Brief}}
+{{Item-Liste/Zeile|de=MORPH-BRIEF|en=MORPH MAIL|es=CARTMORFOSIS|fr=LETR MORPH|it=MESS.MORPH|ja=へんしんメール|link=Morph-Brief}}
+{{Item-Liste/Zeile|de=KOBALTBRIEF|en=BLUESKY MAIL|es=CARTACELESTE|fr=LETRCIELBLEU|it=MESS.CIELO|ja=あおぞらメール|link=Kobaltbrief}}
+{{Item-Liste/Zeile|de=MELODIEBRIEF|en=MUSIC MAIL|es=CARTA MÚSICA|fr=LETR MUSIQUE|it=MESS.MUSICA|ja=おんぷメール|link=Melodiebrief}}
+{{Item-Liste/Zeile|de=TRUGBRIEF|en=MIRAGE MAIL|es=C.ESPEJISMO|fr=LETR MIRAGE|it=MESS.VISIONE|ja=まぼろしメール|link=Trugbrief}}
+{{Item-Liste/Zeile|de=TM01|en=TM01|es=MT01|fr=CT01|it=MT01|ja=わざマシン01}}
+{{Item-Liste/Zeile|de=TM02|en=TM02|es=MT02|fr=CT02|it=MT02|ja=わざマシン02}}
+{{Item-Liste/Zeile|de=TM03|en=TM03|es=MT03|fr=CT03|it=MT03|ja=わざマシン03}}
+{{Item-Liste/Zeile|de=TM04|en=TM04|es=MT04|fr=CT04|it=MT04|ja=わざマシン04}}
+{{Item-Liste/Zeile|de=TM05|en=TM05|es=MT05|fr=CT05|it=MT05|ja=わざマシン05}}
+{{Item-Liste/Zeile|de=TM06|en=TM06|es=MT06|fr=CT06|it=MT06|ja=わざマシン06}}
+{{Item-Liste/Zeile|de=TM07|en=TM07|es=MT07|fr=CT07|it=MT07|ja=わざマシン07}}
+{{Item-Liste/Zeile|de=TM08|en=TM08|es=MT08|fr=CT08|it=MT08|ja=わざマシン08}}
+{{Item-Liste/Zeile|de=TM09|en=TM09|es=MT09|fr=CT09|it=MT09|ja=わざマシン09}}
+{{Item-Liste/Zeile|de=TM10|en=TM10|es=MT10|fr=CT10|it=MT10|ja=わざマシン10}}
+{{Item-Liste/Zeile|de=TM11|en=TM11|es=MT11|fr=CT11|it=MT11|ja=わざマシン11}}
+{{Item-Liste/Zeile|de=TM12|en=TM12|es=MT12|fr=CT12|it=MT12|ja=わざマシン12}}
+{{Item-Liste/Zeile|de=TM13|en=TM13|es=MT13|fr=CT13|it=MT13|ja=わざマシン13}}
+{{Item-Liste/Zeile|de=TM14|en=TM14|es=MT14|fr=CT14|it=MT14|ja=わざマシン14}}
+{{Item-Liste/Zeile|de=TM15|en=TM15|es=MT15|fr=CT15|it=MT15|ja=わざマシン15}}
+{{Item-Liste/Zeile|de=TM16|en=TM16|es=MT16|fr=CT16|it=MT16|ja=わざマシン16}}
+{{Item-Liste/Zeile|de=TM17|en=TM17|es=MT17|fr=CT17|it=MT17|ja=わざマシン17}}
+{{Item-Liste/Zeile|de=TM18|en=TM18|es=MT18|fr=CT18|it=MT18|ja=わざマシン18}}
+{{Item-Liste/Zeile|de=TM19|en=TM19|es=MT19|fr=CT19|it=TM19|ja=わざマシン19}}
+{{Item-Liste/Zeile|de=TM20|en=TM20|es=MT20|fr=CT20|it=MT20|ja=わざマシン20}}
+{{Item-Liste/Zeile|de=TM21|en=TM21|es=MT21|fr=CT21|it=MT21|ja=わざマシン21}}
+{{Item-Liste/Zeile|de=TM22|en=TM22|es=MT22|fr=CT22|it=MT22|ja=わざマシン22}}
+{{Item-Liste/Zeile|de=TM23|en=TM23|es=MT23|fr=CT23|it=MT23|ja=わざマシン23}}
+{{Item-Liste/Zeile|de=TM24|en=TM24|es=MT24|fr=CT24|it=MT24|ja=わざマシン24}}
+{{Item-Liste/Zeile|de=TM25|en=TM25|es=MT25|fr=CT25|it=MT25|ja=わざマシン25}}
+{{Item-Liste/Zeile|de=TM26|en=TM26|es=MT26|fr=CT26|it=MT26|ja=わざマシン26}}
+{{Item-Liste/Zeile|de=TM27|en=TM27|es=MT27|fr=CT27|it=MT27|ja=わざマシン27}}
+{{Item-Liste/Zeile|de=TM28|en=TM28|es=MT28|fr=CT28|it=MT28|ja=わざマシン28}}
+{{Item-Liste/Zeile|de=TM29|en=TM29|es=MT29|fr=CT29|it=MT29|ja=わざマシン29}}
+{{Item-Liste/Zeile|de=TM30|en=TM30|es=MT30|fr=CT30|it=MT30|ja=わざマシン30}}
+{{Item-Liste/Zeile|de=TM31|en=TM31|es=MT31|fr=CT31|it=MT31|ja=わざマシン31}}
+{{Item-Liste/Zeile|de=TM32|en=TM32|es=MT32|fr=CT32|it=MT32|ja=わざマシン32}}
+{{Item-Liste/Zeile|de=TM33|en=TM33|es=MT33|fr=CT33|it=MT33|ja=わざマシン33}}
+{{Item-Liste/Zeile|de=TM34|en=TM34|es=MT34|fr=CT34|it=MT34|ja=わざマシン34}}
+{{Item-Liste/Zeile|de=TM35|en=TM35|es=MT35|fr=CT35|it=MT35|ja=わざマシン35}}
+{{Item-Liste/Zeile|de=TM36|en=TM36|es=MT36|fr=CT36|it=MT36|ja=わざマシン36}}
+{{Item-Liste/Zeile|de=TM37|en=TM37|es=MT37|fr=CT37|it=MT37|ja=わざマシン37}}
+{{Item-Liste/Zeile|de=TM38|en=TM38|es=MT38|fr=CT38|it=MT38|ja=わざマシン38}}
+{{Item-Liste/Zeile|de=TM39|en=TM39|es=MT39|fr=CT39|it=MT39|ja=わざマシン39}}
+{{Item-Liste/Zeile|de=TM40|en=TM40|es=MT40|fr=CT40|it=MT40|ja=わざマシン40}}
+{{Item-Liste/Zeile|de=TM41|en=TM41|es=MT41|fr=CT41|it=MT41|ja=わざマシン41}}
+{{Item-Liste/Zeile|de=TM42|en=TM42|es=MT42|fr=CT42|it=MT42|ja=わざマシン42}}
+{{Item-Liste/Zeile|de=TM43|en=TM43|es=MT43|fr=CT43|it=MT43|ja=わざマシン43}}
+{{Item-Liste/Zeile|de=TM44|en=TM44|es=MT44|fr=CT44|it=MT44|ja=わざマシン44}}
+{{Item-Liste/Zeile|de=TM45|en=TM45|es=MT45|fr=CT45|it=MT45|ja=わざマシン45}}
+{{Item-Liste/Zeile|de=TM46|en=TM46|es=MT46|fr=CT46|it=MT46|ja=わざマシン46}}
+{{Item-Liste/Zeile|de=TM47|en=TM47|es=MT47|fr=CT47|it=MT47|ja=わざマシン47}}
+{{Item-Liste/Zeile|de=TM48|en=TM48|es=MT48|fr=CT48|it=MT48|ja=わざマシン48}}
+{{Item-Liste/Zeile|de=TM49|en=TM49|es=MT49|fr=CT49|it=MT49|ja=わざマシン49}}
+{{Item-Liste/Zeile|de=TM50|en=TM50|es=MT50|fr=CT50|it=MT50|ja=わざマシン50}}
+{{Item-Liste/Zeile|de=VM01|en=HM01|es=MO01|fr=CS01|it=MN01|ja=ひでんマシン01}}
+{{Item-Liste/Zeile|de=VM02|en=HM02|es=MO02|fr=CS02|it=MN02|ja=ひでんマシン02}}
+{{Item-Liste/Zeile|de=VM03|en=HM03|es=MO03|fr=CS03|it=MN03|ja=ひでんマシン03}}
+{{Item-Liste/Zeile|de=VM04|en=HM04|es=MO04|fr=CS04|it=MN04|ja=ひでんマシン04}}
+{{Item-Liste/Zeile|de=VM05|en=HM05|es=MO05|fr=CS05|it=MN05|ja=ひでんマシン05}}
+{{Item-Liste/Zeile|de=VM06|en=HM06|es=MO06|fr=CS06|it=MN06|ja=ひでんマシン06}}
+{{Item-Liste/Zeile|de=VM07|en=HM07|es=MO07|fr=CS07|it=MN07|ja=ひでんマシン07}}
+|}
