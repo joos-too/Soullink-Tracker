@@ -6,14 +6,6 @@ services:
     ports:
       - "${APP_PORT:-8067}:80"
     volumes:
-      - maintenance:/maintenance
+      - ${MAINTENANCE_DIR:-./maintenance}:/maintenance
     labels:
       - "ubuntu"
-
-volumes:
-  maintenance:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ${MAINTENANCE_DIR:-/home/ubuntu/Docker/Webserver/Soullink/maintenance}
