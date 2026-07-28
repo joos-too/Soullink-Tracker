@@ -1,6 +1,7 @@
 services:
   soullink-tracker:
     image: ghcr.io/joos-too/soullink-tracker:${IMAGE_TAG:-latest}
+    container_name: ${CONTAINER_NAME:-Soullink-Tracker}
     restart: unless-stopped
     ports:
       - "${APP_PORT:-8067}:80"

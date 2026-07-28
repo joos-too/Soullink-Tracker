@@ -106,7 +106,7 @@ jobs:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
           ssh-known-hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
           remote-path: ${{ vars.DEPLOY_PATH }}
-          compose-project: soullink-tracker-production
+          compose-project: Soullink-Tracker-production
           image-tag: latest
           app-port: ${{ vars.APP_PORT }}
           registry-username: ${{ github.actor }}
