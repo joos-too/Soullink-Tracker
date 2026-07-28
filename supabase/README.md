@@ -47,7 +47,6 @@ npm run supabase:status
 Copy `API_URL` and `ANON_KEY` into the repository-root `.env` file:
 
 ```dotenv
-VITE_BACKEND=supabase
 VITE_SUPABASE_URL=<API_URL>
 VITE_SUPABASE_ANON_KEY=<ANON_KEY>
 ```
@@ -224,7 +223,7 @@ has been applied to either hosted database, do not edit, rename, reorder, or
 delete its SQL file; add a new forward migration instead. A production
 environment approval confirms that a recent restorable backup exists.
 
-The separate hosted environment, safety marker, SSH tunnel, preflight, import
-order, and evidence checklist are documented in
-[`Staging_Rehearsal.md`](Staging_Rehearsal.md). Run its read-only preflight with
-`npm run supabase:staging:preflight` before any hosted rehearsal step.
+The staging and production migration procedure, including the safety marker,
+SSH tunnel, import order, validation, and evidence checklist, is documented in
+[`Data_Migration.md`](Data_Migration.md). Run the read-only staging preflight
+before any hosted rehearsal step.
