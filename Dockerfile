@@ -26,9 +26,8 @@ FROM nginx:1.27-alpine AS runtime
 COPY docker/nginx/default.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/dist /usr/share/nginx/html
 
-RUN mkdir -p /maintenance-src/fonts /maintenance/fonts && \
-    cp /usr/share/nginx/html/fonts/press-start-2p.woff2 /maintenance-src/fonts/ && \
-    cp /usr/share/nginx/html/fonts/Roboto-VariableFont.woff2 /maintenance-src/fonts/
+RUN mkdir -p /maintenance-src /maintenance/fonts && \
+    cp -r /usr/share/nginx/html/fonts /maintenance-src/fonts
 COPY maintenance.html /maintenance-src/maintenance.html
 COPY docker/maintenance-entrypoint.sh /maintenance-entrypoint.sh
 RUN chmod +x /maintenance-entrypoint.sh
