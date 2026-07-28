@@ -133,8 +133,10 @@ the normal command path can ignore `sslmode=disable` and fail with `server
 refused TLS connection`. The `--debug` path honors it. Remove this workaround
 after upgrading to a release that fixes the regression.
 
-Never add `--include-seed`: `supabase/seed.sql` contains local-only accounts and
-trackers. Run the pgTAP suite locally against the identical migrations; do not
+Never add `--include-seed` to this migration/import procedure:
+`supabase/seed.sql` contains deterministic development accounts and trackers.
+The seed is allowed on hosted staging only through the deployment
+workflow. Run the pgTAP suite locally against the identical migrations; do not
 run data-mutating fixture tests against hosted staging.
 
 After the schema has been applied and before importing any data, require empty
@@ -198,9 +200,13 @@ counts, state hashes, warnings, disk usage before/after, commit SHA, Supabase
 release, commands, manual fixes, and screenshots/log references. Keep reports
 outside Git because they contain identifiers.
 
-After the first successful rehearsal, use the pre-recorded staging-only reset
-procedure, verify `--expect-empty`, and repeat from the same inputs. Production
-cutover is not approved until both runs match and the rollback boundary in
+After the first successful rehearsal, manually run the `Deploy staging` GitHub
+Actions workflow and select the branch containing the application, migrations,
+and seed to rehearse. The workflow verifies the staging database marker, clears
+the managed Auth data that a remote Supabase CLI reset preserves, reapplies all
+migrations and `seed.sql`, verifies the deterministic fixture counts, and
+deploys the frontend. Production cutover is not approved until both runs match
+and the rollback boundary in
 [`Supabase_Migration.md`](Supabase_Migration.md) is explicitly accepted.
 
 ## 8. Secret cleanup
