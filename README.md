@@ -11,7 +11,7 @@
 
 <p align="center">
   <a href="https://github.com/joos-too/pokemon-soullink-tracker/releases"><img src="https://img.shields.io/github/v/release/joos-too/pokemon-soullink-tracker?style=for-the-badge&color=blue" alt="Release" /></a>&nbsp;
-  <img src="https://status.freakmedialp.de/api/badge/32/uptime?style=for-the-badge" alt="Uptime" />&nbsp;
+  <img src="https://status.freakmedialp.de/api/badge/52/uptime?style=for-the-badge" alt="Uptime" />&nbsp;
   <a href="https://github.com/joos-too/pokemon-soullink-tracker/issues"><img src="https://img.shields.io/github/issues/joos-too/pokemon-soullink-tracker?style=for-the-badge" alt="Issues" /></a>&nbsp;
   <a href="https://github.com/joos-too/pokemon-soullink-tracker/stargazers"><img src="https://img.shields.io/github/stars/joos-too/pokemon-soullink-tracker?style=for-the-badge&color=f5c542" alt="Stars" /></a>&nbsp;
   <a href="https://github.com/joos-too/pokemon-soullink-tracker/graphs/contributors"><img src="https://img.shields.io/github/contributors/joos-too/pokemon-soullink-tracker?style=for-the-badge" alt="Contributors" /></a>&nbsp;
