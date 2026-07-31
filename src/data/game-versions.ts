@@ -1107,7 +1107,7 @@ export const GAME_VERSIONS: Record<string, GameVersion> = {
   },
   gen4_hgss: {
     id: "gen4_hgss",
-    badgeSet: "gen2/gsk",
+    badgeSet: "gen2/gsc",
     badge: {
       segments: [
         {

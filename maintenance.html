@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Soullink Tracker – Maintenance</title>
+    <style>
+      @font-face {
+        font-family: "Press Start 2P";
+        src: url("/fonts/press-start-2p.woff2") format("woff2");
+        font-display: swap;
+      }
+      @font-face {
+        font-family: "Roboto";
+        src: url("/fonts/Roboto-VariableFont.woff2") format("woff2");
+        font-weight: 100 900;
+        font-style: normal;
+        font-display: swap;
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: "Roboto", sans-serif;
+        background-color: #101828;
+        color: #e5e7eb;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem;
+      }
+
+      .card {
+        background-color: #1e2939;
+        border-radius: 0.75rem;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+        padding: 2.5rem 2rem;
+        max-width: 520px;
+        width: 100%;
+        text-align: center;
+      }
+
+      .icon {
+        font-size: 3rem;
+        margin-bottom: 1.25rem;
+      }
+
+      h1 {
+        font-family: "Press Start 2P", cursive;
+        font-size: 1rem;
+        line-height: 1.8;
+        color: #f9fafb;
+        margin-bottom: 1rem;
+      }
+
+      p {
+        font-size: 1rem;
+        line-height: 1.6;
+        color: #9ca3af;
+        margin-bottom: 1.75rem;
+      }
+
+      .loading-bar-track {
+        width: 100%;
+        height: 6px;
+        background-color: #374151; /* gray-700 */
+        border-radius: 999px;
+        overflow: hidden;
+      }
+
+      .loading-bar-fill {
+        width: 40%;
+        height: 100%;
+        background-color: #2563eb; /* blue-600 */
+        border-radius: 999px;
+        animation: slide 1.6s ease-in-out infinite;
+      }
+
+      @keyframes slide {
+        0% {
+          transform: translateX(-100%);
+        }
+        100% {
+          transform: translateX(350%);
+        }
+      }
+
+      .subtitle {
+        font-family: "Roboto", sans-serif;
+        font-size: 0.9rem;
+        color: #6b7280;
+        margin-top: 1.5rem;
+        line-height: 1.6;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="icon">🔧</div>
+      <h1>Under Maintenance</h1>
+      <p>
+        This page is currently undergoing maintenance.
+        The tracker will be back online shortly.
+      </p>
+      <div class="loading-bar-track">
+        <div class="loading-bar-fill"></div>
+      </div>
+      <div class="subtitle">Please check back in a few minutes</div>
+    </div>
+  </body>
+</html>

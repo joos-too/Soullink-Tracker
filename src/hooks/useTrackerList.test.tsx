@@ -10,10 +10,6 @@ const trackerRepositoryMock = vi.hoisted(() => ({
   unsubscribe: vi.fn(),
 }));
 
-vi.mock("@/src/services/backend/backend.ts", () => ({
-  isSupabaseBackend: true,
-}));
-
 vi.mock("@/src/services/repos/profileRepository.ts", () => ({
   getDefaultDisplayName: (email?: string | null) => email ?? "User",
 }));
@@ -28,7 +24,6 @@ vi.mock("@/src/services/repos/trackerRepository.ts", () => ({
   },
   subscribeToTrackerMeta: vi.fn(() => vi.fn()),
   subscribeToTrackerState: vi.fn(() => vi.fn()),
-  subscribeToUserTrackerIds: vi.fn(() => vi.fn()),
 }));
 
 const trackerEntry: TrackerListEntry = {

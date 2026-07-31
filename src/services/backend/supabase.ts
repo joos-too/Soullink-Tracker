@@ -13,10 +13,7 @@ const getRequiredEnvironmentValue = (name: string): string => {
   return value;
 };
 
-/**
- * Lazily creates the browser client so Firebase-only builds do not require
- * Supabase configuration while the migration switch remains on Firebase.
- */
+/** Lazily creates the shared browser client. */
 export const getSupabaseClient = (): SupabaseClient<Database> => {
   if (client) return client;
 

@@ -150,9 +150,9 @@ runs:
 
         "${ssh_command[@]}" "$target" \
           "cd $quoted_remote_path &&
-           IMAGE_TAG=$quoted_image_tag APP_PORT=$quoted_app_port docker compose --env-file /dev/null --project-name $quoted_compose_project config --quiet &&
-           IMAGE_TAG=$quoted_image_tag APP_PORT=$quoted_app_port docker compose --env-file /dev/null --project-name $quoted_compose_project pull &&
-           IMAGE_TAG=$quoted_image_tag APP_PORT=$quoted_app_port docker compose --env-file /dev/null --project-name $quoted_compose_project up -d"
+           IMAGE_TAG=$quoted_image_tag APP_PORT=$quoted_app_port ENV=$quoted_compose_project docker compose --env-file /dev/null --project-name $quoted_compose_project config --quiet &&
+           IMAGE_TAG=$quoted_image_tag APP_PORT=$quoted_app_port ENV=$quoted_compose_project docker compose --env-file /dev/null --project-name $quoted_compose_project pull &&
+           IMAGE_TAG=$quoted_image_tag APP_PORT=$quoted_app_port ENV=$quoted_compose_project docker compose --env-file /dev/null --project-name $quoted_compose_project up -d"
 
         "${ssh_command[@]}" "$target" \
           "docker logout $quoted_registry_host"

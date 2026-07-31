@@ -1,8 +1,11 @@
 services:
   soullink-tracker:
     image: ghcr.io/joos-too/soullink-tracker:${IMAGE_TAG:-latest}
+    container_name: Soullink-Tracker-${ENV}
     restart: unless-stopped
     ports:
       - "${APP_PORT:-8067}:80"
+    volumes:
+      - ${MAINTENANCE_DIR:-./maintenance}:/maintenance
     labels:
       - "ubuntu"

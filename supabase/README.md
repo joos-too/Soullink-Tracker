@@ -47,7 +47,6 @@ npm run supabase:status
 Copy `API_URL` and `ANON_KEY` into the repository-root `.env` file:
 
 ```dotenv
-VITE_BACKEND=supabase
 VITE_SUPABASE_URL=<API_URL>
 VITE_SUPABASE_ANON_KEY=<ANON_KEY>
 ```
@@ -78,7 +77,10 @@ The local seed accounts all use password `testpassword123`:
 | `guest@example.com`     | Guest on the public Gen 1 tracker  |
 | `unrelated@example.com` | No memberships                     |
 
-The four tracker IDs and all user IDs are fixed UUIDs so database and frontend tests remain deterministic. Seeds are local fixtures only and must never be included in a staging or production database push.
+The four tracker IDs and all user IDs are fixed UUIDs so database and frontend
+tests remain deterministic. The fixtures may be loaded locally or through the
+staging deployment workflow. They must never be included in a normal
+hosted database push or applied to production.
 
 ## Automated tests
 
@@ -124,7 +126,7 @@ npm run supabase:db:push:dry-run -- --db-url "<database-url>"
 npm run supabase:db:push -- --db-url "<database-url>"
 ```
 
-Never put database URLs, service-role keys, Firebase exports, or migration reports containing user data in this repository. Do not add `--include-seed` when pushing to staging or production.
+Never put database URLs, service-role keys, Firebase exports, or migration reports containing user data in this repository. Do not add `--include-seed` to a normal hosted database push. Production must never receive the seed.
 
 ### Automated hosted deployments
 
@@ -136,13 +138,13 @@ Hosted releases use two independent branch workflows:
 | `master`  | `deploy-production.yml` | `latest`  | production         |
 
 Both workflows run on a push to their branch and through `workflow_dispatch`.
-A manual run fails when the selected ref is not the workflow's matching branch.
-Each release builds the frontend and runs the complete Supabase E2E workflow,
-then applies pending database migrations, and only then deploys the frontend.
-Migration and frontend deployment run in one environment-bound release job.
-The production release job uses the protected `production` GitHub environment
-as its approval gate and records the complete release in GitHub's deployment
-history.
+A manual staging deployment may use any selected branch; a manual production
+deployment must use `master`. Each release builds the frontend before changing
+the hosted environment. Staging then resets and seeds its database, while
+production applies only pending migrations. Database and frontend deployment
+run in one environment-bound release job. The production release job uses the
+protected `production` GitHub environment as its approval gate and records the
+complete release in GitHub's deployment history.
 
 Configure both GitHub environments, `staging` and `production`, with:
 
@@ -196,16 +198,32 @@ alter database postgres set app.environment = 'production';
 ```
 
 Run only the matching statement against each database, then reconnect. The
-pipeline refuses to migrate a database whose marker does not match its target.
-It also rejects migration-history divergence and verifies exact history after
-`supabase db push`. Seeds are never applied to hosted environments.
+pipelines refuse to change a database whose marker does not match their target.
+Production also rejects migration-history divergence and verifies exact history
+after `supabase db push`. Production deployments never apply seeds.
+
+### Staging deployment reset
+
+The `Deploy staging` workflow destroys all data in the isolated staging
+database, reapplies every migration, loads `supabase/seed.sql`, and then deploys
+the frontend. It runs automatically for pushes to `staging` and can be started
+manually from any branch. For a manual run, select the branch whose application,
+migrations, and seed should be deployed.
+
+Before changing any data, the workflow verifies the persistent
+`app.environment=staging` marker. It clears the managed Auth users because a
+remote Supabase CLI reset preserves the `auth` schema, then runs
+`supabase db reset --db-url`. Afterward it verifies migration history, fixture
+counts, and the exact seeded Auth email list before deploying the frontend. The
+workflow uses the protected `staging` environment and cannot target production
+without replacing its hard-coded marker check and bypassing that environment.
 
 Promote releases through a `staging` to `master` pull request. Once a migration
 has been applied to either hosted database, do not edit, rename, reorder, or
 delete its SQL file; add a new forward migration instead. A production
 environment approval confirms that a recent restorable backup exists.
 
-The separate hosted environment, safety marker, SSH tunnel, preflight, import
-order, and evidence checklist are documented in
-[`Staging_Rehearsal.md`](Staging_Rehearsal.md). Run its read-only preflight with
-`npm run supabase:staging:preflight` before any hosted rehearsal step.
+The staging and production migration procedure, including the safety marker,
+SSH tunnel, import order, validation, and evidence checklist, is documented in
+[`Data_Migration.md`](Data_Migration.md). Run the read-only staging preflight
+before any hosted rehearsal step.

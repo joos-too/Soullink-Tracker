@@ -68,7 +68,6 @@ jobs:
       cleanup: true
       keep-versions: 3
       build-args: |
-        VITE_BACKEND=supabase
         VITE_SUPABASE_URL=${{ needs.build-config.outputs.supabase_url }}
         VITE_SUPABASE_ANON_KEY=${{ needs.build-config.outputs.supabase_anon_key }}
 
@@ -106,7 +105,7 @@ jobs:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
           ssh-known-hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
           remote-path: ${{ vars.DEPLOY_PATH }}
-          compose-project: soullink-tracker-production
+          compose-project: production
           image-tag: latest
           app-port: ${{ vars.APP_PORT }}
           registry-username: ${{ github.actor }}

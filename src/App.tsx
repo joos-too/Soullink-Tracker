@@ -39,6 +39,7 @@ import { useRulesets } from "@/src/hooks/useRulesets.ts";
 import { useTrackerList } from "@/src/hooks/useTrackerList.ts";
 import { getPokemonTypeSlugsById } from "@/src/services/pokemons/pokemonTypes.ts";
 import InfoPanel from "@/src/components/widgets/InfoPanel.tsx";
+import Rules from "@/src/components/widgets/Rules.tsx";
 import Graveyard from "@/src/components/widgets/Graveyard.tsx";
 import ClearedLocations from "@/src/components/widgets/ClearedLocations.tsx";
 import AddLostPokemonModal from "@/src/components/modals/AddLostPokemonModal.tsx";
@@ -73,8 +74,6 @@ import {
   useNavigate,
   useSearchParams,
 } from "react-router-dom";
-import { USE_EMULATORS } from "@/src/firebaseConfig";
-import { seedEmulatorData } from "@/src/services/emulatorSeed";
 import {
   setTrackerVisibility,
   subscribeToTrackerMeta,
@@ -99,7 +98,6 @@ import {
   updateUserSpritesInTeamTablePreference,
   updateUserWikiPreference,
 } from "@/src/services/repos/profileRepository.ts";
-import { isSupabaseBackend } from "@/src/services/backend/backend.ts";
 import { GAME_VERSIONS } from "@/src/data/game-versions";
 import {
   DEFAULT_RULES,
@@ -123,15 +121,8 @@ import { resolvePokemonLocationDisplay } from "@/src/services/search/locationSea
 import { normalizeLanguage } from "@/src/utils/language.ts";
 import "@/src/pokeapi"; // initialize Pokedex once so sprite caching SW gets registered
 
-const LEGACY_LAST_TRACKER_STORAGE_KEY = "soullink:lastTrackerId";
-const SUPABASE_LAST_TRACKER_STORAGE_KEY = "soullink:lastSupabaseTrackerId";
-const BACKEND_MIGRATION_VERSION_STORAGE_KEY =
-  "soullink:backendMigrationVersion";
-const SUPABASE_BACKEND_MIGRATION_VERSION = "1";
 const AUTOSAVE_DEBOUNCE_MS = 200;
-const LAST_TRACKER_STORAGE_KEY = isSupabaseBackend
-  ? SUPABASE_LAST_TRACKER_STORAGE_KEY
-  : LEGACY_LAST_TRACKER_STORAGE_KEY;
+const LAST_TRACKER_STORAGE_KEY = "soullink:lastSupabaseTrackerId";
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -142,29 +133,12 @@ const isTrackerUuid = (value: string | null): value is string =>
 const getInitialActiveTrackerId = (): string | null => {
   if (typeof window === "undefined") return null;
 
-  if (isSupabaseBackend) {
-    if (
-      window.localStorage.getItem(BACKEND_MIGRATION_VERSION_STORAGE_KEY) !==
-      SUPABASE_BACKEND_MIGRATION_VERSION
-    ) {
-      window.localStorage.removeItem(LEGACY_LAST_TRACKER_STORAGE_KEY);
-      window.localStorage.setItem(
-        BACKEND_MIGRATION_VERSION_STORAGE_KEY,
-        SUPABASE_BACKEND_MIGRATION_VERSION,
-      );
-    }
-
-    const storedSupabaseTrackerId = window.localStorage.getItem(
-      SUPABASE_LAST_TRACKER_STORAGE_KEY,
-    );
-    if (!isTrackerUuid(storedSupabaseTrackerId)) {
-      window.localStorage.removeItem(SUPABASE_LAST_TRACKER_STORAGE_KEY);
-      return null;
-    }
-    return storedSupabaseTrackerId;
+  const storedTrackerId = window.localStorage.getItem(LAST_TRACKER_STORAGE_KEY);
+  if (!isTrackerUuid(storedTrackerId)) {
+    window.localStorage.removeItem(LAST_TRACKER_STORAGE_KEY);
+    return null;
   }
-
-  return window.localStorage.getItem(LEGACY_LAST_TRACKER_STORAGE_KEY);
+  return storedTrackerId;
 };
 
 const MAX_SUPPORTED_GENERATION = 9;
@@ -192,13 +166,9 @@ const App: React.FC = () => {
     : null;
   const trackerRouteMatch = useMatch("/tracker/:trackerId");
   const routeTrackerParam = trackerRouteMatch?.params?.trackerId ?? null;
-  const isInvalidSupabaseTrackerRoute =
-    isSupabaseBackend &&
-    routeTrackerParam !== null &&
-    !isTrackerUuid(routeTrackerParam);
-  const routeTrackerId = isInvalidSupabaseTrackerRoute
-    ? null
-    : routeTrackerParam;
+  const isInvalidTrackerRoute =
+    routeTrackerParam !== null && !isTrackerUuid(routeTrackerParam);
+  const routeTrackerId = isInvalidTrackerRoute ? null : routeTrackerParam;
   const [data, setData] = useState<AppState>(createInitialState());
   const { user, loading } = useAuthSession();
   const [activeTrackerId, setActiveTrackerId] = useState<string | null>(
@@ -785,21 +755,6 @@ const App: React.FC = () => {
     [activeGameVersion],
   );
 
-  /**
-   * Seed emulator with test data when running in emulator mode
-   * This effect runs after Firebase initialization and creates:
-   * - A test user (test@example.com)
-   * - A sample tracker with pre-populated team, box, and graveyard data
-   * The seeding is idempotent and checks for existing data to prevent duplication
-   */
-  useEffect(() => {
-    if (USE_EMULATORS && !loading) {
-      seedEmulatorData().catch((error) => {
-        console.error("Failed to seed emulator data:", error);
-      });
-    }
-  }, [loading]);
-
   useEffect(() => {
     if (!user) {
       setAuthScreen("login");
@@ -832,7 +787,7 @@ const App: React.FC = () => {
     // Don't redirect away from tracker route while we are still resolving whether it is public
     if (user || loading) return;
 
-    if (isInvalidSupabaseTrackerRoute) return;
+    if (isInvalidTrackerRoute) return;
 
     if (!routeTrackerId) {
       navigate("/", { replace: true });
@@ -849,7 +804,7 @@ const App: React.FC = () => {
     loading,
     navigate,
     routeTrackerId,
-    isInvalidSupabaseTrackerRoute,
+    isInvalidTrackerRoute,
     publicTrackerLoading,
     trackerMetas,
     isViewingPublicTracker,
@@ -862,10 +817,10 @@ const App: React.FC = () => {
   }, [location.pathname, showSettings, closeSettingsPanel]);
 
   useEffect(() => {
-    if (isInvalidSupabaseTrackerRoute) {
+    if (isInvalidTrackerRoute) {
       setActiveTrackerId(null);
     }
-  }, [isInvalidSupabaseTrackerRoute]);
+  }, [isInvalidTrackerRoute]);
 
   // Load tracker metadata for direct URL access (used for public trackers)
   useEffect(() => {
@@ -998,7 +953,7 @@ const App: React.FC = () => {
     ? Boolean(trackerMetas[routeTrackerId]?.isPublic)
     : false;
   const routeTrackerKnownMissing = Boolean(
-    isInvalidSupabaseTrackerRoute ||
+    isInvalidTrackerRoute ||
       (user &&
         routeTrackerId &&
         !userTrackersLoading &&
@@ -2712,8 +2667,6 @@ const App: React.FC = () => {
               onRivalCapReveal={handleRivalCapReveal}
               onStatChange={handleStatChange}
               onPlayerStatChange={handlePlayerStatChange}
-              rules={data.rules}
-              onRulesChange={(rules) => setData((prev) => ({ ...prev, rules }))}
               legendaryTrackerEnabled={data.legendaryTrackerEnabled ?? true}
               rivalCensorEnabled={data.rivalCensorEnabled ?? true}
               rivalCensorMode={
@@ -2752,6 +2705,11 @@ const App: React.FC = () => {
               megaStoneSpriteStyle={data.megaStoneSpriteStyle ?? "item"}
               onMegaStoneSpriteStyleToggle={handleMegaStoneSpriteStyleToggle}
             />
+            <Rules
+              rules={data.rules}
+              onRulesChange={(rules) => setData((prev) => ({ ...prev, rules }))}
+              readOnly={isReadOnly}
+            />
             <Graveyard
               graveyard={data.graveyard}
               playerNames={resolvedPlayerNames}
@@ -2778,9 +2736,7 @@ const App: React.FC = () => {
             title={t("tracker.footer.github")}
           >
             <FaGithub size={18} aria-hidden="true" />
-            <span className="text-sm">
-              vibecoded by joos-too & FreakMediaLP
-            </span>
+            <span className="text-sm">Coded by joos-too & FreakMediaLP</span>
           </a>
         </footer>
       </div>

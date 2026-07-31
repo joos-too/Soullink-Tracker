@@ -13,17 +13,6 @@
       }
     },
     {
-      "label": "Firebase Emulators",
-      "type": "npm",
-      "script": "emulators",
-      "isBackground": true,
-      "problemMatcher": [],
-      "presentation": {
-        "reveal": "always",
-        "panel": "dedicated"
-      }
-    },
-    {
       "label": "Supabase Local",
       "type": "npm",
       "script": "supabase:start",
@@ -33,12 +22,6 @@
         "reveal": "always",
         "panel": "dedicated"
       }
-    },
-    {
-      "label": "Start Dev + Emulators",
-      "dependsOn": ["Dev Server", "Firebase Emulators"],
-      "dependsOrder": "parallel",
-      "problemMatcher": []
     },
     {
       "label": "Start Dev + Supabase",
