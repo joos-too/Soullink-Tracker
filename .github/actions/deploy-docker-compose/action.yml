@@ -107,8 +107,6 @@ runs:
         printf -v quoted_registry_host '%q' "$REGISTRY_HOST"
         printf -v quoted_registry_username '%q' "$REGISTRY_USERNAME"
         printf -v quoted_compose_project '%q' "$COMPOSE_PROJECT"
-        printf -v quoted_image_tag '%q' "$IMAGE_TAG"
-        printf -v quoted_app_port '%q' "$APP_PORT"
 
         ssh_command=(
           ssh
@@ -143,6 +141,14 @@ runs:
           "$COMPOSE_FILE" \
           "$target:$REMOTE_PATH/docker-compose.yml"
 
+        printf '%s\n' \
+          "IMAGE_TAG=$IMAGE_TAG" \
+          "APP_PORT=$APP_PORT" \
+          "ENV=$COMPOSE_PROJECT" \
+          "COMPOSE_PROJECT_NAME=$COMPOSE_PROJECT" |
+          "${ssh_command[@]}" "$target" \
+            "umask 077 && cat > $quoted_remote_path/.env"
+
         printf '%s' "$REGISTRY_PASSWORD" |
           "${ssh_command[@]}" "$target" \
             "docker login $quoted_registry_host --username $quoted_registry_username --password-stdin"
@@ -150,9 +156,9 @@ runs:
 
         "${ssh_command[@]}" "$target" \
           "cd $quoted_remote_path &&
-           IMAGE_TAG=$quoted_image_tag APP_PORT=$quoted_app_port ENV=$quoted_compose_project docker compose --env-file /dev/null --project-name $quoted_compose_project config --quiet &&
-           IMAGE_TAG=$quoted_image_tag APP_PORT=$quoted_app_port ENV=$quoted_compose_project docker compose --env-file /dev/null --project-name $quoted_compose_project pull &&
-           IMAGE_TAG=$quoted_image_tag APP_PORT=$quoted_app_port ENV=$quoted_compose_project docker compose --env-file /dev/null --project-name $quoted_compose_project up -d"
+           docker compose --project-name $quoted_compose_project config --quiet &&
+           docker compose --project-name $quoted_compose_project pull &&
+           docker compose --project-name $quoted_compose_project up -d"
 
         "${ssh_command[@]}" "$target" \
           "docker logout $quoted_registry_host"
