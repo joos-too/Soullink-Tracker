@@ -63,6 +63,8 @@ two options, to expand the supported versions
   when creating a Tracker. You can override this behavior and allow it, to show Pokémon and Items from any version, which
   is perfect for ROM hacks, that take place in older regions.
 
+Planned for the future:
+
 - Custom Tracker
   Creating a custom Tracker requires you to provide your own gyms/badges, rival battles and level caps. This way you can
   add any game you desire, like Gen 7+ or fan games.
