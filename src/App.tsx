@@ -64,6 +64,7 @@ import HomePage from "@/src/components/pages/HomePage.tsx";
 import CreateTrackerModal from "@/src/components/modals/CreateTrackerModal.tsx";
 import DeleteTrackerModal from "@/src/components/modals/DeleteTrackerModal.tsx";
 import TrackerSearchModal from "@/src/components/modals/TrackerSearchModal.tsx";
+import ReadOnlyNoticeBanner from "@/src/components/banners/ReadOnlyNoticeBanner.tsx";
 import { focusRingClasses } from "@/src/styles/focusRing";
 import {
   Navigate,
@@ -2410,10 +2411,12 @@ const App: React.FC = () => {
         generationSpritePath={generationSpritePath}
         gameVersionId={activeGameVersionId || undefined}
       />
-      {readOnlyNotice && (
-        <div className="max-w-480 mx-auto mt-3 mb-3 bg-blue-50 border border-blue-200 text-blue-800 dark:bg-slate-800 dark:border-slate-700 dark:text-blue-100 rounded-md px-3 py-2 text-sm shadow-sm">
-          {readOnlyNotice}
-        </div>
+      {readOnlyNotice && activeTrackerId && (
+        <ReadOnlyNoticeBanner
+          key={activeTrackerId}
+          trackerId={activeTrackerId}
+          notice={readOnlyNotice}
+        />
       )}
       <div className="max-w-480 mx-auto bg-white dark:bg-gray-800 shadow-lg p-4 rounded-lg">
         <header className="relative py-4 border-b-2 border-gray-300 dark:border-gray-700">
