@@ -112,8 +112,8 @@ _Have an idea or found a bug? [Open an issue!](https://github.com/joos-too/pokem
 
 <p align="center">
   <sub>
-    Pokémon and all related names are trademarks of Nintendo / Creatures Inc. / GAME FREAK Inc.<br>
-    © 2026 Pokémon. © 1995–2026 Nintendo / Creatures Inc. / GAME FREAK inc.<br>
+    Pokémon and all related names and characters are trademarks of their respective owners.<br>
+    © 2026 The Pokémon Company. © 1995–2026 Nintendo / Creatures Inc. / GAME FREAK inc.<br>
     This is a fan-made, non-commercial project not affiliated with, endorsed by, or sponsored by any of these companies.
   </sub>
 </p>
