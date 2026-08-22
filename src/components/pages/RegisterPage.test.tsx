@@ -32,6 +32,7 @@ describe("RegisterPage", () => {
       "ash@example.com",
       "password123",
       "Ash Ketchum",
+      "en",
     );
   });
 

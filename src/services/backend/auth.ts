@@ -1,8 +1,10 @@
 import { getSupabaseClient } from "@/src/services/backend/supabase.ts";
+import type { SupportedLanguage } from "@/src/utils/language.ts";
 
 export interface AuthenticatedUser {
   uid: string;
   email: string | null;
+  language: SupportedLanguage | null;
 }
 
 export type AuthErrorCode =
@@ -17,14 +19,27 @@ export const passwordResetRequiresCode = false;
 const normalizeEmail = (email?: string | null): string =>
   email?.trim().toLowerCase() ?? "";
 
+const getUserLanguage = (metadata: unknown): SupportedLanguage | null => {
+  if (typeof metadata !== "object" || metadata === null) return null;
+  const language = (metadata as { language?: unknown }).language;
+  return language === "de" || language === "en" ? language : null;
+};
+
 const toAuthenticatedUser = (
   user: {
     id?: string;
     email?: string | null;
+    user_metadata?: unknown;
   } | null,
 ): AuthenticatedUser | null => {
   if (!user) return null;
-  return user.id ? { uid: user.id, email: user.email ?? null } : null;
+  return user.id
+    ? {
+        uid: user.id,
+        email: user.email ?? null,
+        language: getUserLanguage(user.user_metadata),
+      }
+    : null;
 };
 
 const getRecoveryRedirectUrl = (): string =>
@@ -87,12 +102,13 @@ export const signUp = async (
   email: string,
   password: string,
   displayName: string,
+  language: SupportedLanguage,
 ): Promise<SignUpResult> => {
   const { data, error } = await getSupabaseClient().auth.signUp({
     email: normalizeEmail(email),
     password,
     options: {
-      data: { display_name: displayName },
+      data: { display_name: displayName, language },
     },
   });
   if (error) throw error;
@@ -100,6 +116,17 @@ export const signUp = async (
   const confirmationRequired =
     !!data.user && !data.session && data.user.identities?.length !== 0;
   return { confirmationRequired };
+};
+
+export const synchronizeCurrentUserLanguage = async (
+  currentLanguage: SupportedLanguage | null,
+  language: SupportedLanguage,
+): Promise<void> => {
+  if (currentLanguage === language) return;
+  const { error } = await getSupabaseClient().auth.updateUser({
+    data: { language },
+  });
+  if (error) throw error;
 };
 
 export const verifyEmailOtp = async (

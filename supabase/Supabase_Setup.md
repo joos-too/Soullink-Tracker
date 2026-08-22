@@ -85,6 +85,13 @@ from the Auth container, so deploy the frontend templates first and ensure
 `SITE_URL` is the public HTTPS frontend URL. Both emails also load the app logo
 through that URL.
 
+Both templates select German only when `auth.users.raw_user_meta_data.language`
+is exactly `de`; `en`, missing values, and invalid values use English. The
+frontend stores the normalized active language during signup and synchronizes
+it whenever an authenticated user's app language differs from their Auth
+metadata. Password-reset requests therefore use the last language synchronized
+while the user was signed in.
+
 ### Staging SMTP sink
 
 Use Mailpit for hosted staging rehearsals. It accepts every address but does

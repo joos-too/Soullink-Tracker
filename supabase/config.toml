@@ -230,7 +230,7 @@ enable_signup = true
 # addresses. If disabled, only the new email is required to confirm.
 double_confirm_changes = true
 # If enabled, users need to confirm their email address before signing in.
-enable_confirmations = false
+enable_confirmations = true
 # If enabled, users will need to reauthenticate or have logged in recently to change their password.
 secure_password_change = false
 # Controls the minimum amount of time that must pass before sending another signup confirmation or password reset email.
@@ -251,11 +251,11 @@ otp_expiry = 3600
 # sender_name = "Admin"
 
 [auth.email.template.confirmation]
-subject = "Bestätige deinen Soullink Tracker Account"
+subject = '{{ if eq .Data.language "de" }}Bestätige deinen Soullink Tracker Account{{ else }}Confirm your Soullink Tracker account{{ end }}'
 content_path = "./public/auth-email-templates/confirmation.html"
 
 [auth.email.template.recovery]
-subject = "Setze dein Soullink Tracker Passwort zurück"
+subject = '{{ if eq .Data.language "de" }}Setze dein Soullink Tracker Passwort zurück{{ else }}Reset your Soullink Tracker password{{ end }}'
 content_path = "./public/auth-email-templates/recovery.html"
 
 # Uncomment to customize notification email template

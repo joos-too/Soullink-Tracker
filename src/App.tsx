@@ -80,7 +80,10 @@ import {
   subscribeToTrackerMeta,
   updateTrackerMetadata,
 } from "@/src/services/repos/trackerRepository.ts";
-import { signOutCurrentUser } from "@/src/services/backend/auth.ts";
+import {
+  signOutCurrentUser,
+  synchronizeCurrentUserLanguage,
+} from "@/src/services/backend/auth.ts";
 import {
   addMemberByEmail,
   createTracker,
@@ -761,6 +764,13 @@ const App: React.FC = () => {
       setAuthScreen("login");
     }
   }, [user]);
+
+  useEffect(() => {
+    if (!user || user.language === locale) return;
+    synchronizeCurrentUserLanguage(user.language, locale).catch((error) => {
+      console.error("Failed to synchronize authentication language", error);
+    });
+  }, [locale, user]);
 
   useEffect(() => {
     if (!user) return;

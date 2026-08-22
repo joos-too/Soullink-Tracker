@@ -11,6 +11,7 @@ import {
 } from "@/src/styles/focusRing.ts";
 import { useTranslation } from "react-i18next";
 import PasswordInput from "@/src/components/auth/PasswordInput.tsx";
+import { normalizeLanguage } from "@/src/utils/language.ts";
 
 type RegisterPageProps = {
   onSwitchToLogin: () => void;
@@ -29,7 +30,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onSwitchToLogin }) => {
   const [otp, setOtp] = useState("");
   const [otpError, setOtpError] = useState<string | null>(null);
   const [otpLoading, setOtpLoading] = useState(false);
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const resolveErrorMessage = (err: unknown): string => {
     switch (getAuthErrorCode(err)) {
@@ -75,6 +76,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onSwitchToLogin }) => {
         email.trim(),
         password,
         normalizedDisplayName,
+        normalizeLanguage(i18n.resolvedLanguage || i18n.language),
       );
       if (confirmationRequired) {
         setConfirmationEmail(email.trim());

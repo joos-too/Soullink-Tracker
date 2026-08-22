@@ -1,9 +1,12 @@
 <!doctype html>
-<html lang="de">
+<html lang="{{ if eq .Data.language `de` }}de{{ else }}en{{ end }}">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Soullink Tracker Account bestätigen</title>
+    <title>
+      {{ if eq .Data.language "de" }}Soullink Tracker Account bestätigen{{ else
+      }}Confirm your Soullink Tracker account{{ end }}
+    </title>
     <style>
       @media only screen and (max-width: 620px) {
         .email-shell {
@@ -34,7 +37,9 @@
         color: transparent;
       "
     >
-      Bestätige deine Email-Adresse für den Soullink Tracker.
+      {{ if eq .Data.language "de" }}Bestätige deine Email-Adresse für den
+      Soullink Tracker.{{ else }}Confirm your email address for Soullink
+      Tracker.{{ end }}
     </div>
     <table
       role="presentation"
@@ -105,7 +110,8 @@
                     line-height: 1.3;
                   "
                 >
-                  Email-Adresse bestätigen
+                  {{ if eq .Data.language "de" }}Email-Adresse bestätigen{{ else
+                  }}Confirm your email address{{ end }}
                 </h1>
                 <p
                   style="
@@ -115,9 +121,11 @@
                     line-height: 1.6;
                   "
                 >
-                  Willkommen beim Soullink Tracker! Bestätige deine
-                  Email-Adresse über den folgenden Button oder gib den Code in
-                  der App ein.
+                  {{ if eq .Data.language "de" }}Willkommen beim Soullink
+                  Tracker! Bestätige deine Email-Adresse über den folgenden
+                  Button oder gib den Code in der App ein.{{ else }}Welcome to
+                  Soullink Tracker! Confirm your email address using the button
+                  below or enter the code in the app.{{ end }}
                 </p>
                 <table
                   role="presentation"
@@ -139,7 +147,8 @@
                           text-decoration: none;
                         "
                       >
-                        Email-Adresse bestätigen
+                        {{ if eq .Data.language "de" }}Email-Adresse
+                        bestätigen{{ else }}Confirm email address{{ end }}
                       </a>
                     </td>
                   </tr>
@@ -154,7 +163,8 @@
                     letter-spacing: 0.08em;
                   "
                 >
-                  Bestätigungscode
+                  {{ if eq .Data.language "de" }}Bestätigungscode{{ else
+                  }}Confirmation code{{ end }}
                 </p>
                 <div
                   style="
@@ -180,8 +190,10 @@
                     line-height: 1.5;
                   "
                 >
-                  Falls du diesen Account nicht erstellt hast, kannst du diese
-                  Email ignorieren.
+                  {{ if eq .Data.language "de" }}Falls du diesen Account nicht
+                  erstellt hast, kannst du diese Email ignorieren.{{ else }}If
+                  you did not create this account, you can ignore this email.{{
+                  end }}
                 </p>
               </td>
             </tr>
@@ -191,8 +203,10 @@
                 style="padding: 24px; background-color: #111827; color: #d1d5db"
               >
                 <p style="margin: 0; font-size: 12px; line-height: 1.5">
-                  Diese Email wurde automatisch versendet. Bitte antworte nicht
-                  auf diese Nachricht.
+                  {{ if eq .Data.language "de" }}Diese Email wurde automatisch
+                  versendet. Bitte antworte nicht auf diese Nachricht.{{ else
+                  }}This email was sent automatically. Please do not reply to
+                  this message.{{ end }}
                 </p>
               </td>
             </tr>
