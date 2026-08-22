@@ -57,6 +57,34 @@ The equivalent local CLI setting is maintained in `supabase/config.toml` as
 valid even if they are shorter; the limit applies when creating or changing a
 password.
 
+### Authentication email templates
+
+The branded account-confirmation and password-recovery templates live in
+`public/auth-email-templates`. Local Supabase loads them directly through
+`supabase/config.toml`. Restart the local stack after changing a template:
+
+```bash
+supabase stop
+supabase start
+```
+
+The self-hosted Auth service loads custom templates from URLs. Because these
+files are deployed with the frontend, copy
+[`docker-compose.auth-email-templates.yml`](docker-compose.auth-email-templates.yml)
+beside the self-hosted Supabase `docker-compose.yml`, then enable the override
+and recreate Auth:
+
+```bash
+cd supabase-project
+sh run.sh config add auth-email-templates
+docker compose up -d --force-recreate auth
+```
+
+The override builds the template URLs from `SITE_URL`. They must be reachable
+from the Auth container, so deploy the frontend templates first and ensure
+`SITE_URL` is the public HTTPS frontend URL. Both emails also load the app logo
+through that URL.
+
 ### Staging SMTP sink
 
 Use Mailpit for hosted staging rehearsals. It accepts every address but does

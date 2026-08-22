@@ -2732,7 +2732,7 @@ const App: React.FC = () => {
         </main>
         <footer className="text-center mt-8 py-4 border-t-2 border-gray-200 dark:border-gray-700">
           <a
-            href="https://github.com/joos-too/Pokemon-Soullink-Tracker"
+            href="https://github.com/joos-too/soullink-tracker"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"

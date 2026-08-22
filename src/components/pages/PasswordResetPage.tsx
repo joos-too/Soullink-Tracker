@@ -8,6 +8,7 @@ import {
   verifyPasswordReset,
 } from "@/src/services/backend/auth.ts";
 import { useTranslation } from "react-i18next";
+import PasswordInput from "@/src/components/auth/PasswordInput.tsx";
 
 interface PasswordResetPageProps {
   oobCode: string | null;
@@ -169,18 +170,24 @@ const PasswordResetPage: React.FC<PasswordResetPageProps> = ({ oobCode }) => {
                 >
                   {t("auth.passwordReset.newPasswordLabel")}
                 </label>
-                <input
+                <PasswordInput
                   id="reset-new-password"
-                  type="password"
                   autoComplete="new-password"
                   required
                   minLength={8}
+                  aria-describedby="reset-password-hint"
                   className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                  placeholder={t("auth.passwordReset.passwordTooShort")}
+                  placeholder={t("auth.login.passwordPlaceholder")}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={actionDisabled}
                 />
+                <p
+                  id="reset-password-hint"
+                  className="mt-1 text-xs text-gray-500 dark:text-gray-400"
+                >
+                  {t("auth.passwordReset.passwordTooShort")}
+                </p>
               </div>
               <div>
                 <label
@@ -189,13 +196,12 @@ const PasswordResetPage: React.FC<PasswordResetPageProps> = ({ oobCode }) => {
                 >
                   {t("auth.passwordReset.confirmPasswordLabel")}
                 </label>
-                <input
+                <PasswordInput
                   id="reset-confirm-password"
-                  type="password"
                   autoComplete="new-password"
                   required
                   className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                  placeholder={t("auth.passwordReset.confirmPasswordLabel")}
+                  placeholder={t("auth.login.passwordPlaceholder")}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   disabled={actionDisabled}

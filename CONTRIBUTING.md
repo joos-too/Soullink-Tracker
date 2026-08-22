@@ -11,8 +11,8 @@ Thanks for your interest in contributing to **Soullink Tracker**! This guide cov
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/joos-too/pokemon-soullink-tracker.git
-cd pokemon-soullink-tracker
+git clone https://github.com/joos-too/soullink-tracker.git
+cd soullink-tracker
 
 # 2. Install dependencies
 npm install

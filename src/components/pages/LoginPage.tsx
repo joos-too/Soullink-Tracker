@@ -1,11 +1,12 @@
 import React, { useState } from "react";
-import { signIn } from "@/src/services/backend/auth.ts";
+import { requestPasswordReset, signIn } from "@/src/services/backend/auth.ts";
 import {
   focusRingBlueClasses,
   focusRingClasses,
   focusRingInputClasses,
 } from "@/src/styles/focusRing.ts";
 import { useTranslation } from "react-i18next";
+import PasswordInput from "@/src/components/auth/PasswordInput.tsx";
 
 type LoginPageProps = {
   onSwitchToRegister: () => void;
@@ -16,6 +17,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ onSwitchToRegister }) => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [passwordResetSent, setPasswordResetSent] = useState(false);
   const { t } = useTranslation();
 
   const handleAuthAction = async (e: React.SubmitEvent) => {
@@ -27,6 +30,22 @@ const LoginPage: React.FC<LoginPageProps> = ({ onSwitchToRegister }) => {
     } catch (err) {
       console.error("Error signing in", err);
       setError(t("auth.login.error"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePasswordReset = async (e: React.SubmitEvent) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+    try {
+      const normalizedEmail = email.trim();
+      await requestPasswordReset(normalizedEmail);
+      setPasswordResetSent(true);
+    } catch (err) {
+      console.error("Error requesting password reset", err);
+      setError(t("auth.login.passwordResetError"));
     } finally {
       setLoading(false);
     }
@@ -60,12 +79,21 @@ const LoginPage: React.FC<LoginPageProps> = ({ onSwitchToRegister }) => {
             </p>
           </header>
 
-          <form onSubmit={handleAuthAction} className="mt-6 space-y-4">
+          <form
+            onSubmit={
+              showForgotPassword ? handlePasswordReset : handleAuthAction
+            }
+            className="mt-6 space-y-4"
+          >
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label
+                htmlFor="login-email"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
                 {t("auth.login.emailLabel")}
               </label>
               <input
+                id="login-email"
                 type="email"
                 autoComplete="email"
                 required
@@ -75,20 +103,54 @@ const LoginPage: React.FC<LoginPageProps> = ({ onSwitchToRegister }) => {
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {t("auth.login.passwordLabel")}
-              </label>
-              <input
-                type="password"
-                autoComplete="current-password"
-                required
-                className={`w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${focusRingInputClasses}`}
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
+            {!showForgotPassword && (
+              <div>
+                <label
+                  htmlFor="login-password"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  {t("auth.login.passwordLabel")}
+                </label>
+                <PasswordInput
+                  id="login-password"
+                  autoComplete="current-password"
+                  required
+                  className={`w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${focusRingInputClasses}`}
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                <div className="mt-2 text-right">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setError(null);
+                      setPasswordResetSent(false);
+                      setShowForgotPassword(true);
+                    }}
+                    className={`text-sm font-semibold text-blue-600 hover:text-blue-700 hover:underline focus-visible:underline dark:text-blue-400 ${focusRingBlueClasses}`}
+                  >
+                    {t("auth.login.forgotPassword")}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {showForgotPassword && (
+              <div className="space-y-2 text-sm">
+                <p className="text-gray-600 dark:text-gray-300">
+                  {t("auth.login.passwordResetInstructions")}
+                </p>
+                {passwordResetSent && (
+                  <p
+                    role="status"
+                    className="font-medium text-green-700 dark:text-green-400"
+                  >
+                    {t("auth.login.passwordResetSent")}
+                  </p>
+                )}
+              </div>
+            )}
 
             {error && (
               <div className="text-red-500 dark:text-red-400 text-sm">
@@ -96,13 +158,34 @@ const LoginPage: React.FC<LoginPageProps> = ({ onSwitchToRegister }) => {
               </div>
             )}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className={`w-full bg-green-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-green-700 transition-colors shadow-md disabled:opacity-70 ${focusRingClasses}`}
-            >
-              {loading ? `${t("auth.login.submit")}…` : t("auth.login.submit")}
-            </button>
+            {!passwordResetSent && (
+              <button
+                type="submit"
+                disabled={loading}
+                className={`w-full bg-green-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-green-700 transition-colors shadow-md disabled:opacity-70 ${focusRingClasses}`}
+              >
+                {loading
+                  ? `${t(showForgotPassword ? "auth.login.sendReset" : "auth.login.submit")}…`
+                  : t(
+                      showForgotPassword
+                        ? "auth.login.sendReset"
+                        : "auth.login.submit",
+                    )}
+              </button>
+            )}
+            {showForgotPassword && (
+              <button
+                type="button"
+                onClick={() => {
+                  setError(null);
+                  setPasswordResetSent(false);
+                  setShowForgotPassword(false);
+                }}
+                className={`w-full text-sm font-semibold text-blue-600 hover:text-blue-700 hover:underline focus-visible:underline dark:text-blue-400 ${focusRingBlueClasses}`}
+              >
+                {t("auth.passwordReset.backToLogin")}
+              </button>
+            )}
           </form>
         </div>
       </div>

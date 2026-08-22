@@ -10,6 +10,7 @@ import {
   focusRingInputClasses,
 } from "@/src/styles/focusRing.ts";
 import { useTranslation } from "react-i18next";
+import PasswordInput from "@/src/components/auth/PasswordInput.tsx";
 
 type RegisterPageProps = {
   onSwitchToLogin: () => void;
@@ -262,9 +263,8 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onSwitchToLogin }) => {
               >
                 {t("auth.register.passwordLabel")}
               </label>
-              <input
+              <PasswordInput
                 id="register-password"
-                type="password"
                 autoComplete="new-password"
                 required
                 className={`w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${focusRingInputClasses}`}
@@ -280,9 +280,8 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onSwitchToLogin }) => {
               >
                 {t("auth.register.confirmPasswordLabel")}
               </label>
-              <input
+              <PasswordInput
                 id="register-confirm-password"
-                type="password"
                 autoComplete="new-password"
                 required
                 className={`w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${focusRingInputClasses}`}
