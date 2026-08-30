@@ -62,20 +62,30 @@ const LoginPage: React.FC<LoginPageProps> = ({ onSwitchToRegister }) => {
               className="mx-auto mb-3 w-40 h-40 object-contain"
             />
             <h1 className="text-2xl sm:text-3xl font-bold font-press-start tracking-tighter dark:text-gray-100">
-              {t("auth.login.title")}
+              {showForgotPassword
+                ? t("auth.passwordReset.title")
+                : t("auth.login.title")}
             </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 text-center">
-              <span className="block">{t("auth.login.headline")}</span>
-              <span className="block mt-1">
-                {t("auth.login.fallback")}{" "}
-                <button
-                  type="button"
-                  onClick={onSwitchToRegister}
-                  className={`font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 hover:underline focus-visible:underline ${focusRingBlueClasses}`}
-                >
-                  {t("auth.login.registerPrompt")}
-                </button>
-              </span>
+              {showForgotPassword ? (
+                <span className="block">
+                  {t("auth.login.passwordResetInstructions")}
+                </span>
+              ) : (
+                <>
+                  <span className="block">{t("auth.login.headline")}</span>
+                  <span className="block mt-1">
+                    {t("auth.login.fallback")}{" "}
+                    <button
+                      type="button"
+                      onClick={onSwitchToRegister}
+                      className={`font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 hover:underline focus-visible:underline ${focusRingBlueClasses}`}
+                    >
+                      {t("auth.login.registerPrompt")}
+                    </button>
+                  </span>
+                </>
+              )}
             </p>
           </header>
 
@@ -136,20 +146,13 @@ const LoginPage: React.FC<LoginPageProps> = ({ onSwitchToRegister }) => {
               </div>
             )}
 
-            {showForgotPassword && (
-              <div className="space-y-2 text-sm">
-                <p className="text-gray-600 dark:text-gray-300">
-                  {t("auth.login.passwordResetInstructions")}
-                </p>
-                {passwordResetSent && (
-                  <p
-                    role="status"
-                    className="font-medium text-green-700 dark:text-green-400"
-                  >
-                    {t("auth.login.passwordResetSent")}
-                  </p>
-                )}
-              </div>
+            {showForgotPassword && passwordResetSent && (
+              <p
+                role="status"
+                className="text-sm font-medium text-green-700 dark:text-green-400"
+              >
+                {t("auth.login.passwordResetSent")}
+              </p>
             )}
 
             {error && (
