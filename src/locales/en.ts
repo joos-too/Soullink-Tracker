@@ -700,8 +700,7 @@ export const en = {
       passwordResetInstructions:
         "Enter your email address and we’ll send you a password reset link.",
       sendReset: "Send reset email",
-      passwordResetSent:
-        "We sent you an email with a link to reset your password.",
+      passwordResetSent: "Email sent",
       passwordResetError:
         "We couldn’t send the reset email. Please check the address and try again.",
     },

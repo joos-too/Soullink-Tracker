@@ -34,10 +34,9 @@ describe("LoginPage", () => {
     expect(requestPasswordResetMock).toHaveBeenCalledWith(
       "trainer@example.com",
     );
-    expect(
-      screen.getByText(
-        "We sent you an email with a link to reset your password.",
-      ),
-    ).toBeInTheDocument();
+    const sentButton = await screen.findByRole("button", {
+      name: "Email sent",
+    });
+    expect(sentButton).toBeDisabled();
   });
 });

@@ -708,8 +708,7 @@ export const de = {
       passwordResetInstructions:
         "Gib deine Email-Adresse ein. Wir senden dir einen Link zum Zurücksetzen deines Passworts.",
       sendReset: "Reset-Email senden",
-      passwordResetSent:
-        "Wir haben dir eine Email mit einem Link zum Zurücksetzen deines Passworts geschickt.",
+      passwordResetSent: "Email gesendet",
       passwordResetError:
         "Die Reset-Email konnte nicht gesendet werden. Prüfe die Adresse und versuche es erneut.",
     },

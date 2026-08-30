@@ -146,36 +146,28 @@ const LoginPage: React.FC<LoginPageProps> = ({ onSwitchToRegister }) => {
               </div>
             )}
 
-            {showForgotPassword && passwordResetSent && (
-              <p
-                role="status"
-                className="text-sm font-medium text-green-700 dark:text-green-400"
-              >
-                {t("auth.login.passwordResetSent")}
-              </p>
-            )}
-
             {error && (
               <div className="text-red-500 dark:text-red-400 text-sm">
                 {error}
               </div>
             )}
 
-            {!passwordResetSent && (
-              <button
-                type="submit"
-                disabled={loading}
-                className={`w-full bg-green-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-green-700 transition-colors shadow-md disabled:opacity-70 ${focusRingClasses}`}
-              >
-                {loading
+            <button
+              type="submit"
+              disabled={loading || passwordResetSent}
+              aria-live="polite"
+              className={`w-full bg-green-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-green-700 transition-colors shadow-md disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500 disabled:shadow-none disabled:hover:bg-gray-300 dark:disabled:bg-gray-700 dark:disabled:text-gray-400 dark:disabled:hover:bg-gray-700 ${focusRingClasses}`}
+            >
+              {passwordResetSent
+                ? t("auth.login.passwordResetSent")
+                : loading
                   ? `${t(showForgotPassword ? "auth.login.sendReset" : "auth.login.submit")}…`
                   : t(
                       showForgotPassword
                         ? "auth.login.sendReset"
                         : "auth.login.submit",
                     )}
-              </button>
-            )}
+            </button>
             {showForgotPassword && (
               <button
                 type="button"
