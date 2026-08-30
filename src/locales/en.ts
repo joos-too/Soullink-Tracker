@@ -730,7 +730,7 @@ export const en = {
       },
       confirmation: {
         title: "Check your email",
-        sent: "We sent an email to {{email}}. Enter the confirmation code or click the link.",
+        sent: "We sent an email to <strong>{{email}}</strong>. Enter the confirmation code or click the link.",
         checkSpam: "Can't find it? Check your spam or junk folder.",
         codeLabel: "Confirmation code",
         submit: "Confirm",
@@ -761,7 +761,6 @@ export const en = {
         "The new password must be different from your old password.",
       successMessage: "Password updated!",
       buttonSave: "Set password",
-      buttonBack: "Back",
       accountLabel: "Account",
     },
     passwordVisibility: {

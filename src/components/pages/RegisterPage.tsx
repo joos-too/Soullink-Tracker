@@ -9,7 +9,7 @@ import {
   focusRingClasses,
   focusRingInputClasses,
 } from "@/src/styles/focusRing.ts";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import PasswordInput from "@/src/components/auth/PasswordInput.tsx";
 import { normalizeLanguage } from "@/src/utils/language.ts";
 
@@ -124,9 +124,15 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onSwitchToLogin }) => {
 
             <div className="mt-6 space-y-4">
               <p className="text-sm text-gray-700 dark:text-gray-300 text-center">
-                {t("auth.register.confirmation.sent", {
-                  email: confirmationEmail,
-                })}
+                <Trans
+                  i18nKey="auth.register.confirmation.sent"
+                  values={{ email: confirmationEmail }}
+                  components={{
+                    strong: (
+                      <strong className="font-semibold text-gray-900 dark:text-gray-100" />
+                    ),
+                  }}
+                />
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
                 {t("auth.register.confirmation.checkSpam")}

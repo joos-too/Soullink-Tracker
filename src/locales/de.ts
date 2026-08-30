@@ -740,7 +740,7 @@ export const de = {
       },
       confirmation: {
         title: "Email prüfen",
-        sent: "Wir haben eine Email an {{email}} gesendet. Gebe den Bestätigungscode an oder klicke auf den Link.",
+        sent: "Wir haben eine Email an <strong>{{email}}</strong> gesendet. Gebe den Bestätigungscode an oder klicke auf den Link.",
         checkSpam: "Nicht gefunden? Überprüfe deinen Spam- oder Junk-Ordner.",
         codeLabel: "Bestätigungscode",
         submit: "Bestätigen",
@@ -772,7 +772,6 @@ export const de = {
         "Das neue Passwort muss sich von deinem bisherigen Passwort unterscheiden.",
       successMessage: "Passwort aktualisiert!",
       buttonSave: "Passwort setzen",
-      buttonBack: "Zurück",
       accountLabel: "Account",
     },
     passwordVisibility: {
