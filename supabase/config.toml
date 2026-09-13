@@ -2,7 +2,7 @@
 # https://supabase.com/docs/guides/local-development/cli/config
 # A string used to distinguish different Supabase projects on the same host. Defaults to the
 # working directory name when running `supabase init`.
-project_id = "Pokemon-Soullink-Tracker"
+project_id = "Soullink-Tracker"
 
 [api]
 enabled = true
@@ -230,7 +230,7 @@ enable_signup = true
 # addresses. If disabled, only the new email is required to confirm.
 double_confirm_changes = true
 # If enabled, users need to confirm their email address before signing in.
-enable_confirmations = false
+enable_confirmations = true
 # If enabled, users will need to reauthenticate or have logged in recently to change their password.
 secure_password_change = false
 # Controls the minimum amount of time that must pass before sending another signup confirmation or password reset email.
@@ -250,10 +250,13 @@ otp_expiry = 3600
 # admin_email = "admin@email.com"
 # sender_name = "Admin"
 
-# Uncomment to customize email template
-# [auth.email.template.invite]
-# subject = "You have been invited"
-# content_path = "./supabase/templates/invite.html"
+[auth.email.template.confirmation]
+subject = '{{ if eq .Data.language "de" }}Bestätige deinen Soullink Tracker Account{{ else }}Confirm your Soullink Tracker account{{ end }}'
+content_path = "./public/auth-email-templates/confirmation.html"
+
+[auth.email.template.recovery]
+subject = '{{ if eq .Data.language "de" }}Setze dein Soullink Tracker Passwort zurück{{ else }}Reset your Soullink Tracker password{{ end }}'
+content_path = "./public/auth-email-templates/recovery.html"
 
 # Uncomment to customize notification email template
 # [auth.email.notification.password_changed]

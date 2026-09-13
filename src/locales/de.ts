@@ -704,6 +704,13 @@ export const de = {
       passwordLabel: "Passwort",
       passwordPlaceholder: "••••••••",
       registerPrompt: "Hier registrieren",
+      forgotPassword: "Passwort vergessen?",
+      passwordResetInstructions:
+        "Gib deine Email-Adresse ein. Wir senden dir einen Link zum Zurücksetzen deines Passworts.",
+      sendReset: "Reset-Email senden",
+      passwordResetSent: "Email gesendet",
+      passwordResetError:
+        "Die Reset-Email konnte nicht gesendet werden. Prüfe die Adresse und versuche es erneut.",
     },
     register: {
       title: "Registrierung",
@@ -733,7 +740,7 @@ export const de = {
       },
       confirmation: {
         title: "Email prüfen",
-        sent: "Wir haben einen Bestätigungscode an {{email}} gesendet.",
+        sent: "Wir haben eine Email an <strong>{{email}}</strong> gesendet. Gebe den Bestätigungscode an oder klicke auf den Link.",
         checkSpam: "Nicht gefunden? Überprüfe deinen Spam- oder Junk-Ordner.",
         codeLabel: "Bestätigungscode",
         submit: "Bestätigen",
@@ -765,8 +772,11 @@ export const de = {
         "Das neue Passwort muss sich von deinem bisherigen Passwort unterscheiden.",
       successMessage: "Passwort aktualisiert!",
       buttonSave: "Passwort setzen",
-      buttonBack: "Zurück",
       accountLabel: "Account",
+    },
+    passwordVisibility: {
+      show: "Passwort anzeigen",
+      hide: "Passwort ausblenden",
     },
   },
   fossils: {
