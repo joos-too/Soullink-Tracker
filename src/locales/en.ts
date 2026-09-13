@@ -696,6 +696,13 @@ export const en = {
       passwordLabel: "Password",
       passwordPlaceholder: "••••••••",
       registerPrompt: "Register here",
+      forgotPassword: "Forgot your password?",
+      passwordResetInstructions:
+        "Enter your email address and we’ll send you a password reset link.",
+      sendReset: "Send reset email",
+      passwordResetSent: "Email sent",
+      passwordResetError:
+        "We couldn’t send the reset email. Please check the address and try again.",
     },
     register: {
       title: "Register",
@@ -723,7 +730,7 @@ export const en = {
       },
       confirmation: {
         title: "Check your email",
-        sent: "We sent a confirmation code to {{email}}.",
+        sent: "We sent an email to <strong>{{email}}</strong>. Enter the confirmation code or click the link.",
         checkSpam: "Can't find it? Check your spam or junk folder.",
         codeLabel: "Confirmation code",
         submit: "Confirm",
@@ -754,8 +761,11 @@ export const en = {
         "The new password must be different from your old password.",
       successMessage: "Password updated!",
       buttonSave: "Set password",
-      buttonBack: "Back",
       accountLabel: "Account",
+    },
+    passwordVisibility: {
+      show: "Show password",
+      hide: "Hide password",
     },
   },
   fossils: {

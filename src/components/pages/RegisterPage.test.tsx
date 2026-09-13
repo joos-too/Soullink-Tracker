@@ -32,6 +32,23 @@ describe("RegisterPage", () => {
       "ash@example.com",
       "password123",
       "Ash Ketchum",
+      "en",
     );
+  });
+
+  it("can reveal and hide a password", async () => {
+    const user = userEvent.setup();
+    render(<RegisterPage onSwitchToLogin={vi.fn()} />);
+    const password = screen.getByLabelText("Password");
+
+    expect(password).toHaveAttribute("type", "password");
+    await user.click(
+      screen.getAllByRole("button", { name: "Show password" })[0],
+    );
+    expect(password).toHaveAttribute("type", "text");
+    await user.click(
+      screen.getAllByRole("button", { name: "Hide password" })[0],
+    );
+    expect(password).toHaveAttribute("type", "password");
   });
 });

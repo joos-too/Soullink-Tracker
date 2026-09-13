@@ -1,0 +1,7 @@
+services:
+  auth:
+    environment:
+      GOTRUE_MAILER_TEMPLATES_CONFIRMATION: "${SITE_URL}/auth-email-templates/confirmation.html"
+      GOTRUE_MAILER_SUBJECTS_CONFIRMATION: '{{ if eq .Data.language "de" }}Bestätige deinen Soullink Tracker Account{{ else }}Confirm your Soullink Tracker account{{ end }}'
+      GOTRUE_MAILER_TEMPLATES_RECOVERY: "${SITE_URL}/auth-email-templates/recovery.html"
+      GOTRUE_MAILER_SUBJECTS_RECOVERY: '{{ if eq .Data.language "de" }}Setze dein Soullink Tracker Passwort zurück{{ else }}Reset your Soullink Tracker password{{ end }}'
