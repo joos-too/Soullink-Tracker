@@ -9,7 +9,9 @@ import {
   focusRingClasses,
   focusRingInputClasses,
 } from "@/src/styles/focusRing.ts";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
+import PasswordInput from "@/src/components/auth/PasswordInput.tsx";
+import { normalizeLanguage } from "@/src/utils/language.ts";
 
 type RegisterPageProps = {
   onSwitchToLogin: () => void;
@@ -28,7 +30,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onSwitchToLogin }) => {
   const [otp, setOtp] = useState("");
   const [otpError, setOtpError] = useState<string | null>(null);
   const [otpLoading, setOtpLoading] = useState(false);
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const resolveErrorMessage = (err: unknown): string => {
     switch (getAuthErrorCode(err)) {
@@ -74,6 +76,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onSwitchToLogin }) => {
         email.trim(),
         password,
         normalizedDisplayName,
+        normalizeLanguage(i18n.resolvedLanguage || i18n.language),
       );
       if (confirmationRequired) {
         setConfirmationEmail(email.trim());
@@ -121,9 +124,15 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onSwitchToLogin }) => {
 
             <div className="mt-6 space-y-4">
               <p className="text-sm text-gray-700 dark:text-gray-300 text-center">
-                {t("auth.register.confirmation.sent", {
-                  email: confirmationEmail,
-                })}
+                <Trans
+                  i18nKey="auth.register.confirmation.sent"
+                  values={{ email: confirmationEmail }}
+                  components={{
+                    strong: (
+                      <strong className="font-semibold text-gray-900 dark:text-gray-100" />
+                    ),
+                  }}
+                />
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
                 {t("auth.register.confirmation.checkSpam")}
@@ -262,9 +271,8 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onSwitchToLogin }) => {
               >
                 {t("auth.register.passwordLabel")}
               </label>
-              <input
+              <PasswordInput
                 id="register-password"
-                type="password"
                 autoComplete="new-password"
                 required
                 className={`w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${focusRingInputClasses}`}
@@ -280,9 +288,8 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onSwitchToLogin }) => {
               >
                 {t("auth.register.confirmPasswordLabel")}
               </label>
-              <input
+              <PasswordInput
                 id="register-confirm-password"
-                type="password"
                 autoComplete="new-password"
                 required
                 className={`w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${focusRingInputClasses}`}

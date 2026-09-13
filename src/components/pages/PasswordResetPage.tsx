@@ -8,10 +8,18 @@ import {
   verifyPasswordReset,
 } from "@/src/services/backend/auth.ts";
 import { useTranslation } from "react-i18next";
+import PasswordInput from "@/src/components/auth/PasswordInput.tsx";
+import {
+  focusRingBlueClasses,
+  focusRingClasses,
+  focusRingInputClasses,
+} from "@/src/styles/focusRing.ts";
 
 interface PasswordResetPageProps {
   oobCode: string | null;
 }
+
+const passwordInputClasses = `w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 disabled:cursor-not-allowed disabled:opacity-60 ${focusRingInputClasses}`;
 
 const PasswordResetPage: React.FC<PasswordResetPageProps> = ({ oobCode }) => {
   const navigate = useNavigate();
@@ -102,9 +110,9 @@ const PasswordResetPage: React.FC<PasswordResetPageProps> = ({ oobCode }) => {
 
   return (
     <div className="bg-[#f0f0f0] dark:bg-gray-900 min-h-screen p-2 sm:p-4 md:p-8 text-gray-800 flex items-center justify-center">
-      <div className="w-full max-w-lg">
-        <div className="bg-white dark:bg-gray-800 shadow-lg p-6 sm:p-8 rounded-lg">
-          <header className="text-center pb-4 border-b-2 border-gray-200 dark:border-gray-700">
+      <div className="w-full max-w-md">
+        <div className="bg-white dark:bg-gray-800 shadow-[6px_6px_0_0_rgba(31,41,55,0.25)] border border-gray-200 dark:border-gray-700 p-6 sm:p-8 rounded-lg">
+          <header className="text-center pb-4 border-b border-gray-200 dark:border-gray-700">
             <img
               src="/Soullinktracker-Logo.png"
               alt="Soullink Tracker Logo"
@@ -125,19 +133,6 @@ const PasswordResetPage: React.FC<PasswordResetPageProps> = ({ oobCode }) => {
                 {t("auth.passwordReset.checkingLink")}
               </p>
             </div>
-          ) : success ? (
-            <div className="py-8 text-center space-y-4">
-              <p className="text-lg font-semibold text-green-600">
-                {t("auth.passwordReset.successMessage")}
-              </p>
-              <button
-                type="button"
-                onClick={handleBackToLogin}
-                className="inline-flex justify-center w-full bg-green-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-green-700 transition-colors shadow-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
-              >
-                {t("auth.passwordReset.backToLogin")}
-              </button>
-            </div>
           ) : error && !email ? (
             <div className="py-8 text-center space-y-4 text-red-600 dark:text-red-400">
               <p className="text-lg font-semibold">
@@ -146,22 +141,15 @@ const PasswordResetPage: React.FC<PasswordResetPageProps> = ({ oobCode }) => {
               <p className="text-sm">
                 {t("auth.passwordReset.invalidLinkDescription")}
               </p>
-              <button
-                type="button"
-                onClick={handleBackToLogin}
-                className="inline-flex justify-center w-full bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-blue-700 transition-colors shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-              >
-                {t("auth.passwordReset.buttonBack")}
-              </button>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="mt-6 space-y-5">
-              <div className="bg-gray-50 dark:bg-gray-900/40 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
-                <p className="font-semibold text-gray-800 dark:text-gray-100">
-                  {t("auth.passwordReset.accountLabel")}
-                </p>
-                <p>{email}</p>
-              </div>
+            <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+              <p className="text-sm text-center text-gray-500 dark:text-gray-400 break-all">
+                {t("auth.passwordReset.accountLabel")}:{" "}
+                <span className="font-semibold text-gray-800 dark:text-gray-100">
+                  {email}
+                </span>
+              </p>
               <div>
                 <label
                   htmlFor="reset-new-password"
@@ -169,14 +157,12 @@ const PasswordResetPage: React.FC<PasswordResetPageProps> = ({ oobCode }) => {
                 >
                   {t("auth.passwordReset.newPasswordLabel")}
                 </label>
-                <input
+                <PasswordInput
                   id="reset-new-password"
-                  type="password"
                   autoComplete="new-password"
                   required
-                  minLength={8}
-                  className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                  placeholder={t("auth.passwordReset.passwordTooShort")}
+                  className={passwordInputClasses}
+                  placeholder={t("auth.login.passwordPlaceholder")}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={actionDisabled}
@@ -189,34 +175,44 @@ const PasswordResetPage: React.FC<PasswordResetPageProps> = ({ oobCode }) => {
                 >
                   {t("auth.passwordReset.confirmPasswordLabel")}
                 </label>
-                <input
+                <PasswordInput
                   id="reset-confirm-password"
-                  type="password"
                   autoComplete="new-password"
                   required
-                  className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                  placeholder={t("auth.passwordReset.confirmPasswordLabel")}
+                  className={passwordInputClasses}
+                  placeholder={t("auth.login.passwordPlaceholder")}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   disabled={actionDisabled}
                 />
               </div>
               {error && (
-                <div className="text-red-600 dark:text-red-400 text-sm">
+                <div className="text-red-500 dark:text-red-400 text-sm">
                   {error}
                 </div>
               )}
               <button
                 type="submit"
                 disabled={actionDisabled}
-                className="w-full bg-green-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-green-700 transition-colors shadow-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 disabled:opacity-70"
+                aria-live="polite"
+                className={`w-full bg-green-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-green-700 transition-colors shadow-md disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500 disabled:shadow-none disabled:hover:bg-gray-300 dark:disabled:bg-gray-700 dark:disabled:text-gray-400 dark:disabled:hover:bg-gray-700 ${focusRingClasses}`}
               >
-                {submitting
-                  ? `${t("auth.passwordReset.buttonSave")}…`
-                  : t("auth.passwordReset.buttonSave")}
+                {success
+                  ? t("auth.passwordReset.successMessage")
+                  : submitting
+                    ? `${t("auth.passwordReset.buttonSave")}…`
+                    : t("auth.passwordReset.buttonSave")}
               </button>
             </form>
           )}
+
+          <button
+            type="button"
+            onClick={handleBackToLogin}
+            className={`mt-4 w-full text-sm font-semibold text-blue-600 hover:text-blue-700 hover:underline focus-visible:underline dark:text-blue-400 ${focusRingBlueClasses}`}
+          >
+            {t("auth.passwordReset.backToLogin")}
+          </button>
         </div>
       </div>
     </div>

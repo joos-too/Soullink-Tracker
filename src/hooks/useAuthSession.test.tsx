@@ -31,6 +31,7 @@ describe("useAuthSession", () => {
     const user = {
       uid: "10000000-0000-0000-0000-000000000001",
       email: "test@example.com",
+      language: "en",
     } satisfies AuthenticatedUser;
 
     act(() => authMock.callback?.(user));
