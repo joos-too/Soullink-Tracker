@@ -25,12 +25,6 @@ import {
   focusRingClasses,
   focusRingInsetClasses,
 } from "@/src/styles/focusRing.ts";
-import {
-  actionDividerHorizontalClasses,
-  actionDividerVerticalClasses,
-  actionIconButtonClasses,
-  actionIconColorClasses,
-} from "@/src/styles/actionColors.ts";
 import { GAME_VERSIONS } from "@/src/data/game-versions.ts";
 import { formatBestLabel } from "@/src/utils/bestRun.ts";
 import { useTranslation } from "react-i18next";
@@ -223,19 +217,22 @@ const HomePage: React.FC<HomePageProps> = ({
                 <button
                   type="button"
                   onClick={onOpenRulesetEditor}
-                  className={`${actionIconButtonClasses.tracker} ${focusRingClasses}`}
+                  className={`p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white ${focusRingClasses}`}
                   aria-label={t("home.rulesetEditor")}
                   title={t("home.rulesetEditor")}
                 >
                   <FiEdit size={30} />
                   <span className="sr-only">{t("home.rulesetEditor")}</span>
                 </button>
-                <span aria-hidden className={actionDividerVerticalClasses} />
+                <span
+                  aria-hidden
+                  className="h-8 w-px bg-gray-300 dark:bg-gray-600"
+                />
                 <DarkModeToggle />
                 <button
                   type="button"
                   onClick={onOpenUserSettings}
-                  className={`${actionIconButtonClasses.settings} ${focusRingClasses}`}
+                  className={`p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white ${focusRingClasses}`}
                   aria-label={t("tracker.menu.settings")}
                   title={t("tracker.menu.settings")}
                 >
@@ -289,13 +286,12 @@ const HomePage: React.FC<HomePageProps> = ({
                   className={`w-full text-left px-2 py-2 rounded-md text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 inline-flex items-center gap-2 ${focusRingClasses}`}
                   title={t("tracker.menu.rulesets")}
                 >
-                  <FiEdit
-                    size={18}
-                    className={actionIconColorClasses.tracker}
-                  />{" "}
-                  {t("tracker.menu.rulesets")}
+                  <FiEdit size={18} /> {t("tracker.menu.rulesets")}
                 </button>
-                <div aria-hidden className={actionDividerHorizontalClasses} />
+                <div
+                  aria-hidden
+                  className="border-t border-gray-200 dark:border-gray-700"
+                />
                 <button
                   type="button"
                   onClick={() => {
@@ -310,17 +306,7 @@ const HomePage: React.FC<HomePageProps> = ({
                       : t("tracker.menu.darkMode")
                   }
                 >
-                  {isDark ? (
-                    <FiSun
-                      size={18}
-                      className={actionIconColorClasses.lightMode}
-                    />
-                  ) : (
-                    <FiMoon
-                      size={18}
-                      className={actionIconColorClasses.darkMode}
-                    />
-                  )}
+                  {isDark ? <FiSun size={18} /> : <FiMoon size={18} />}
                   {isDark
                     ? t("tracker.menu.lightMode")
                     : t("tracker.menu.darkMode")}
@@ -334,11 +320,7 @@ const HomePage: React.FC<HomePageProps> = ({
                   className={`w-full text-left px-2 py-2 rounded-md text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 inline-flex items-center gap-2 ${focusRingClasses}`}
                   title={t("tracker.menu.settings")}
                 >
-                  <FiSettings
-                    size={18}
-                    className={actionIconColorClasses.settings}
-                  />{" "}
-                  {t("tracker.menu.settings")}
+                  <FiSettings size={18} /> {t("tracker.menu.settings")}
                 </button>
               </div>
             </div>

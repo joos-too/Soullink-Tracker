@@ -315,7 +315,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
                 <button
                   type="button"
                   onClick={onRequestDeleteTracker}
-                  className={`text-red-600 hover:text-red-800 dark:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 p-2 rounded-full ${focusRingRedClasses}`}
+                  className={`text-red-600 hover:text-red-800 p-2 rounded-full ${focusRingRedClasses}`}
                   title={t("settings.header.deleteTrackerTitle")}
                 >
                   <FiTrash2 size={24} />
@@ -325,7 +325,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
                   type="button"
                   onClick={() => setMemberPendingRemoval(currentMember)}
                   disabled={removingMemberId === currentMember.uid}
-                  className={`text-red-600 hover:text-red-800 dark:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 p-2 rounded-full disabled:opacity-60 ${focusRingRedClasses}`}
+                  className="text-red-600 hover:text-red-800 p-2 disabled:opacity-60"
                   title={t("settings.header.leaveTrackerTitle")}
                 >
                   <FiLogOut size={24} />

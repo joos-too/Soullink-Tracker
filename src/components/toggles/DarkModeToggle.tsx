@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { FiMoon, FiSun } from "react-icons/fi";
 import { useTranslation } from "react-i18next";
 import { focusRingClasses } from "@/src/styles/focusRing.ts";
-import { actionIconButtonClasses } from "@/src/styles/actionColors.ts";
 
 export function getSystemPrefersDark(): boolean {
   if (typeof window === "undefined") return false;
@@ -79,7 +78,7 @@ const DarkModeToggle: React.FC<DarkModeToggleProps> = ({ size = 28 }) => {
   return (
     <button
       onClick={toggleDarkMode}
-      className={`${isDarkMode ? actionIconButtonClasses.lightMode : actionIconButtonClasses.darkMode} ${focusRingClasses}`}
+      className={`p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white ${focusRingClasses}`}
       aria-label={t("common.darkModeToggleLabel")}
       title={t("common.darkModeToggleTitle")}
     >

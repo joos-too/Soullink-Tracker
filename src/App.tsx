@@ -65,13 +65,7 @@ import CreateTrackerModal from "@/src/components/modals/CreateTrackerModal.tsx";
 import DeleteTrackerModal from "@/src/components/modals/DeleteTrackerModal.tsx";
 import TrackerSearchModal from "@/src/components/modals/TrackerSearchModal.tsx";
 import ReadOnlyNoticeBanner from "@/src/components/banners/ReadOnlyNoticeBanner.tsx";
-import { focusRingClasses, focusRingRedClasses } from "@/src/styles/focusRing";
-import {
-  actionDividerHorizontalClasses,
-  actionDividerVerticalClasses,
-  actionIconButtonClasses,
-  actionIconColorClasses,
-} from "@/src/styles/actionColors.ts";
+import { focusRingClasses } from "@/src/styles/focusRing";
 import {
   Navigate,
   Route,
@@ -2449,7 +2443,7 @@ const App: React.FC = () => {
             <div className="hidden xl:flex items-center gap-1 sm:gap-2">
               <button
                 onClick={() => setShowSearchModal(true)}
-                className={`${actionIconButtonClasses.tracker} ${focusRingClasses}`}
+                className={`p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white ${focusRingClasses}`}
                 aria-label={t("tracker.search.openWithShortcut")}
                 title={t("tracker.search.openWithShortcut")}
               >
@@ -2458,19 +2452,22 @@ const App: React.FC = () => {
               {!isReadOnly && (
                 <button
                   onClick={handleReset}
-                  className={`${actionIconButtonClasses.danger} ${focusRingRedClasses}`}
+                  className={`p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white ${focusRingClasses}`}
                   aria-label={t("tracker.actions.resetRun")}
                   title={t("tracker.actions.resetRun")}
                 >
                   <FiRotateCw size={28} />
                 </button>
               )}
-              <span aria-hidden className={actionDividerVerticalClasses} />
+              <span
+                aria-hidden
+                className="h-8 w-px bg-gray-300 dark:bg-gray-600"
+              />
               <DarkModeToggle />
               {(!isReadOnly || isGuest) && (
                 <button
                   onClick={openSettingsPanel}
-                  className={`${actionIconButtonClasses.settings} ${focusRingClasses}`}
+                  className={`p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white ${focusRingClasses}`}
                   aria-label={t("tracker.actions.settings")}
                   title={t("tracker.actions.settings")}
                 >
@@ -2479,7 +2476,7 @@ const App: React.FC = () => {
               )}
               <button
                 onClick={handleNavigateHome}
-                className={`${actionIconButtonClasses.navigation} ${focusRingClasses}`}
+                className={`p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white ${focusRingClasses}`}
                 aria-label={t("common.overview")}
                 title={t("common.overview")}
               >
@@ -2533,11 +2530,7 @@ const App: React.FC = () => {
                 className={`w-full text-left px-2 py-2 rounded-md text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 inline-flex items-center gap-2 ${focusRingClasses}`}
                 title={t("tracker.search.open")}
               >
-                <FiSearch
-                  size={18}
-                  className={actionIconColorClasses.tracker}
-                />{" "}
-                {t("tracker.search.open")}
+                <FiSearch size={18} /> {t("tracker.search.open")}
               </button>
               {!isReadOnly && (
                 <button
@@ -2548,14 +2541,13 @@ const App: React.FC = () => {
                   className={`w-full text-left px-2 py-2 rounded-md text-sm inline-flex items-center gap-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 ${focusRingClasses}`}
                   title={t("tracker.menu.resetRun")}
                 >
-                  <FiRotateCw
-                    size={18}
-                    className={actionIconColorClasses.danger}
-                  />{" "}
-                  {t("tracker.menu.resetRun")}
+                  <FiRotateCw size={18} /> {t("tracker.menu.resetRun")}
                 </button>
               )}
-              <div aria-hidden className={actionDividerHorizontalClasses} />
+              <div
+                aria-hidden
+                className="border-t border-gray-200 dark:border-gray-700"
+              />
               <button
                 onClick={() => {
                   const next = !isDark;
@@ -2569,17 +2561,7 @@ const App: React.FC = () => {
                     : t("tracker.menu.darkMode")
                 }
               >
-                {isDark ? (
-                  <FiSun
-                    size={18}
-                    className={actionIconColorClasses.lightMode}
-                  />
-                ) : (
-                  <FiMoon
-                    size={18}
-                    className={actionIconColorClasses.darkMode}
-                  />
-                )}
+                {isDark ? <FiSun size={18} /> : <FiMoon size={18} />}
                 {isDark
                   ? t("tracker.menu.lightMode")
                   : t("tracker.menu.darkMode")}
@@ -2593,11 +2575,7 @@ const App: React.FC = () => {
                   className={`w-full text-left px-2 py-2 rounded-md text-sm inline-flex items-center gap-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 ${focusRingClasses}`}
                   title={t("tracker.menu.settings")}
                 >
-                  <FiSliders
-                    size={18}
-                    className={actionIconColorClasses.settings}
-                  />{" "}
-                  {t("tracker.menu.settings")}
+                  <FiSliders size={18} /> {t("tracker.menu.settings")}
                 </button>
               )}
               <button
@@ -2605,11 +2583,7 @@ const App: React.FC = () => {
                 className={`w-full text-left px-2 py-2 rounded-md text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 inline-flex items-center gap-2 ${focusRingClasses}`}
                 title={t("common.overview")}
               >
-                <FiHome
-                  size={18}
-                  className={actionIconColorClasses.navigation}
-                />{" "}
-                {t("tracker.menu.overview")}
+                <FiHome size={18} /> {t("tracker.menu.overview")}
               </button>
             </div>
           </div>
