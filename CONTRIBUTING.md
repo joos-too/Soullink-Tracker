@@ -116,11 +116,14 @@ Click **"New Issue"** on GitHub and select the appropriate template. Fill in all
 
 ## 🚢 Submitting Changes
 
-1. **Fork & branch** - on GitHub, click **Fork** to create your own copy, then create a new branch from `main` (e.g. `feature/amazing-feature`).
+1. **Fork & branch** - on GitHub, click **Fork** to create your own copy, then create a new branch from `master` (e.g. `feature/amazing-feature`).
 2. **Code** - make your changes locally and ensure `npm run build` and `npm run prettier:check` both pass.
 3. **Push** - push your branch to your fork.
-4. **Open a Pull Request** - on GitHub, navigate to the original repository, click **"New Pull Request"**, and select your fork/branch. The **PR template** loads automatically — fill in all sections, link the related issue (e.g. `Closes #42`), and complete the checklist.
-5. **Request a review** - assign the PR to a code owner and wait for approval before merging.
+4. **Open a Pull Request to `staging`** - on GitHub, navigate to the original repository, click **"New Pull Request"**, and select `staging` as the base branch. The **PR template** loads automatically — fill in all sections, link the related issue (e.g. `Closes #42`), and complete the checklist.
+5. **Test in staging** - features and fixes are deployed to the staging environment for testing and reviewed before they are brought into `master`.
+6. **Request a review** - assign the PR to a code owner and wait for approval before merging.
+
+Pull requests should target `staging`, not `master`. After changes have been tested and approved in staging, they will be brought into `master`.
 
 ---
 

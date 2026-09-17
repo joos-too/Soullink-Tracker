@@ -214,7 +214,6 @@ const HomePage: React.FC<HomePageProps> = ({
             </div>
             <div className="hidden xl:flex flex-col items-end gap-3 sm:gap-4">
               <div className="flex items-center gap-2">
-                <DarkModeToggle />
                 <button
                   type="button"
                   onClick={onOpenRulesetEditor}
@@ -225,6 +224,11 @@ const HomePage: React.FC<HomePageProps> = ({
                   <FiEdit size={30} />
                   <span className="sr-only">{t("home.rulesetEditor")}</span>
                 </button>
+                <span
+                  aria-hidden
+                  className="h-8 w-px bg-gray-300 dark:bg-gray-600"
+                />
+                <DarkModeToggle />
                 <button
                   type="button"
                   onClick={onOpenUserSettings}
@@ -276,6 +280,21 @@ const HomePage: React.FC<HomePageProps> = ({
                 <button
                   type="button"
                   onClick={() => {
+                    setMobileMenuOpen(false);
+                    onOpenRulesetEditor();
+                  }}
+                  className={`w-full text-left px-2 py-2 rounded-md text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 inline-flex items-center gap-2 ${focusRingClasses}`}
+                  title={t("tracker.menu.rulesets")}
+                >
+                  <FiEdit size={18} /> {t("tracker.menu.rulesets")}
+                </button>
+                <div
+                  aria-hidden
+                  className="border-t border-gray-200 dark:border-gray-700"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
                     const next = !isDark;
                     setDarkMode(next);
                     setIsDark(next);
@@ -291,17 +310,6 @@ const HomePage: React.FC<HomePageProps> = ({
                   {isDark
                     ? t("tracker.menu.lightMode")
                     : t("tracker.menu.darkMode")}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    onOpenRulesetEditor();
-                  }}
-                  className={`w-full text-left px-2 py-2 rounded-md text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 inline-flex items-center gap-2 ${focusRingClasses}`}
-                  title={t("tracker.menu.rulesets")}
-                >
-                  <FiEdit size={18} /> {t("tracker.menu.rulesets")}
                 </button>
                 <button
                   type="button"

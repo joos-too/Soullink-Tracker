@@ -2441,7 +2441,6 @@ const App: React.FC = () => {
           <div className="absolute right-2 sm:right-4 top-2 sm:top-3 flex items-center gap-1 sm:gap-2 z-30">
             {/* Desktop icons (>=xl) */}
             <div className="hidden xl:flex items-center gap-1 sm:gap-2">
-              <DarkModeToggle />
               <button
                 onClick={() => setShowSearchModal(true)}
                 className={`p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white ${focusRingClasses}`}
@@ -2449,14 +2448,6 @@ const App: React.FC = () => {
                 title={t("tracker.search.openWithShortcut")}
               >
                 <FiSearch size={28} />
-              </button>
-              <button
-                onClick={handleNavigateHome}
-                className={`p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white ${focusRingClasses}`}
-                aria-label={t("common.overview")}
-                title={t("common.overview")}
-              >
-                <FiHome size={28} />
               </button>
               {!isReadOnly && (
                 <button
@@ -2468,6 +2459,11 @@ const App: React.FC = () => {
                   <FiRotateCw size={28} />
                 </button>
               )}
+              <span
+                aria-hidden
+                className="h-8 w-px bg-gray-300 dark:bg-gray-600"
+              />
+              <DarkModeToggle />
               {(!isReadOnly || isGuest) && (
                 <button
                   onClick={openSettingsPanel}
@@ -2478,6 +2474,14 @@ const App: React.FC = () => {
                   <FiSliders size={28} />
                 </button>
               )}
+              <button
+                onClick={handleNavigateHome}
+                className={`p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white ${focusRingClasses}`}
+                aria-label={t("common.overview")}
+                title={t("common.overview")}
+              >
+                <FiHome size={28} />
+              </button>
             </div>
             {/* Mobile burger (<xl) */}
             <button
@@ -2520,6 +2524,32 @@ const App: React.FC = () => {
             <div className="p-2 space-y-1">
               <button
                 onClick={() => {
+                  setMobileMenuOpen(false);
+                  setShowSearchModal(true);
+                }}
+                className={`w-full text-left px-2 py-2 rounded-md text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 inline-flex items-center gap-2 ${focusRingClasses}`}
+                title={t("tracker.search.open")}
+              >
+                <FiSearch size={18} /> {t("tracker.search.open")}
+              </button>
+              {!isReadOnly && (
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    handleReset();
+                  }}
+                  className={`w-full text-left px-2 py-2 rounded-md text-sm inline-flex items-center gap-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 ${focusRingClasses}`}
+                  title={t("tracker.menu.resetRun")}
+                >
+                  <FiRotateCw size={18} /> {t("tracker.menu.resetRun")}
+                </button>
+              )}
+              <div
+                aria-hidden
+                className="border-t border-gray-200 dark:border-gray-700"
+              />
+              <button
+                onClick={() => {
                   const next = !isDark;
                   setDarkMode(next);
                   setIsDark(next);
@@ -2536,35 +2566,6 @@ const App: React.FC = () => {
                   ? t("tracker.menu.lightMode")
                   : t("tracker.menu.darkMode")}
               </button>
-              <button
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  setShowSearchModal(true);
-                }}
-                className={`w-full text-left px-2 py-2 rounded-md text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 inline-flex items-center gap-2 ${focusRingClasses}`}
-                title={t("tracker.search.open")}
-              >
-                <FiSearch size={18} /> {t("tracker.search.open")}
-              </button>
-              <button
-                onClick={handleNavigateHome}
-                className={`w-full text-left px-2 py-2 rounded-md text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 inline-flex items-center gap-2 ${focusRingClasses}`}
-                title={t("common.overview")}
-              >
-                <FiHome size={18} /> {t("tracker.menu.overview")}
-              </button>
-              {!isReadOnly && (
-                <button
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    handleReset();
-                  }}
-                  className={`w-full text-left px-2 py-2 rounded-md text-sm inline-flex items-center gap-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 ${focusRingClasses}`}
-                  title={t("tracker.menu.resetRun")}
-                >
-                  <FiRotateCw size={18} /> {t("tracker.menu.resetRun")}
-                </button>
-              )}
               {(!isReadOnly || isGuest) && (
                 <button
                   onClick={() => {
@@ -2577,6 +2578,13 @@ const App: React.FC = () => {
                   <FiSliders size={18} /> {t("tracker.menu.settings")}
                 </button>
               )}
+              <button
+                onClick={handleNavigateHome}
+                className={`w-full text-left px-2 py-2 rounded-md text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 inline-flex items-center gap-2 ${focusRingClasses}`}
+                title={t("common.overview")}
+              >
+                <FiHome size={18} /> {t("tracker.menu.overview")}
+              </button>
             </div>
           </div>
         </div>

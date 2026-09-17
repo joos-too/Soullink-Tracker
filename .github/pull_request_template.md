@@ -16,6 +16,8 @@
 
 ## Checklist
 
+- [ ] This PR targets the `staging` branch
+
 ### Code Functionality / Quality
 
 - [ ] I have tested my changes locally (`npm run dev`)
