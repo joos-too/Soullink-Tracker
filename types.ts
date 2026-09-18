@@ -16,6 +16,7 @@ export interface PokemonLink {
 export interface LinkEditPayload {
   locationSlug: string | null;
   location?: string;
+  fossilSlugs?: string[];
   members: Pokemon[];
 }
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import type { LinkEditPayload, Pokemon, PokemonLink } from "@/types.ts";
+import type { LinkEditPayload, PokemonLink } from "@/types.ts";
 import EditPairModal from "@/src/components/modals/EditPairModal.tsx";
 import SelectEvolveModal from "@/src/components/modals/SelectEvolveModal.tsx";
 import {
@@ -28,13 +28,8 @@ interface TeamTableProps {
   data: PokemonLink[];
   playerNames: string[];
   playerColors: string[];
-  onPokemonChange: (
-    index: number,
-    playerIndex: number,
-    field: keyof Pokemon,
-    value: string | number | null,
-  ) => void;
-  onRouteChange: (index: number, value: string, locationSlug?: string) => void;
+  onEditLink: (pairId: number, payload: LinkEditPayload) => void;
+  onEvolveLink: (pairId: number, playerIndex: number, newId: number) => void;
   onAddToGraveyard: (pair: PokemonLink) => void;
   onDeleteLink?: (pair: PokemonLink) => void;
   onAddLink: (payload: LinkEditPayload) => void;
@@ -56,6 +51,20 @@ interface TeamTableProps {
   filterBar?: React.ReactNode;
   filtersExpanded?: boolean;
   nicknamesEnabled?: boolean;
+  canonicalLinkIds?: ReadonlySet<number>;
+}
+
+interface PairModalSession {
+  kind: "create" | "edit";
+  pairId?: number;
+  initial: LinkEditPayload;
+  playerLabels: string[];
+}
+
+interface EvolutionModalSession {
+  pairId: number;
+  pair: PokemonLink;
+  playerLabels: string[];
 }
 
 const TeamTable: React.FC<TeamTableProps> = ({
@@ -63,8 +72,8 @@ const TeamTable: React.FC<TeamTableProps> = ({
   data,
   playerNames,
   playerColors,
-  onPokemonChange,
-  onRouteChange,
+  onEditLink,
+  onEvolveLink,
   onAddToGraveyard,
   onDeleteLink,
   onAddLink,
@@ -86,61 +95,61 @@ const TeamTable: React.FC<TeamTableProps> = ({
   filterBar,
   filtersExpanded = false,
   nicknamesEnabled = true,
+  canonicalLinkIds,
 }) => {
   const { t, i18n } = useTranslation();
   const locale = normalizeLanguage(i18n.language);
-  const [editIndex, setEditIndex] = useState<number | null>(null);
-  const [addOpen, setAddOpen] = useState(false);
-  const [evolveIndex, setEvolveIndex] = useState<number | null>(null);
+  const [pairSession, setPairSession] = useState<PairModalSession | null>(null);
+  const [evolutionSession, setEvolutionSession] =
+    useState<EvolutionModalSession | null>(null);
 
   useEffect(() => {
     if (readOnly) {
-      setEditIndex(null);
-      setAddOpen(false);
-      setEvolveIndex(null);
+      setPairSession(null);
+      setEvolutionSession(null);
     }
   }, [readOnly]);
 
+  const linkExists = (pairId: number) =>
+    canonicalLinkIds?.has(pairId) ?? data.some((pair) => pair.id === pairId);
+
+  const createDraft = (
+    pair: PokemonLink | null,
+    labels: string[],
+  ): LinkEditPayload => ({
+    location: pair?.location ?? "",
+    locationSlug: pair?.locationSlug ?? null,
+    fossilSlugs: pair?.fossilSlugs ? [...pair.fossilSlugs] : undefined,
+    members: labels.map((_, index) => ({
+      ...(pair?.members?.[index] ?? { id: null, nickname: "" }),
+    })),
+  });
+
   const rows = useMemo(
     () =>
-      data
-        .map((pair, i) => ({ pair, originalIndex: i }))
-        .filter(
-          ({ pair }) =>
-            pair.locationSlug ||
-            pair.location ||
-            pair.fossilSlugs?.length ||
-            pair.members.some(
-              (member) =>
-                typeof member?.id === "number" || Boolean(member?.name),
-            ),
-        ),
+      data.filter(
+        (pair) =>
+          pair.locationSlug ||
+          pair.location ||
+          pair.fossilSlugs?.length ||
+          pair.members.some(
+            (member) => typeof member?.id === "number" || Boolean(member?.name),
+          ),
+      ),
     [data],
   );
 
   const handleSave = (payload: LinkEditPayload) => {
-    if (readOnly || editIndex === null) return;
-    payload.members.forEach((member, playerIndex) => {
-      onPokemonChange(editIndex, playerIndex, "id", member.id);
-      onPokemonChange(editIndex, playerIndex, "name", member.name ?? "");
-      onPokemonChange(editIndex, playerIndex, "nickname", member.nickname);
-    });
-    onRouteChange(editIndex, payload.location ?? "", payload.locationSlug);
-    setEditIndex(null);
+    if (readOnly || !pairSession) return;
+    if (pairSession.kind === "edit") {
+      if (pairSession.pairId === undefined || !linkExists(pairSession.pairId))
+        return;
+      onEditLink(pairSession.pairId, payload);
+    } else {
+      onAddLink(payload);
+    }
+    setPairSession(null);
   };
-
-  const editInitial = useMemo(() => {
-    if (editIndex === null) return null;
-    const current = data[editIndex];
-    return {
-      location: current?.location,
-      locationSlug: current?.locationSlug,
-      fossilSlugs: current?.fossilSlugs,
-      members: playerNames.map(
-        (_, index) => current?.members?.[index] ?? { id: null, nickname: "" },
-      ),
-    };
-  }, [editIndex, data, playerNames]);
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-300 dark:border-gray-700">
@@ -152,7 +161,13 @@ const TeamTable: React.FC<TeamTableProps> = ({
           <button
             type="button"
             onClick={() => {
-              if (!addDisabled) setAddOpen(true);
+              if (addDisabled) return;
+              const labels = [...playerNames];
+              setPairSession({
+                kind: "create",
+                initial: createDraft(null, labels),
+                playerLabels: labels,
+              });
             }}
             disabled={addDisabled}
             className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-semibold shadow ${
@@ -240,7 +255,7 @@ const TeamTable: React.FC<TeamTableProps> = ({
                 </td>
               </tr>
             )}
-            {rows.map(({ pair, originalIndex }, displayIndex) => {
+            {rows.map((pair, displayIndex) => {
               const locationLabel = resolvePokemonLocationDisplay(pair, locale);
               return (
                 <tr
@@ -348,7 +363,13 @@ const TeamTable: React.FC<TeamTableProps> = ({
                           <button
                             type="button"
                             onClick={() => {
-                              setEditIndex(originalIndex);
+                              const labels = [...playerNames];
+                              setPairSession({
+                                kind: "edit",
+                                pairId: pair.id,
+                                initial: createDraft(pair, labels),
+                                playerLabels: labels,
+                              });
                             }}
                             className={`p-1 rounded-full inline-flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 ${focusRingClasses}`}
                             title={t("team.titleEdit")}
@@ -391,7 +412,19 @@ const TeamTable: React.FC<TeamTableProps> = ({
                           <button
                             type="button"
                             onClick={() => {
-                              setEvolveIndex(originalIndex);
+                              setEvolutionSession({
+                                pairId: pair.id,
+                                pair: {
+                                  ...pair,
+                                  members: pair.members.map((member) => ({
+                                    ...member,
+                                  })),
+                                  fossilSlugs: pair.fossilSlugs
+                                    ? [...pair.fossilSlugs]
+                                    : undefined,
+                                },
+                                playerLabels: [...playerNames],
+                              });
                             }}
                             className={`p-1 rounded-full inline-flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-600 text-green-600 hover:text-green-700 dark:text-green-500 dark:hover:text-green-400 ${focusRingClasses}`}
                             title={t("team.titleEvolve")}
@@ -456,60 +489,48 @@ const TeamTable: React.FC<TeamTableProps> = ({
         </table>
       </div>
 
-      <EditPairModal
-        isOpen={!readOnly && editIndex !== null}
-        onClose={() => setEditIndex(null)}
-        onSave={handleSave}
-        playerLabels={playerNames}
-        mode="edit"
-        initial={
-          editInitial || {
-            location: "",
-            locationSlug: null,
-            members: playerNames.map(() => ({ id: null, nickname: "" })),
+      {!readOnly && pairSession && (
+        <EditPairModal
+          onClose={() => setPairSession(null)}
+          onSave={handleSave}
+          playerLabels={pairSession.playerLabels}
+          mode={pairSession.kind}
+          initial={pairSession.initial}
+          generationLimit={pokemonGenerationLimit}
+          gameVersionId={gameVersionId}
+          generationSpritePath={generationSpritePath}
+          nicknamesEnabled={nicknamesEnabled}
+          blockingError={
+            pairSession.kind === "edit" &&
+            pairSession.pairId !== undefined &&
+            !linkExists(pairSession.pairId)
+              ? t("modals.common.linkUnavailable")
+              : undefined
           }
-        }
-        generationLimit={pokemonGenerationLimit}
-        gameVersionId={gameVersionId}
-        generationSpritePath={generationSpritePath}
-        nicknamesEnabled={nicknamesEnabled}
-      />
-      <SelectEvolveModal
-        isOpen={!readOnly && evolveIndex !== null}
-        onClose={() => setEvolveIndex(null)}
-        onConfirm={(playerIndex, _newName, newId) => {
-          if (evolveIndex === null) return;
-          onPokemonChange(evolveIndex, playerIndex, "id", newId);
-          onPokemonChange(evolveIndex, playerIndex, "name", "");
-          setEvolveIndex(null);
-        }}
-        pair={evolveIndex !== null ? data[evolveIndex] : null}
-        playerLabels={playerNames}
-        maxGeneration={pokemonGenerationLimit}
-        gameVersionId={gameVersionId}
-        generationSpritePath={generationSpritePath}
-        useSpritesEverywhere={useSpritesInTeamTable}
-        nicknamesEnabled={nicknamesEnabled}
-      />
-      <EditPairModal
-        isOpen={!readOnly && addOpen}
-        onClose={() => setAddOpen(false)}
-        onSave={(payload) => {
-          onAddLink(payload);
-          setAddOpen(false);
-        }}
-        playerLabels={playerNames}
-        mode="create"
-        initial={{
-          location: "",
-          locationSlug: null,
-          members: playerNames.map(() => ({ id: null, nickname: "" })),
-        }}
-        generationLimit={pokemonGenerationLimit}
-        gameVersionId={gameVersionId}
-        generationSpritePath={generationSpritePath}
-        nicknamesEnabled={nicknamesEnabled}
-      />
+        />
+      )}
+      {!readOnly && evolutionSession && (
+        <SelectEvolveModal
+          onClose={() => setEvolutionSession(null)}
+          onConfirm={(playerIndex, _newName, newId) => {
+            if (!linkExists(evolutionSession.pairId)) return;
+            onEvolveLink(evolutionSession.pairId, playerIndex, newId);
+            setEvolutionSession(null);
+          }}
+          pair={evolutionSession.pair}
+          playerLabels={evolutionSession.playerLabels}
+          maxGeneration={pokemonGenerationLimit}
+          gameVersionId={gameVersionId}
+          generationSpritePath={generationSpritePath}
+          useSpritesEverywhere={useSpritesInTeamTable}
+          nicknamesEnabled={nicknamesEnabled}
+          blockingError={
+            !linkExists(evolutionSession.pairId)
+              ? t("modals.common.linkUnavailable")
+              : undefined
+          }
+        />
+      )}
     </div>
   );
 };

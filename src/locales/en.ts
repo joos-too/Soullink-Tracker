@@ -71,6 +71,8 @@ export const en = {
     common: {
       loadingSuggestions: "Loading suggestions…",
       noMatches: "No matches found",
+      linkUnavailable:
+        "This link was removed or moved to the graveyard by another user and can no longer be saved.",
     },
     addLost: {
       title: "Add lost Pokémon",
