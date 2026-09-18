@@ -14,6 +14,7 @@ import type {
   FossilEntry,
   ItemEntry,
   LinkEditPayload,
+  LinkId,
   Pokemon,
   PokemonLink,
   RivalCensorMode,
@@ -21,6 +22,7 @@ import type {
   Ruleset,
   TrackerMeta,
 } from "@/types";
+import { createLinkId } from "@/src/services/linkIds.ts";
 import {
   createInitialState,
   ensureStatsForPlayers,
@@ -629,7 +631,7 @@ const App: React.FC = () => {
           : [];
       };
 
-      const sanitizeLink = (p: any, fallbackId: number): PokemonLink => {
+      const sanitizeLink = (p: any): PokemonLink => {
         const members = sanitizeMembers(p);
         const hasNickname = members.some(
           (member) => member.nickname.trim().length > 0,
@@ -641,10 +643,7 @@ const App: React.FC = () => {
             ? p.location.trim()
             : "";
         return {
-          id:
-            Number.isFinite(Number(p?.id)) && Number(p?.id) > 0
-              ? Number(p?.id)
-              : fallbackId,
+          id: p.id,
           locationSlug: p?.locationSlug ?? null,
           ...(locationText ? { location: locationText } : {}),
           fossilSlugs: p.fossilSlugs || [],
@@ -655,7 +654,7 @@ const App: React.FC = () => {
 
       const sanitizeArray = (arr: any): PokemonLink[] => {
         const list = Array.isArray(arr) ? arr : [];
-        return list.map((p, index) => sanitizeLink(p, index + 1));
+        return list.map(sanitizeLink);
       };
 
       const sanitizeFossils = (playerFossils: any): FossilEntry[][] => {
@@ -1177,7 +1176,7 @@ const App: React.FC = () => {
   const handleEditLink = useCallback(
     (
       key: "team" | "box" | "graveyard",
-      pairId: number,
+      pairId: LinkId,
       payload: LinkEditPayload,
     ) => {
       if (isReadOnly) return;
@@ -1222,7 +1221,7 @@ const App: React.FC = () => {
   const handleEvolveLink = useCallback(
     (
       key: "team" | "box",
-      pairId: number,
+      pairId: LinkId,
       playerIndex: number,
       newId: number,
     ) => {
@@ -1389,7 +1388,7 @@ const App: React.FC = () => {
   const handleManualAddFromModal = (payload: LinkEditPayload) => {
     if (isReadOnly) return;
     const newPair: PokemonLink = {
-      id: Date.now(),
+      id: createLinkId(),
       location: payload.location?.trim() || "",
       locationSlug: payload.locationSlug,
       members: payload.members.map((member) => ({
@@ -1404,7 +1403,7 @@ const App: React.FC = () => {
   };
 
   const handleEditGraveyardPair = (
-    pairId: number,
+    pairId: LinkId,
     payload: LinkEditPayload,
   ) => {
     handleEditLink("graveyard", pairId, payload);
@@ -1419,7 +1418,7 @@ const App: React.FC = () => {
         team: [
           ...prev.team,
           {
-            id: Date.now(),
+            id: createLinkId(),
             location: payload.location?.trim() || "",
             locationSlug: payload.locationSlug,
             fossilSlugs: payload.fossilSlugs,
@@ -1441,7 +1440,7 @@ const App: React.FC = () => {
       box: [
         ...prev.box,
         {
-          id: Date.now(),
+          id: createLinkId(),
           location: payload.location?.trim() || "",
           locationSlug: payload.locationSlug,
           fossilSlugs: payload.fossilSlugs,

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import type { LinkEditPayload, PokemonLink } from "@/types.ts";
+import type { LinkEditPayload, LinkId, PokemonLink } from "@/types.ts";
 import EditPairModal from "@/src/components/modals/EditPairModal.tsx";
 import SelectEvolveModal from "@/src/components/modals/SelectEvolveModal.tsx";
 import {
@@ -28,8 +28,8 @@ interface TeamTableProps {
   data: PokemonLink[];
   playerNames: string[];
   playerColors: string[];
-  onEditLink: (pairId: number, payload: LinkEditPayload) => void;
-  onEvolveLink: (pairId: number, playerIndex: number, newId: number) => void;
+  onEditLink: (pairId: LinkId, payload: LinkEditPayload) => void;
+  onEvolveLink: (pairId: LinkId, playerIndex: number, newId: number) => void;
   onAddToGraveyard: (pair: PokemonLink) => void;
   onDeleteLink?: (pair: PokemonLink) => void;
   onAddLink: (payload: LinkEditPayload) => void;
@@ -46,23 +46,23 @@ interface TeamTableProps {
   generationSpritePath?: string | null;
   useSpritesInTeamTable?: boolean;
   wikiId?: WikiId | string | null;
-  badLinkIds?: Set<number>;
-  onToggleBadLink?: (id: number) => void;
+  badLinkIds?: Set<LinkId>;
+  onToggleBadLink?: (id: LinkId) => void;
   filterBar?: React.ReactNode;
   filtersExpanded?: boolean;
   nicknamesEnabled?: boolean;
-  canonicalLinkIds?: ReadonlySet<number>;
+  canonicalLinkIds?: ReadonlySet<LinkId>;
 }
 
 interface PairModalSession {
   kind: "create" | "edit";
-  pairId?: number;
+  pairId?: LinkId;
   initial: LinkEditPayload;
   playerLabels: string[];
 }
 
 interface EvolutionModalSession {
-  pairId: number;
+  pairId: LinkId;
   pair: PokemonLink;
   playerLabels: string[];
 }
@@ -110,7 +110,7 @@ const TeamTable: React.FC<TeamTableProps> = ({
     }
   }, [readOnly]);
 
-  const linkExists = (pairId: number) =>
+  const linkExists = (pairId: LinkId) =>
     canonicalLinkIds?.has(pairId) ?? data.some((pair) => pair.id === pairId);
 
   const createDraft = (

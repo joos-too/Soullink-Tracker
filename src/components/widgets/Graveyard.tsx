@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import type { LinkEditPayload, PokemonLink } from "@/types.ts";
+import type { LinkEditPayload, LinkId, PokemonLink } from "@/types.ts";
 import { PLAYER_COLORS } from "@/src/services/init.ts";
 import { useTranslation } from "react-i18next";
 import { focusRingClasses } from "@/src/styles/focusRing.ts";
@@ -16,7 +16,7 @@ interface GraveyardProps {
   playerNames: string[];
   playerColors?: string[];
   onManualAddClick?: () => void;
-  onEditPair: (pairId: number, payload: LinkEditPayload) => void;
+  onEditPair: (pairId: LinkId, payload: LinkEditPayload) => void;
   onDeleteLink?: (pair: PokemonLink) => void;
   readOnly?: boolean;
   generationSpritePath?: string | null;
@@ -27,7 +27,7 @@ interface GraveyardProps {
 }
 
 interface GraveyardEditSession {
-  pairId: number;
+  pairId: LinkId;
   isLost: boolean;
   initial: LinkEditPayload;
   playerLabels: string[];

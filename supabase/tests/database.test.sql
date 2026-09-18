@@ -3,7 +3,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
 
-select plan(48);
+select plan(53);
 
 select has_table('public', 'profiles', 'profiles table exists');
 select has_table('public', 'trackers', 'trackers table exists');
@@ -75,6 +75,59 @@ select is(
   'an automatically generated display name requires onboarding'
 );
 select col_type_is('public', 'trackers', 'id', 'uuid', 'tracker IDs are UUIDs');
+select ok(
+  exists (
+    select 1
+    from pg_catalog.pg_constraint as constraint_definition
+    join pg_catalog.pg_class as relation
+      on relation.oid = constraint_definition.conrelid
+    join pg_catalog.pg_namespace as namespace
+      on namespace.oid = relation.relnamespace
+    where namespace.nspname = 'public'
+      and relation.relname = 'tracker_states'
+      and constraint_definition.conname = 'tracker_state_link_ids_are_valid'
+  ),
+  'tracker state enforces valid and unique link UUIDs'
+);
+select is(
+  (select min(schema_version) from public.tracker_states),
+  2,
+  'seeded tracker states use schema version 2'
+);
+select ok(
+  not exists (
+    select 1
+    from public.tracker_states as tracker_state
+    cross join lateral jsonb_array_elements(
+      coalesce(tracker_state.state -> 'team', '[]'::jsonb) ||
+      coalesce(tracker_state.state -> 'box', '[]'::jsonb) ||
+      coalesce(tracker_state.state -> 'graveyard', '[]'::jsonb)
+    ) as link
+    where link ->> 'id' !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+  ),
+  'all seeded Pokemon links have UUID IDs'
+);
+select ok(
+  not exists (
+    select 1
+    from public.tracker_states as tracker_state
+    cross join lateral jsonb_array_elements(
+      coalesce(tracker_state.state -> 'team', '[]'::jsonb) ||
+      coalesce(tracker_state.state -> 'box', '[]'::jsonb) ||
+      coalesce(tracker_state.state -> 'graveyard', '[]'::jsonb)
+    ) as link
+    group by tracker_state.tracker_id, link ->> 'id'
+    having count(*) > 1
+  ),
+  'Pokemon link UUIDs are unique within each tracker'
+);
+select is(
+  private.tracker_link_ids_are_valid(
+    '{"team":[{"id":"10000000-0000-4000-8000-000000000001"}],"box":[{"id":"10000000-0000-4000-8000-000000000001"}],"graveyard":[]}'::jsonb
+  ),
+  false,
+  'duplicate link UUIDs are rejected across collections'
+);
 select has_index(
   'public',
   'tracker_members',

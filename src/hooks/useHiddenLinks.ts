@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
+import type { LinkId } from "@/types.ts";
+import { isLinkId } from "@/src/services/linkIds.ts";
 
 function storageKey(trackerId: string | null | undefined): string | null {
   return trackerId ? `soullink:hiddenLinks:${trackerId}` : null;
 }
 
 export function useHiddenLinks(trackerId: string | null | undefined) {
-  const [hiddenLinkIds, setHiddenLinkIds] = useState<Set<number>>(new Set());
+  const [hiddenLinkIds, setHiddenLinkIds] = useState<Set<LinkId>>(new Set());
 
   useEffect(() => {
     const key = storageKey(trackerId);
@@ -16,8 +18,10 @@ export function useHiddenLinks(trackerId: string | null | undefined) {
     try {
       const raw = localStorage.getItem(key);
       if (raw) {
-        const parsed: number[] = JSON.parse(raw);
-        setHiddenLinkIds(new Set(parsed));
+        const parsed: unknown = JSON.parse(raw);
+        setHiddenLinkIds(
+          new Set(Array.isArray(parsed) ? parsed.filter(isLinkId) : []),
+        );
       } else {
         setHiddenLinkIds(new Set());
       }
@@ -27,7 +31,7 @@ export function useHiddenLinks(trackerId: string | null | undefined) {
   }, [trackerId]);
 
   const persist = useCallback(
-    (next: Set<number>) => {
+    (next: Set<LinkId>) => {
       const key = storageKey(trackerId);
       if (!key) return;
       try {
@@ -40,7 +44,7 @@ export function useHiddenLinks(trackerId: string | null | undefined) {
   );
 
   const toggleHiddenLink = useCallback(
-    (id: number) => {
+    (id: LinkId) => {
       setHiddenLinkIds((prev) => {
         const next = new Set(prev);
         if (next.has(id)) {

@@ -60,12 +60,13 @@ Update the Handbook for any major changes.
 - `public.trackers`: tracker metadata such as title, players, game version, ruleset, and public visibility.
 - `public.tracker_members`: owner/editor/guest membership and per-user tracker settings.
 - `public.tracker_states`: JSONB tracker state plus schema version, optimistic-lock revision, and computed summary.
+- Pokemon links inside tracker state use globally unique UUID strings across team, box, and graveyard. Tracker-state schema version 2 enforces this invariant.
 - `public.rulesets`: user-owned custom rulesets, keyed by `(owner_id, id)`.
 - Tracker creation, invitations, member removal, and revision-aware state updates use PostgreSQL RPC functions.
 - Supabase Realtime subscriptions keep tracker metadata, membership, state, and rulesets synchronized.
 - Row Level Security and grants are the authorization boundary. Public trackers are selectable anonymously; guests remain read-only.
 
-When changing tracker shape, add a database migration, update state schema/version handling, regenerate `src/types/database.ts`, and update default-state helpers. The main normalization logic currently lives in `src/services/init.ts` and `src/App.tsx`.
+When changing tracker shape, add a database migration, update state schema/version handling, regenerate `src/types/database.ts`, and update default-state helpers. The main normalization logic currently lives in `src/services/init.ts` and `src/App.tsx`. Create new Pokemon-link IDs through `src/services/linkIds.ts`.
 Runtime sanitization should only be used as a last resort. Prefer an idempotent SQL/data migration for existing rows.
 
 ## Localization Rules

@@ -2,13 +2,16 @@ import React from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { PokemonLink } from "@/types.ts";
+import type { LinkId, PokemonLink } from "@/types.ts";
 import i18n from "@/src/i18n.ts";
 import TeamTable from "./TeamTable.tsx";
 
 type TeamTableProps = React.ComponentProps<typeof TeamTable>;
 
-const pair = (id: number, location: string): PokemonLink => ({
+const LINK_ONE = "10000000-0000-4000-8000-000000000001";
+const LINK_TWO = "10000000-0000-4000-8000-000000000002";
+
+const pair = (id: LinkId, location: string): PokemonLink => ({
   id,
   location,
   locationSlug: null,
@@ -19,7 +22,7 @@ const createProps = (
   overrides: Partial<TeamTableProps> = {},
 ): TeamTableProps => ({
   title: "Team",
-  data: [pair(1, "Route 1")],
+  data: [pair(LINK_ONE, "Route 1")],
   playerNames: ["Red"],
   playerColors: ["#ef4444"],
   onEditLink: vi.fn(),
@@ -30,7 +33,7 @@ const createProps = (
   context: "team",
   onMoveToTeam: vi.fn(),
   onMoveToBox: vi.fn(),
-  canonicalLinkIds: new Set([1]),
+  canonicalLinkIds: new Set([LINK_ONE]),
   nicknamesEnabled: false,
   ...overrides,
 });
@@ -53,8 +56,8 @@ describe("TeamTable modal sessions", () => {
     rerender(
       <TeamTable
         {...createProps({
-          data: [pair(2, "Unrelated"), pair(1, "Remote route")],
-          canonicalLinkIds: new Set([1, 2]),
+          data: [pair(LINK_TWO, "Unrelated"), pair(LINK_ONE, "Remote route")],
+          canonicalLinkIds: new Set([LINK_ONE, LINK_TWO]),
           onEditLink,
         })}
       />,
@@ -63,7 +66,7 @@ describe("TeamTable modal sessions", () => {
     expect(locationInput).toHaveValue("Local route");
     await user.click(screen.getByRole("button", { name: "Save" }));
     expect(onEditLink).toHaveBeenCalledWith(
-      1,
+      LINK_ONE,
       expect.objectContaining({ location: "Local route" }),
     );
   });
@@ -110,7 +113,7 @@ describe("TeamTable modal sessions", () => {
       <TeamTable
         {...createProps({
           data: [],
-          canonicalLinkIds: new Set([1]),
+          canonicalLinkIds: new Set([LINK_ONE]),
           onEditLink,
         })}
       />,
@@ -120,7 +123,7 @@ describe("TeamTable modal sessions", () => {
     expect(screen.getByRole("button", { name: "Save" })).toBeEnabled();
     await user.click(screen.getByRole("button", { name: "Save" }));
     expect(onEditLink).toHaveBeenCalledWith(
-      1,
+      LINK_ONE,
       expect.objectContaining({ location: "Draft after move" }),
     );
   });
@@ -143,8 +146,8 @@ describe("TeamTable modal sessions", () => {
     rerender(
       <TeamTable
         {...createProps({
-          data: [pair(2, "Remote route")],
-          canonicalLinkIds: new Set([2]),
+          data: [pair(LINK_TWO, "Remote route")],
+          canonicalLinkIds: new Set([LINK_TWO]),
           onAddLink,
         })}
       />,
@@ -175,8 +178,8 @@ describe("TeamTable modal sessions", () => {
     rerender(
       <TeamTable
         {...createProps({
-          data: [pair(1, "Remote route"), pair(2, "Unrelated")],
-          canonicalLinkIds: new Set([1, 2]),
+          data: [pair(LINK_ONE, "Remote route"), pair(LINK_TWO, "Unrelated")],
+          canonicalLinkIds: new Set([LINK_ONE, LINK_TWO]),
           onEvolveLink,
         })}
       />,
@@ -187,7 +190,7 @@ describe("TeamTable modal sessions", () => {
     rerender(
       <TeamTable
         {...createProps({
-          data: [pair(1, "Remote route")],
+          data: [pair(LINK_ONE, "Remote route")],
           canonicalLinkIds: new Set(),
           onEvolveLink,
         })}

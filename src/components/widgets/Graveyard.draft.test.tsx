@@ -2,11 +2,13 @@ import React from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { PokemonLink } from "@/types.ts";
+import type { LinkId, PokemonLink } from "@/types.ts";
 import i18n from "@/src/i18n.ts";
 import Graveyard from "./Graveyard.tsx";
 
-const lostPair = (id: number, location: string): PokemonLink => ({
+const LINK_ID = "70000000-0000-4000-8000-000000000007";
+
+const lostPair = (id: LinkId, location: string): PokemonLink => ({
   id,
   location,
   locationSlug: null,
@@ -24,7 +26,7 @@ describe("Graveyard modal sessions", () => {
     const onEditPair = vi.fn();
     const { rerender } = render(
       <Graveyard
-        graveyard={[lostPair(7, "Route 1")]}
+        graveyard={[lostPair(LINK_ID, "Route 1")]}
         playerNames={["Red"]}
         onEditPair={onEditPair}
       />,
