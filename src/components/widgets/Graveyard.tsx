@@ -24,6 +24,7 @@ interface GraveyardProps {
   gameVersionId?: string;
   wikiId?: WikiId | string | null;
   nicknamesEnabled?: boolean;
+  canonicalLinkIds?: ReadonlySet<LinkId>;
 }
 
 interface GraveyardEditSession {
@@ -46,6 +47,7 @@ const Graveyard: React.FC<GraveyardProps> = ({
   readOnly = false,
   wikiId,
   nicknamesEnabled = true,
+  canonicalLinkIds,
 }) => {
   const { t, i18n } = useTranslation();
   const locale = normalizeLanguage(i18n.language);
@@ -72,12 +74,12 @@ const Graveyard: React.FC<GraveyardProps> = ({
     }
   }, [readOnly]);
 
+  const linkExists = (pairId: LinkId) =>
+    canonicalLinkIds?.has(pairId) ??
+    graveyard.some((pair) => pair.id === pairId);
+
   const handleSave = (payload: LinkEditPayload) => {
-    if (
-      !editSession ||
-      !graveyard.some((pair) => pair.id === editSession.pairId)
-    )
-      return;
+    if (!editSession || !linkExists(editSession.pairId)) return;
     onEditPair(editSession.pairId, payload);
     setEditSession(null);
   };
@@ -285,7 +287,7 @@ const Graveyard: React.FC<GraveyardProps> = ({
           generationSpritePath={generationSpritePath}
           nicknamesEnabled={nicknamesEnabled}
           blockingError={
-            graveyard.some((pair) => pair.id === editSession.pairId)
+            linkExists(editSession.pairId)
               ? undefined
               : t("modals.common.linkUnavailable")
           }
@@ -302,7 +304,7 @@ const Graveyard: React.FC<GraveyardProps> = ({
           mode="edit"
           initial={editSession.initial}
           blockingError={
-            graveyard.some((pair) => pair.id === editSession.pairId)
+            linkExists(editSession.pairId)
               ? undefined
               : t("modals.common.linkUnavailable")
           }

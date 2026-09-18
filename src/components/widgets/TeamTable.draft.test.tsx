@@ -90,7 +90,7 @@ describe("TeamTable modal sessions", () => {
 
     expect(screen.getByRole("dialog")).toBeVisible();
     expect(screen.getByRole("alert")).toHaveTextContent(
-      "This link was removed or moved to the graveyard by another user",
+      "This link was removed by another user",
     );
     expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
     expect(onEditLink).not.toHaveBeenCalled();
@@ -198,9 +198,34 @@ describe("TeamTable modal sessions", () => {
     );
 
     expect(screen.getByRole("alert")).toHaveTextContent(
-      "This link was removed or moved to the graveyard by another user",
+      "This link was removed by another user",
     );
     expect(screen.getByRole("button", { name: "Confirm" })).toBeDisabled();
     expect(onEvolveLink).not.toHaveBeenCalled();
+  });
+
+  it("allows evolution after the link moves to another collection", async () => {
+    const user = userEvent.setup();
+    const onEvolveLink = vi.fn();
+    const { rerender } = render(
+      <TeamTable {...createProps({ onEvolveLink })} />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Evolve" }));
+    await user.click(await screen.findByRole("radio", { name: /Ivysaur/ }));
+
+    rerender(
+      <TeamTable
+        {...createProps({
+          data: [],
+          canonicalLinkIds: new Set([LINK_ONE]),
+          onEvolveLink,
+        })}
+      />,
+    );
+
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Confirm" }));
+    expect(onEvolveLink).toHaveBeenCalledWith(LINK_ONE, 0, 2);
   });
 });

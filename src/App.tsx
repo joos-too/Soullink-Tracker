@@ -1181,18 +1181,16 @@ const App: React.FC = () => {
     ) => {
       if (isReadOnly) return;
       setData((prev) => {
-        const currentKey =
-          key === "graveyard"
-            ? "graveyard"
-            : prev[key].some((pair) => pair.id === pairId)
-              ? key
-              : key === "team" && prev.box.some((pair) => pair.id === pairId)
-                ? "box"
-                : key === "box" && prev.team.some((pair) => pair.id === pairId)
-                  ? "team"
-                  : null;
-        if (!currentKey || !prev[currentKey].some((pair) => pair.id === pairId))
-          return prev;
+        const collections: Array<"team" | "box" | "graveyard"> = [
+          key,
+          ...(["team", "box", "graveyard"] as const).filter(
+            (collection) => collection !== key,
+          ),
+        ];
+        const currentKey = collections.find((collection) =>
+          prev[collection].some((pair) => pair.id === pairId),
+        );
+        if (!currentKey) return prev;
         return {
           ...prev,
           [currentKey]: prev[currentKey].map((pair) => {
@@ -1202,9 +1200,6 @@ const App: React.FC = () => {
               ...pair,
               location: payload.location?.trim() || "",
               locationSlug: payload.locationSlug || null,
-              ...(payload.fossilSlugs
-                ? { fossilSlugs: [...payload.fossilSlugs] }
-                : {}),
               members: payload.members.map((member) => ({
                 id: normalizePokemonId(member.id),
                 ...(member.name?.trim() ? { name: member.name.trim() } : {}),
@@ -1227,13 +1222,14 @@ const App: React.FC = () => {
     ) => {
       if (isReadOnly) return;
       setData((prev) => {
-        const currentKey = prev[key].some((pair) => pair.id === pairId)
-          ? key
-          : key === "team" && prev.box.some((pair) => pair.id === pairId)
-            ? "box"
-            : key === "box" && prev.team.some((pair) => pair.id === pairId)
-              ? "team"
-              : null;
+        const collections: Array<"team" | "box" | "graveyard"> = [
+          key,
+          key === "team" ? "box" : "team",
+          "graveyard",
+        ];
+        const currentKey = collections.find((collection) =>
+          prev[collection].some((pair) => pair.id === pairId),
+        );
         if (!currentKey) return prev;
         return {
           ...prev,
@@ -2169,9 +2165,12 @@ const App: React.FC = () => {
     }
     return [];
   }, [data.playerNames, activeTrackerMeta?.playerNames]);
-  const activeLinkIds = useMemo(
-    () => new Set([...data.team, ...data.box].map((pair) => pair.id)),
-    [data.team, data.box],
+  const editableLinkIds = useMemo(
+    () =>
+      new Set(
+        [...data.team, ...data.box, ...data.graveyard].map((pair) => pair.id),
+      ),
+    [data.team, data.box, data.graveyard],
   );
 
   const playerColors = useMemo(
@@ -2599,7 +2598,7 @@ const App: React.FC = () => {
               onEvolveLink={(pairId, playerIndex, newId) =>
                 handleEvolveLink("team", pairId, playerIndex, newId)
               }
-              canonicalLinkIds={activeLinkIds}
+              canonicalLinkIds={editableLinkIds}
               onAddToGraveyard={handleAddToGraveyard}
               onAddLink={handleAddTeamPair}
               emptyMessage={t("team.teamEmpty")}
@@ -2638,7 +2637,7 @@ const App: React.FC = () => {
               onEvolveLink={(pairId, playerIndex, newId) =>
                 handleEvolveLink("box", pairId, playerIndex, newId)
               }
-              canonicalLinkIds={activeLinkIds}
+              canonicalLinkIds={editableLinkIds}
               onAddToGraveyard={handleAddToGraveyard}
               onDeleteLink={handleDeleteLink}
               onAddLink={handleAddBoxPair}
@@ -2744,6 +2743,7 @@ const App: React.FC = () => {
             <Graveyard
               key={`graveyard-${activeTrackerId}`}
               graveyard={data.graveyard}
+              canonicalLinkIds={editableLinkIds}
               playerNames={resolvedPlayerNames}
               playerColors={playerColors}
               onManualAddClick={() => {

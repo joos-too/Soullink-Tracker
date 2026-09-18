@@ -73,7 +73,7 @@ export const de = {
       loadingSuggestions: "Lade Vorschläge…",
       noMatches: "Keine Treffer",
       linkUnavailable:
-        "Dieser Link wurde von einem anderen Benutzer entfernt oder auf den Friedhof verschoben und kann nicht mehr gespeichert werden.",
+        "Dieser Link wurde von einem anderen Benutzer entfernt und kann nicht mehr gespeichert werden.",
     },
     addLost: {
       title: "Verlorene Pokémon hinzufügen",

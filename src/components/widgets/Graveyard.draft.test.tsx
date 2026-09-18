@@ -48,9 +48,43 @@ describe("Graveyard modal sessions", () => {
     expect(locationInput).toHaveValue("Local lost route");
     expect(screen.getByRole("dialog")).toBeVisible();
     expect(screen.getByRole("alert")).toHaveTextContent(
-      "This link was removed or moved to the graveyard by another user",
+      "This link was removed by another user",
     );
     expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
     expect(onEditPair).not.toHaveBeenCalled();
+  });
+
+  it("allows saving when the link moves out of the graveyard", async () => {
+    const user = userEvent.setup();
+    const onEditPair = vi.fn();
+    const { rerender } = render(
+      <Graveyard
+        graveyard={[lostPair(LINK_ID, "Route 1")]}
+        playerNames={["Red"]}
+        onEditPair={onEditPair}
+        canonicalLinkIds={new Set([LINK_ID])}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Edit" }));
+    const locationInput = screen.getByRole("textbox", { name: /^Area/ });
+    await user.clear(locationInput);
+    await user.type(locationInput, "Updated route");
+
+    rerender(
+      <Graveyard
+        graveyard={[]}
+        playerNames={["Red"]}
+        onEditPair={onEditPair}
+        canonicalLinkIds={new Set([LINK_ID])}
+      />,
+    );
+
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    expect(onEditPair).toHaveBeenCalledWith(
+      LINK_ID,
+      expect.objectContaining({ location: "Updated route" }),
+    );
   });
 });
