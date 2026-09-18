@@ -4,8 +4,10 @@ export interface Pokemon {
   name?: string;
 }
 
+export type LinkId = string;
+
 export interface PokemonLink {
-  id: number;
+  id: LinkId;
   locationSlug: string | null;
   location?: string;
   fossilSlugs?: string[];
@@ -16,6 +18,7 @@ export interface PokemonLink {
 export interface LinkEditPayload {
   locationSlug: string | null;
   location?: string;
+  fossilSlugs?: string[];
   members: Pokemon[];
 }
 
