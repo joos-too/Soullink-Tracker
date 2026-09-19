@@ -21,9 +21,6 @@ export interface UseActiveTrackerOptions {
   gameVersionId?: string;
   canLoad: boolean;
   canWrite: boolean;
-  isViewingPublicTracker: boolean;
-  routeTrackerPendingSelection: boolean;
-  routeTrackerKnownMissing: boolean;
   data: AppState;
   setData: Dispatch<SetStateAction<AppState>>;
   coerceState: (incoming: unknown, base: AppState) => AppState;
@@ -34,6 +31,7 @@ export interface ActiveTrackerController {
   dataLoaded: boolean;
   stateConflict: boolean;
   reloadAfterConflict: () => Promise<void>;
+  discardPendingWrites: () => void;
 }
 
 export const useActiveTracker = ({
@@ -42,9 +40,6 @@ export const useActiveTracker = ({
   gameVersionId,
   canLoad,
   canWrite,
-  isViewingPublicTracker,
-  routeTrackerPendingSelection,
-  routeTrackerKnownMissing,
   data,
   setData,
   coerceState,
@@ -59,12 +54,29 @@ export const useActiveTracker = ({
   );
   const writeSessionRef = useRef(0);
   const isHydratingRef = useRef(true);
+  const pendingWriteTaskRef = useRef<(() => void) | null>(null);
 
   const clearPendingWriteTimer = useCallback(() => {
     if (!pendingWriteTimerRef.current) return;
     clearTimeout(pendingWriteTimerRef.current);
     pendingWriteTimerRef.current = null;
   }, []);
+
+  const discardPendingWrites = useCallback(() => {
+    clearPendingWriteTimer();
+    pendingWriteTaskRef.current = null;
+  }, [clearPendingWriteTimer]);
+
+  // Route navigation unmounts the editor. Persist its last debounced edit before
+  // the subscription and autosave effects clean up. Delete/leave discard it first.
+  useEffect(
+    () => () => {
+      clearPendingWriteTimer();
+      pendingWriteTaskRef.current?.();
+      pendingWriteTaskRef.current = null;
+    },
+    [clearPendingWriteTimer],
+  );
 
   const reloadAfterConflict = useCallback(async () => {
     if (!activeTrackerId) return;
@@ -86,19 +98,6 @@ export const useActiveTracker = ({
     if (!canLoad) {
       setData(createInitialState());
       setDataLoaded(false);
-      isHydratingRef.current = false;
-      return;
-    }
-
-    if (!isViewingPublicTracker && routeTrackerPendingSelection) {
-      setData(createInitialState());
-      setDataLoaded(false);
-      return;
-    }
-
-    if (!isViewingPublicTracker && routeTrackerKnownMissing) {
-      setData(createInitialState());
-      setDataLoaded(true);
       isHydratingRef.current = false;
       return;
     }
@@ -141,6 +140,7 @@ export const useActiveTracker = ({
           unsubscribe = subscribeToTrackerState(
             activeTrackerId,
             (liveState) => {
+              if (cancelled) return;
               if (liveState) {
                 skipNextWriteRef.current = true;
                 setData((previous) => coerceState(liveState, previous));
@@ -161,23 +161,14 @@ export const useActiveTracker = ({
       isHydratingRef.current = true;
       setDataLoaded(false);
     };
-  }, [
-    activeTrackerId,
-    canLoad,
-    coerceState,
-    gameVersionId,
-    isViewingPublicTracker,
-    routeTrackerKnownMissing,
-    routeTrackerPendingSelection,
-    setData,
-  ]);
+  }, [activeTrackerId, canLoad, coerceState, gameVersionId, setData]);
 
   useEffect(() => {
     writeSessionRef.current += 1;
-    clearPendingWriteTimer();
+    discardPendingWrites();
     pendingWriteRef.current = Promise.resolve();
     setStateConflict(false);
-  }, [activeTrackerId, clearPendingWriteTimer, userId]);
+  }, [activeTrackerId, discardPendingWrites, userId]);
 
   useEffect(() => {
     if (
@@ -200,8 +191,7 @@ export const useActiveTracker = ({
     const session = writeSessionRef.current;
     const stateToPersist = data;
 
-    pendingWriteTimerRef.current = setTimeout(() => {
-      pendingWriteTimerRef.current = null;
+    pendingWriteTaskRef.current = () => {
       pendingWriteRef.current = pendingWriteRef.current
         .then(() => saveTrackerState(trackerId, stateToPersist))
         .catch((error) => {
@@ -214,18 +204,29 @@ export const useActiveTracker = ({
           }
           console.error("Tracker state write failed", error);
         });
+    };
+    pendingWriteTimerRef.current = setTimeout(() => {
+      pendingWriteTimerRef.current = null;
+      pendingWriteTaskRef.current?.();
+      pendingWriteTaskRef.current = null;
     }, debounceMs);
 
-    return clearPendingWriteTimer;
+    return discardPendingWrites;
   }, [
     activeTrackerId,
     canWrite,
     clearPendingWriteTimer,
+    discardPendingWrites,
     data,
     dataLoaded,
     debounceMs,
     stateConflict,
   ]);
 
-  return { dataLoaded, stateConflict, reloadAfterConflict };
+  return {
+    dataLoaded,
+    stateConflict,
+    reloadAfterConflict,
+    discardPendingWrites,
+  };
 };
