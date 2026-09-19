@@ -76,6 +76,16 @@ export const useActiveTracker = ({
   const realtimeAttemptRef = useRef(0);
   const latestDataRef = useRef(data);
   latestDataRef.current = data;
+  const canWriteRef = useRef(canWrite);
+  canWriteRef.current = canWrite;
+
+  useEffect(() => {
+    console.info("[TrackerSync] status", {
+      trackerId: activeTrackerId,
+      realtimeStatus,
+      stateConflict,
+    });
+  }, [activeTrackerId, realtimeStatus, stateConflict]);
 
   const clearPendingWriteTimer = useCallback(() => {
     if (!pendingWriteTimerRef.current) return;
@@ -105,7 +115,18 @@ export const useActiveTracker = ({
     ) => {
       pendingWriteRef.current = pendingWriteRef.current
         .then(async () => {
+          if (stateConflictRef.current) return;
+          console.info("[TrackerSync] save started", {
+            trackerId,
+            session,
+            editVersion,
+          });
           await saveTrackerState(trackerId, stateToPersist);
+          console.info("[TrackerSync] save succeeded", {
+            trackerId,
+            session,
+            editVersion,
+          });
           if (
             writeSessionRef.current === session &&
             editVersionRef.current === editVersion
@@ -120,6 +141,10 @@ export const useActiveTracker = ({
             writeSessionRef.current === session
           ) {
             stateConflictRef.current = true;
+            console.info(
+              "[TrackerSync] revision conflict; server reload required",
+              { trackerId, session, editVersion },
+            );
             setStateConflict(true);
             return;
           }
@@ -141,16 +166,30 @@ export const useActiveTracker = ({
 
   const reloadAfterConflict = useCallback(async () => {
     if (!activeTrackerId) return;
+    const attempt = ++realtimeAttemptRef.current;
+    console.info("[TrackerSync] server reload started", {
+      trackerId: activeTrackerId,
+      attempt,
+    });
     try {
-      const remoteState = await getTrackerState(activeTrackerId);
-      if (remoteState) {
+      await pendingWriteRef.current;
+      const snapshot = await fetchTrackerStateSnapshot(activeTrackerId);
+      if (attempt !== realtimeAttemptRef.current) return;
+      if (snapshot) {
+        acceptTrackerStateSnapshot(activeTrackerId, snapshot);
         skipNextWriteRef.current = true;
         dirtyRef.current = false;
         saveFailedRef.current = false;
-        setData((previous) => coerceState(remoteState, previous));
+        setData((previous) => coerceState(snapshot.state, previous));
+      } else {
+        throw new Error("Tracker state was not found.");
       }
       stateConflictRef.current = false;
       setStateConflict(false);
+      console.info("[TrackerSync] server reload completed", {
+        trackerId: activeTrackerId,
+        attempt,
+      });
     } catch (error) {
       console.error("Failed to reload tracker after state conflict", error);
     }
@@ -158,7 +197,15 @@ export const useActiveTracker = ({
 
   const reconcileTracker = useCallback(
     async (trackerId: string, session: number, attempt: number) => {
+      console.info("[TrackerSync] reconciliation started", {
+        trackerId,
+        session,
+        attempt,
+        dirty: dirtyRef.current,
+        saveFailed: saveFailedRef.current,
+      });
       setRealtimeStatus("resyncing");
+      const hadPendingTask = pendingWriteTaskRef.current !== null;
       flushPendingWrite();
       await pendingWriteRef.current;
       if (
@@ -167,12 +214,44 @@ export const useActiveTracker = ({
       )
         return;
 
+      // A failed offline save has already consumed its debounce task. Retry
+      // the latest local state here, for both SUBSCRIBED and manual retry.
+      if (
+        !hadPendingTask &&
+        dirtyRef.current &&
+        canWriteRef.current &&
+        !stateConflictRef.current
+      ) {
+        console.info("[TrackerSync] retrying unsaved state", {
+          trackerId,
+          attempt,
+        });
+        clearPendingWriteTimer();
+        pendingWriteTaskRef.current = null;
+        enqueueSave(
+          trackerId,
+          latestDataRef.current,
+          session,
+          editVersionRef.current,
+        );
+        await pendingWriteRef.current;
+        if (
+          writeSessionRef.current !== session ||
+          realtimeAttemptRef.current !== attempt
+        )
+          return;
+      }
       if (stateConflictRef.current) {
         setRealtimeStatus("connected");
         return;
       }
-      if (dirtyRef.current || saveFailedRef.current) {
+      if (saveFailedRef.current) {
         setRealtimeStatus("resync-error");
+        return;
+      }
+      if (dirtyRef.current) {
+        // New edits made while awaiting a save remain owned by autosave.
+        setRealtimeStatus("connected");
         return;
       }
 
@@ -204,23 +283,24 @@ export const useActiveTracker = ({
         setRealtimeStatus("resync-error");
       }
     },
-    [coerceState, flushPendingWrite, setData],
+    [
+      coerceState,
+      flushPendingWrite,
+      clearPendingWriteTimer,
+      enqueueSave,
+      setData,
+    ],
   );
 
   const retryRealtimeSync = useCallback(() => {
     if (!activeTrackerId) return;
     const attempt = ++realtimeAttemptRef.current;
-    saveFailedRef.current = false;
-    if (canWrite && dirtyRef.current && !stateConflictRef.current) {
-      enqueueSave(
-        activeTrackerId,
-        latestDataRef.current,
-        writeSessionRef.current,
-        editVersionRef.current,
-      );
-    }
+    console.info("[TrackerSync] manual retry", {
+      trackerId: activeTrackerId,
+      attempt,
+    });
     void reconcileTracker(activeTrackerId, writeSessionRef.current, attempt);
-  }, [activeTrackerId, canWrite, enqueueSave, reconcileTracker]);
+  }, [activeTrackerId, reconcileTracker]);
 
   useEffect(() => {
     isHydratingRef.current = true;
@@ -242,6 +322,10 @@ export const useActiveTracker = ({
     }
 
     setRealtimeStatus("connecting");
+    console.info(
+      "[TrackerSync] subscription effect started; loading initial state",
+      { trackerId: activeTrackerId },
+    );
 
     let unsubscribe: (() => void) | undefined;
     let cancelled = false;
@@ -289,6 +373,10 @@ export const useActiveTracker = ({
             },
             (status, error) => {
               if (cancelled) return;
+              console.info("[TrackerSync] channel callback", {
+                trackerId: activeTrackerId,
+                status,
+              });
               if (status === "disconnected") {
                 realtimeAttemptRef.current += 1;
                 if (error)
@@ -309,6 +397,10 @@ export const useActiveTracker = ({
     })();
 
     return () => {
+      console.info("[TrackerSync] subscription effect cleanup", {
+        trackerId: activeTrackerId,
+      });
+      realtimeAttemptRef.current += 1;
       cancelled = true;
       unsubscribe?.();
       isHydratingRef.current = true;
@@ -367,7 +459,10 @@ export const useActiveTracker = ({
       pendingWriteTaskRef.current = null;
     }, debounceMs);
 
-    return discardPendingWrites;
+    return () => {
+      clearPendingWriteTimer();
+      pendingWriteTaskRef.current = null;
+    };
   }, [
     activeTrackerId,
     canWrite,
