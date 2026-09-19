@@ -16,7 +16,9 @@ Update the Handbook for any major changes.
 
 ## Key Directories
 
-- `src/App.tsx`: routing, auth/bootstrap, tracker lifecycle, modal orchestration, and most application state wiring
+- `src/App.tsx`: route shell, authentication gates, and lazy-loaded route boundaries
+- `src/app/`: shared auth/profile/list session and home, account, ruleset, and tracker route controllers
+- `src/components/pages/TrackerPage.tsx`: tracker editing state, settings, and tracker modal orchestration; mounted only for a resolved tracker route
 - `src/components/`: UI components and modal flows
 - `src/services/backend/`: Supabase client and authentication abstraction
 - `src/services/repos/`: profile and tracker repositories, realtime subscriptions, RPC calls, and row-to-domain mapping
@@ -40,6 +42,7 @@ Update the Handbook for any major changes.
 - Regenerate database types: `npm run supabase:types`
 - Create a database migration: `npm run supabase:migration:new -- <name>`
 - Create a production build: `npm run build`
+- Validate production bundle boundaries and run browser smoke tests with a mocked backend: `npm run test:bundle`
 - Preview the build: `npm run preview`
 - Format the repo: `npm run prettier`
 - Check formatting: `npm run prettier:check`
@@ -66,8 +69,12 @@ Update the Handbook for any major changes.
 - Supabase Realtime subscriptions keep tracker metadata, membership, state, and rulesets synchronized.
 - Row Level Security and grants are the authorization boundary. Public trackers are selectable anonymously; guests remain read-only.
 
-When changing tracker shape, add a database migration, update state schema/version handling, regenerate `src/types/database.ts`, and update default-state helpers. The main normalization logic currently lives in `src/services/init.ts` and `src/App.tsx`. Create new Pokemon-link IDs through `src/services/linkIds.ts`.
+When changing tracker shape, add a database migration, update state schema/version handling, regenerate `src/types/database.ts`, and update default-state helpers. The main normalization logic currently lives in `src/services/init.ts` and `src/components/pages/TrackerPage.tsx`. Create new Pokemon-link IDs through `src/services/linkIds.ts`.
 Runtime sanitization should only be used as a last resort. Prefer an idempotent SQL/data migration for existing rows.
+
+Tracker selection is driven by the URL, not shared active-tracker state. `src/app/TrackerRoute.tsx` resolves access before mounting the editor, keyed by tracker ID. Keep tracker loading, autosave, and modal effects inside that route boundary; home and account pages must not load a remembered tracker's state. Settings permissions control rendering and must not trigger search-parameter navigation from an effect. `useActiveTracker` flushes pending debounced edits on ordinary unmount; successful delete/leave flows navigate home with replacement, suspending and discarding pending writes before the operation and resuming on failure.
+
+Production chunk groups use Vite's `build.rolldownOptions.output.codeSplitting` with strict execution order. React, Supabase, i18n, and the three large generated datasets have separate cacheable chunks. Keep wiki preferences in `src/utils/wikiPreferences.ts`; importing Pokémon URL lookup helpers into the app session would eagerly load the Pokémon dataset. Registration is eagerly loaded with login. All UI inside the tracker, including Settings, search, and ruleset saving, is eagerly imported by TrackerPage to avoid interaction-time loading screens. Keep the tracker route itself lazy. Tracker creation is eagerly imported by the home route as well. `scripts/check-bundle.mjs` checks the build manifest for missing imports, static chunk cycles, the 500 kB chunk budget, and dataset/lazy-UI boundaries.
 
 ## Localization Rules
 
