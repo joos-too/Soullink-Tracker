@@ -29,6 +29,11 @@ export interface SupabaseTrackerListEntry {
 
 type ValueCallback<T> = (value: T | null) => void;
 type ErrorCallback = (error: Error) => void;
+export type RealtimeConnectionStatus = "subscribed" | "disconnected";
+type ConnectionStatusCallback = (
+  status: RealtimeConnectionStatus,
+  error?: Error,
+) => void;
 
 type TrackerListQueryRow = {
   added_at: string;
@@ -344,6 +349,7 @@ export const subscribeToSupabaseTrackerState = (
   trackerId: string,
   onValueChange: ValueCallback<TrackerStateSnapshot>,
   onError?: ErrorCallback,
+  onConnectionStatusChange?: ConnectionStatusCallback,
 ): SupabaseTrackerSubscription => {
   const supabase = getSupabaseClient();
   let active = true;
@@ -357,7 +363,6 @@ export const subscribeToSupabaseTrackerState = (
     }
   };
 
-  void load();
   const channel = supabase
     .channel(`tracker-state:${trackerId}`)
     .on(
@@ -370,7 +375,20 @@ export const subscribeToSupabaseTrackerState = (
       },
       () => void load(),
     )
-    .subscribe();
+    .subscribe((status, error) => {
+      if (!active) return;
+      if (status === "SUBSCRIBED") {
+        onConnectionStatusChange?.("subscribed");
+        return;
+      }
+      if (
+        status === "CHANNEL_ERROR" ||
+        status === "TIMED_OUT" ||
+        status === "CLOSED"
+      ) {
+        onConnectionStatusChange?.("disconnected", error);
+      }
+    });
 
   return () => {
     active = false;

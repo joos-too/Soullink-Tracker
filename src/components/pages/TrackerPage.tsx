@@ -1,20 +1,10 @@
 import RulesetSaveModal from "@/src/components/modals/RulesetSaveModal.tsx";
-import TrackerSearchModal from "@/src/components/modals/TrackerSearchModal.tsx";
 import SettingsPage from "@/src/components/pages/SettingsPage.tsx";
+import TrackerEditor from "@/src/components/pages/TrackerEditor.tsx";
 import { useAppSession } from "@/src/app/AppSession";
 import { LAST_TRACKER_STORAGE_KEY } from "@/src/app/trackerStorage";
 import LoadingScreen from "@/src/app/LoadingScreen";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  FiHome,
-  FiMenu,
-  FiMoon,
-  FiRotateCw,
-  FiSearch,
-  FiSliders,
-  FiSun,
-} from "react-icons/fi";
-import { FaGithub } from "react-icons/fa";
 import type {
   AppState,
   FossilEntry,
@@ -35,34 +25,14 @@ import {
   sanitizePlayerNames,
   sanitizeRules,
 } from "@/src/services/init.ts";
-import TeamTable from "@/src/components/widgets/TeamTable.tsx";
-import BoxFilters, {
-  type TypeFilterEntry,
-} from "@/src/components/widgets/BoxFilters.tsx";
+import type { TypeFilterEntry } from "@/src/components/widgets/BoxFilters.tsx";
 import { useHiddenLinks } from "@/src/hooks/useHiddenLinks.ts";
 import { useActiveTracker } from "@/src/hooks/useActiveTracker.ts";
 import { getPokemonTypeSlugsById } from "@/src/services/pokemons/pokemonTypes.ts";
-import InfoPanel from "@/src/components/widgets/InfoPanel.tsx";
-import Rules from "@/src/components/widgets/Rules.tsx";
-import Graveyard from "@/src/components/widgets/Graveyard.tsx";
-import ClearedLocations from "@/src/components/widgets/ClearedLocations.tsx";
-import AddLostPokemonModal from "@/src/components/modals/AddLostPokemonModal.tsx";
-
-import ItemTracker from "@/src/components/widgets/ItemTracker.tsx";
 import { getGenerationSpritePath } from "@/src/services/sprites";
-import SelectLossModal from "@/src/components/modals/SelectLossModal.tsx";
-import DeleteLinkModal from "@/src/components/modals/DeleteLinkModal.tsx";
-
-import ResetModal from "@/src/components/modals/ResetModal.tsx";
-import EditPairModal from "@/src/components/modals/EditPairModal.tsx";
 import { MultiLocaleSearchContext } from "@/src/hooks/useMultiLocaleSearch.ts";
-import DarkModeToggle, {
-  getDarkMode,
-  setDarkMode,
-} from "@/src/components/toggles/DarkModeToggle.tsx";
 import DeleteTrackerModal from "@/src/components/modals/DeleteTrackerModal.tsx";
-
-import ReadOnlyNoticeBanner from "@/src/components/banners/ReadOnlyNoticeBanner.tsx";
+import RealtimeConnectionBanner from "@/src/components/banners/RealtimeConnectionBanner.tsx";
 import { focusRingClasses } from "@/src/styles/focusRing";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {
@@ -160,9 +130,6 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
   const [showDeleteLinkModal, setShowDeleteLinkModal] = useState(false);
   const [pendingDeletePair, setPendingDeletePair] =
     useState<PokemonLink | null>(null);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [showSearchModal, setShowSearchModal] = useState(false);
-  const [isDark, setIsDark] = useState(getDarkMode());
   const [trackerPendingDelete, setTrackerPendingDelete] =
     useState<TrackerMeta | null>(null);
   const [deleteTrackerLoading, setDeleteTrackerLoading] = useState(false);
@@ -600,25 +567,12 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
       window.localStorage.setItem(LAST_TRACKER_STORAGE_KEY, activeTrackerId);
   }, [activeTrackerId, user]);
 
-  // Keep local isDark in sync with document class/localStorage
-  useEffect(() => {
-    const target = document.documentElement;
-    const observer = new MutationObserver(() => setIsDark(getDarkMode()));
-    observer.observe(target, { attributes: true, attributeFilter: ["class"] });
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === "color-theme") setIsDark(getDarkMode());
-    };
-    window.addEventListener("storage", onStorage);
-    return () => {
-      observer.disconnect();
-      window.removeEventListener("storage", onStorage);
-    };
-  }, []);
-
   const {
     dataLoaded,
     stateConflict,
+    realtimeStatus,
     reloadAfterConflict: handleReloadAfterStateConflict,
+    retryRealtimeSync,
     discardPendingWrites,
   } = useActiveTracker({
     activeTrackerId,
@@ -732,7 +686,6 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
   }, [getRulesetCopyName, getRulesetOverwriteName]);
 
   const handleOpenRulesetEditor = useCallback(() => {
-    setMobileMenuOpen(false);
     const from =
       typeof window !== "undefined"
         ? `${location.pathname}${location.search}`
@@ -741,7 +694,6 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
   }, [navigate, location.pathname, location.search]);
 
   const handleNavigateHome = () => {
-    setMobileMenuOpen(false);
     navigate("/");
   };
 
@@ -1707,533 +1659,7 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
         ? t("app.publicReadOnlyNotice")
         : null
     : null;
-  const isTrackerSearchShortcutEnabled = Boolean(!showSettings);
-
-  useEffect(() => {
-    if (!isTrackerSearchShortcutEnabled) return;
-
-    const handleTrackerSearchShortcut = (event: KeyboardEvent) => {
-      if (
-        event.defaultPrevented ||
-        !event.ctrlKey ||
-        event.altKey ||
-        event.metaKey ||
-        event.key.toLowerCase() !== "f"
-      ) {
-        return;
-      }
-
-      event.preventDefault();
-      setMobileMenuOpen(false);
-      setShowSearchModal(true);
-    };
-
-    window.addEventListener("keydown", handleTrackerSearchShortcut);
-    return () =>
-      window.removeEventListener("keydown", handleTrackerSearchShortcut);
-  }, [isTrackerSearchShortcutEnabled]);
-
   if (!dataLoaded) return <LoadingScreen />;
-
-  const trackerElement = showSettings ? (
-    <SettingsPage
-      trackerTitle={activeTrackerMeta?.title ?? t("tracker.defaultTitle")}
-      onTitleChange={handleTitleChange}
-      playerNames={resolvedPlayerNames}
-      onPlayerNameChange={handlePlayerNameChange}
-      onBack={closeSettingsPanel}
-      legendaryTrackerEnabled={data.legendaryTrackerEnabled ?? true}
-      onlegendaryTrackerToggle={handleLegendaryTrackerToggle}
-      rivalCensorMode={
-        data.rivalCensorMode ??
-        (data.rivalCensorEnabled === false ? "off" : "on")
-      }
-      onRivalCensorModeChange={handleRivalCensorToggle}
-      hardcoreModeEnabled={data.hardcoreModeEnabled ?? true}
-      onHardcoreModeToggle={handleHardcoreModeToggle}
-      nicknamesEnabled={data.nicknamesEnabled ?? true}
-      onNicknamesToggle={handleNicknamesToggle}
-      infiniteFossilsEnabled={data.infiniteFossilsEnabled ?? false}
-      onInfiniteFossilsToggle={handleInfiniteFossilsToggle}
-      allPokemonAndItems={activeTrackerAllPokemonAndItems}
-      onAllPokemonAndItemsToggle={handleAllPokemonAndItemsToggle}
-      isPublic={activeTrackerMeta?.isPublic ?? false}
-      onPublicToggle={handlePublicToggle}
-      members={trackerMembers}
-      guests={trackerGuests}
-      onInviteMember={handleInviteMember}
-      onRemoveMember={handleRemoveMember}
-      onRequestDeleteTracker={() => {
-        if (activeTrackerId) {
-          handleRequestTrackerDeletion(activeTrackerId);
-        }
-      }}
-      canManageMembers={canManageMembers}
-      currentUserId={user?.uid}
-      gameVersion={activeGameVersion}
-      rivalPreferences={currentUserRivalPreferences}
-      onRivalPreferenceChange={handleRivalPreferenceChange}
-      rulesets={rulesets}
-      selectedRulesetId={data.rulesetId}
-      onRulesetSelect={handleRulesetChange}
-      onSynchronizeRules={handleSynchronizeRules}
-      onOpenRulesetEditor={handleOpenRulesetEditor}
-      isGuest={isGuest}
-      onSaveRulesetToCollection={() => openRulesetSaveModal("manual")}
-      rulesetDirty={!rulesetInSync}
-    />
-  ) : (
-    <div className="bg-[#f0f0f0] dark:bg-gray-900 min-h-screen p-2 sm:p-4 md:p-8 text-gray-800 dark:text-gray-200">
-      {manualLostSession && (
-        <AddLostPokemonModal
-          onClose={() => setManualLostSession(null)}
-          onAdd={handleManualAddFromModal}
-          playerNames={manualLostSession.playerLabels}
-          initial={manualLostSession.initial}
-          generationLimit={pokemonGenerationLimit}
-          generationSpritePath={generationSpritePath}
-          gameVersionId={activeGameVersionId || undefined}
-        />
-      )}
-      <SelectLossModal
-        isOpen={!isReadOnly && showLossModal}
-        onClose={() => {
-          setShowLossModal(false);
-          setPendingLossPair(null);
-        }}
-        onConfirm={handleConfirmLoss}
-        pair={pendingLossPair}
-        playerNames={resolvedPlayerNames}
-        generationSpritePath={generationSpritePath}
-        nicknamesEnabled={data.nicknamesEnabled ?? true}
-      />
-      <DeleteLinkModal
-        isOpen={!isReadOnly && showDeleteLinkModal}
-        onClose={() => {
-          setShowDeleteLinkModal(false);
-          setPendingDeletePair(null);
-        }}
-        onConfirm={handleConfirmDeleteLink}
-        pair={pendingDeletePair}
-        generationSpritePath={generationSpritePath}
-        playerNames={resolvedPlayerNames}
-        nicknamesEnabled={data.nicknamesEnabled ?? true}
-      />
-      <ResetModal
-        isOpen={!isReadOnly && showResetModal}
-        onClose={() => setShowResetModal(false)}
-        onConfirm={handleConfirmReset}
-      />
-      {showSearchModal && (
-        <TrackerSearchModal
-          isOpen={showSearchModal}
-          onClose={() => setShowSearchModal(false)}
-          playerNames={resolvedPlayerNames}
-          playerColors={playerColors}
-          team={data.team}
-          box={data.box}
-          graveyard={data.graveyard}
-          fossils={data.fossils ?? []}
-          items={data.items ?? []}
-          generationSpritePath={generationSpritePath}
-          gameVersionId={activeGameVersionId || undefined}
-        />
-      )}
-      {readOnlyNotice && activeTrackerId && (
-        <ReadOnlyNoticeBanner
-          key={activeTrackerId}
-          trackerId={activeTrackerId}
-          notice={readOnlyNotice}
-        />
-      )}
-      <div className="max-w-480 mx-auto bg-white dark:bg-gray-800 shadow-lg p-4 rounded-lg">
-        <header className="relative py-4 border-b-2 border-gray-300 dark:border-gray-700">
-          <div className="mx-auto max-w-full px-2 pr-14 sm:pr-16 xl:px-0 xl:pr-0 text-center">
-            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-3xl xl:text-3xl 2xl:text-4xl font-bold font-press-start tracking-tighter dark:text-gray-100">
-              {trackerTitleDisplay}
-            </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              {t("tracker.header.subtitle")}
-            </p>
-          </div>
-          <div className="absolute right-2 sm:right-4 top-2 sm:top-3 flex items-center gap-1 sm:gap-2 z-30">
-            {/* Desktop icons (>=xl) */}
-            <div className="hidden xl:flex items-center gap-1 sm:gap-2">
-              <button
-                onClick={() => setShowSearchModal(true)}
-                className={`p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white ${focusRingClasses}`}
-                aria-label={t("tracker.search.openWithShortcut")}
-                title={t("tracker.search.openWithShortcut")}
-              >
-                <FiSearch size={28} />
-              </button>
-              {!isReadOnly && (
-                <button
-                  onClick={handleReset}
-                  className={`p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white ${focusRingClasses}`}
-                  aria-label={t("tracker.actions.resetRun")}
-                  title={t("tracker.actions.resetRun")}
-                >
-                  <FiRotateCw size={28} />
-                </button>
-              )}
-              <span
-                aria-hidden
-                className="h-8 w-px bg-gray-300 dark:bg-gray-600"
-              />
-              <DarkModeToggle />
-              {(!isReadOnly || isGuest) && (
-                <button
-                  onClick={openSettingsPanel}
-                  className={`p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white ${focusRingClasses}`}
-                  aria-label={t("tracker.actions.settings")}
-                  title={t("tracker.actions.settings")}
-                >
-                  <FiSliders size={28} />
-                </button>
-              )}
-              <button
-                onClick={handleNavigateHome}
-                className={`p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white ${focusRingClasses}`}
-                aria-label={t("common.overview")}
-                title={t("common.overview")}
-              >
-                <FiHome size={28} />
-              </button>
-            </div>
-            {/* Mobile burger (<xl) */}
-            <button
-              className={`xl:hidden p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 ${focusRingClasses}`}
-              aria-label={t("tracker.menu.open")}
-              aria-expanded={mobileMenuOpen}
-              onClick={() => setMobileMenuOpen((v) => !v)}
-            >
-              <FiMenu size={26} />
-            </button>
-          </div>
-        </header>
-
-        {/* Mobile side drawer + backdrop */}
-        <div className="xl:hidden">
-          {/* Backdrop for outside click */}
-          <div
-            className={`fixed inset-0 bg-black/50 transition-opacity duration-300 ${mobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"} z-40`}
-            onClick={() => setMobileMenuOpen(false)}
-            aria-hidden
-          />
-          {/* Sliding panel */}
-          <div
-            className={`fixed top-0 right-0 h-full w-64 bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 shadow-xl transform transition-transform duration-300 ${mobileMenuOpen ? "translate-x-0" : "translate-x-full"} z-50`}
-            role="dialog"
-            aria-label={t("tracker.menu.dialog")}
-          >
-            <div className="p-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-              <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
-                {t("tracker.menu.title")}
-              </span>
-              <button
-                onClick={() => setMobileMenuOpen(false)}
-                className={`p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 ${focusRingClasses}`}
-                aria-label={t("tracker.menu.close")}
-              >
-                ✕
-              </button>
-            </div>
-            <div className="p-2 space-y-1">
-              <button
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  setShowSearchModal(true);
-                }}
-                className={`w-full text-left px-2 py-2 rounded-md text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 inline-flex items-center gap-2 ${focusRingClasses}`}
-                title={t("tracker.search.open")}
-              >
-                <FiSearch size={18} /> {t("tracker.search.open")}
-              </button>
-              {!isReadOnly && (
-                <button
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    handleReset();
-                  }}
-                  className={`w-full text-left px-2 py-2 rounded-md text-sm inline-flex items-center gap-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 ${focusRingClasses}`}
-                  title={t("tracker.menu.resetRun")}
-                >
-                  <FiRotateCw size={18} /> {t("tracker.menu.resetRun")}
-                </button>
-              )}
-              <div
-                aria-hidden
-                className="border-t border-gray-200 dark:border-gray-700"
-              />
-              <button
-                onClick={() => {
-                  const next = !isDark;
-                  setDarkMode(next);
-                  setIsDark(next);
-                }}
-                className={`w-full text-left px-2 py-2 rounded-md text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 inline-flex items-center gap-2 ${focusRingClasses}`}
-                title={
-                  isDark
-                    ? t("tracker.menu.lightMode")
-                    : t("tracker.menu.darkMode")
-                }
-              >
-                {isDark ? <FiSun size={18} /> : <FiMoon size={18} />}
-                {isDark
-                  ? t("tracker.menu.lightMode")
-                  : t("tracker.menu.darkMode")}
-              </button>
-              {(!isReadOnly || isGuest) && (
-                <button
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    openSettingsPanel();
-                  }}
-                  className={`w-full text-left px-2 py-2 rounded-md text-sm inline-flex items-center gap-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 ${focusRingClasses}`}
-                  title={t("tracker.menu.settings")}
-                >
-                  <FiSliders size={18} /> {t("tracker.menu.settings")}
-                </button>
-              )}
-              <button
-                onClick={handleNavigateHome}
-                className={`w-full text-left px-2 py-2 rounded-md text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 inline-flex items-center gap-2 ${focusRingClasses}`}
-                title={t("common.overview")}
-              >
-                <FiHome size={18} /> {t("tracker.menu.overview")}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <main className="grid grid-cols-1 xl:grid-cols-[64fr_36fr] gap-6 mt-6">
-          <div className="space-y-8">
-            <TeamTable
-              key={`team-${activeTrackerId}`}
-              title={t("team.teamTitle")}
-              data={data.team}
-              playerNames={resolvedPlayerNames}
-              playerColors={playerColors}
-              onEditLink={(pairId, payload) =>
-                handleEditLink("team", pairId, payload)
-              }
-              onEvolveLink={(pairId, playerIndex, newId) =>
-                handleEvolveLink("team", pairId, playerIndex, newId)
-              }
-              canonicalLinkIds={editableLinkIds}
-              onAddToGraveyard={handleAddToGraveyard}
-              onAddLink={handleAddTeamPair}
-              emptyMessage={t("team.teamEmpty")}
-              addDisabled={data.team.length >= 6}
-              addDisabledReason={t("team.teamFull")}
-              context="team"
-              onMoveToTeam={() => {}}
-              onMoveToBox={(pair) => {
-                if (isReadOnly) return;
-                setData((prev) => ({
-                  ...prev,
-                  team: prev.team.filter((p) => p.id !== pair.id),
-                  box: [...prev.box, pair],
-                }));
-              }}
-              pokemonGenerationLimit={pokemonGenerationLimit}
-              gameVersionId={activeGameVersionId || undefined}
-              readOnly={isReadOnly}
-              generationSpritePath={generationSpritePath}
-              useSpritesInTeamTable={userUseSpritesInTeamTable}
-              wikiId={effectiveWikiId}
-              badLinkIds={hiddenLinkIds}
-              onToggleBadLink={isReadOnly ? undefined : toggleHiddenLink}
-              filtersExpanded={boxFiltersExpanded}
-              nicknamesEnabled={data.nicknamesEnabled ?? true}
-            />
-            <TeamTable
-              key={`box-${activeTrackerId}`}
-              title={t("team.boxTitle")}
-              data={filteredBox}
-              playerNames={resolvedPlayerNames}
-              playerColors={playerColors}
-              onEditLink={(pairId, payload) =>
-                handleEditLink("box", pairId, payload)
-              }
-              onEvolveLink={(pairId, playerIndex, newId) =>
-                handleEvolveLink("box", pairId, playerIndex, newId)
-              }
-              canonicalLinkIds={editableLinkIds}
-              onAddToGraveyard={handleAddToGraveyard}
-              onDeleteLink={handleDeleteLink}
-              onAddLink={handleAddBoxPair}
-              emptyMessage={t("team.boxEmpty")}
-              context="box"
-              onMoveToTeam={(pair) =>
-                setData((prev) => {
-                  if (isReadOnly || prev.team.length >= 6) return prev;
-                  return {
-                    ...prev,
-                    box: prev.box.filter((p) => p.id !== pair.id),
-                    team: [...prev.team, pair],
-                  };
-                })
-              }
-              onMoveToBox={() => {}}
-              teamIsFull={data.team.length >= 6}
-              pokemonGenerationLimit={pokemonGenerationLimit}
-              gameVersionId={activeGameVersionId || undefined}
-              readOnly={isReadOnly}
-              generationSpritePath={generationSpritePath}
-              useSpritesInTeamTable={userUseSpritesInTeamTable}
-              wikiId={effectiveWikiId}
-              badLinkIds={hiddenLinkIds}
-              onToggleBadLink={isReadOnly ? undefined : toggleHiddenLink}
-              filtersExpanded={boxFiltersExpanded}
-              nicknamesEnabled={data.nicknamesEnabled ?? true}
-              filterBar={
-                <BoxFilters
-                  playerNames={resolvedPlayerNames}
-                  playerColors={playerColors}
-                  typeFilter={boxTypeFilter}
-                  onTypeFilterChange={handleBoxTypeFilterChange}
-                  hideHiddenLinks={boxHideHiddenLinks}
-                  onHideHiddenLinksChange={handleBoxHideHiddenLinksChange}
-                  hasHiddenLinks={hiddenLinkIds.size > 0}
-                  onResetHiddenLinks={resetAllHiddenLinks}
-                  playerTypeSlugs={playerTypeSlugs}
-                  expanded={boxFiltersExpanded}
-                  onExpandedChange={handleBoxFiltersExpandedChange}
-                />
-              }
-            />
-          </div>
-
-          <div className="space-y-6">
-            <InfoPanel
-              levelCaps={data.levelCaps}
-              rivalCaps={data.rivalCaps}
-              stats={data.stats}
-              playerNames={resolvedPlayerNames}
-              playerColors={playerColors}
-              onLevelCapToggle={handleLevelCapToggle}
-              onRivalCapToggleDone={handleRivalCapToggleDone}
-              onRivalCapReveal={handleRivalCapReveal}
-              onStatChange={handleStatChange}
-              onPlayerStatChange={handlePlayerStatChange}
-              legendaryTrackerEnabled={data.legendaryTrackerEnabled ?? true}
-              rivalCensorEnabled={data.rivalCensorEnabled ?? true}
-              rivalCensorMode={
-                data.rivalCensorMode ??
-                (data.rivalCensorEnabled === false ? "off" : "on")
-              }
-              hardcoreModeEnabled={data.hardcoreModeEnabled ?? true}
-              onlegendaryIncrement={handleLegendaryIncrement}
-              onlegendaryDecrement={handleLegendaryDecrement}
-              runStartedAt={data.runStartedAt ?? activeTrackerMeta?.createdAt}
-              gameVersion={activeGameVersion}
-              rivalPreferences={currentUserRivalPreferences}
-              activeTrackerId={activeTrackerId}
-              readOnly={isReadOnly}
-              generationSpritePath={generationSpritePath}
-              pokemonGenerationLimit={pokemonGenerationLimit}
-            />
-            <ItemTracker
-              playerNames={resolvedPlayerNames}
-              fossils={data.fossils || resolvedPlayerNames.map(() => [])}
-              items={data.items || resolvedPlayerNames.map(() => [])}
-              maxGeneration={itemGenerationLimit}
-              infiniteFossilsEnabled={data.infiniteFossilsEnabled ?? false}
-              onAddFossil={handleAddFossil}
-              onToggleBag={handleToggleFossilBag}
-              onRevive={(selectedIndices) =>
-                handleReviveFossils(selectedIndices, resolvedPlayerNames)
-              }
-              onUpdateFossils={handleUpdateFossilList}
-              onAddItems={handleAddItem}
-              onToggleItemBag={handleToggleItemBag}
-              onUseItem={handleUseStone}
-              onUpdateItems={handleUpdateStoneList}
-              readOnly={isReadOnly}
-              gameVersionId={activeGameVersionId || undefined}
-              allPokemonAndItems={activeTrackerAllPokemonAndItems}
-              generationSpritePath={generationSpritePath}
-              megaStoneSpriteStyle={data.megaStoneSpriteStyle ?? "item"}
-              onMegaStoneSpriteStyleToggle={handleMegaStoneSpriteStyleToggle}
-            />
-            <Rules
-              rules={data.rules}
-              onRulesChange={(rules) => setData((prev) => ({ ...prev, rules }))}
-              readOnly={isReadOnly}
-            />
-            <Graveyard
-              key={`graveyard-${activeTrackerId}`}
-              graveyard={data.graveyard}
-              canonicalLinkIds={editableLinkIds}
-              playerNames={resolvedPlayerNames}
-              playerColors={playerColors}
-              onManualAddClick={() => {
-                const playerLabels = [...resolvedPlayerNames];
-                setManualLostSession({
-                  playerLabels,
-                  initial: {
-                    location: "",
-                    locationSlug: null,
-                    members: playerLabels.map(() => ({
-                      id: null,
-                      nickname: "",
-                    })),
-                  },
-                });
-              }}
-              onEditPair={handleEditGraveyardPair}
-              onDeleteLink={handleDeleteLink}
-              readOnly={isReadOnly}
-              generationSpritePath={generationSpritePath}
-              pokemonGenerationLimit={pokemonGenerationLimit}
-              gameVersionId={activeGameVersionId || undefined}
-              wikiId={effectiveWikiId}
-              nicknamesEnabled={data.nicknamesEnabled ?? true}
-            />
-            <ClearedLocations locations={clearedLocations} />
-          </div>
-        </main>
-        <footer className="text-center mt-8 py-4 border-t-2 border-gray-200 dark:border-gray-700">
-          <a
-            href="https://github.com/joos-too/soullink-tracker"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-            title={t("tracker.footer.github")}
-          >
-            <FaGithub size={18} aria-hidden="true" />
-            <span className="text-sm">Coded by joos-too & FreakMediaLP</span>
-          </a>
-        </footer>
-      </div>
-
-      {reviveSession && (
-        <EditPairModal
-          onClose={() => {
-            setReviveSession(null);
-          }}
-          onSave={(payload) => {
-            handleAddBoxPair(payload);
-            const pokemonIds = payload.members.map((m) =>
-              normalizePokemonId(m.id),
-            );
-            const pokemonNames = payload.members.map((m) => m.name ?? "");
-            confirmRevival(pokemonIds, pokemonNames);
-            setReviveSession(null);
-          }}
-          playerLabels={reviveSession.playerLabels}
-          mode="create"
-          initial={reviveSession.initial}
-          generationLimit={pokemonGenerationLimit}
-          gameVersionId={activeGameVersionId || undefined}
-          generationSpritePath={generationSpritePath}
-          nicknamesEnabled={data.nicknamesEnabled ?? true}
-        />
-      )}
-    </div>
-  );
 
   return (
     <MultiLocaleSearchContext.Provider value={userMultiLocaleSearch}>
@@ -2280,7 +1706,319 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
           rulesetOverwriteName={rulesetOverwriteName}
         />
       )}
-      {trackerElement}
+      {realtimeStatus !== "idle" && realtimeStatus !== "connected" && (
+        <RealtimeConnectionBanner
+          status={realtimeStatus}
+          onRetry={retryRealtimeSync}
+        />
+      )}
+      {showSettings ? (
+        <SettingsPage
+          trackerTitle={activeTrackerMeta?.title ?? t("tracker.defaultTitle")}
+          onTitleChange={handleTitleChange}
+          playerNames={resolvedPlayerNames}
+          onPlayerNameChange={handlePlayerNameChange}
+          onBack={closeSettingsPanel}
+          legendaryTrackerEnabled={data.legendaryTrackerEnabled ?? true}
+          onlegendaryTrackerToggle={handleLegendaryTrackerToggle}
+          rivalCensorMode={
+            data.rivalCensorMode ??
+            (data.rivalCensorEnabled === false ? "off" : "on")
+          }
+          onRivalCensorModeChange={handleRivalCensorToggle}
+          hardcoreModeEnabled={data.hardcoreModeEnabled ?? true}
+          onHardcoreModeToggle={handleHardcoreModeToggle}
+          nicknamesEnabled={data.nicknamesEnabled ?? true}
+          onNicknamesToggle={handleNicknamesToggle}
+          infiniteFossilsEnabled={data.infiniteFossilsEnabled ?? false}
+          onInfiniteFossilsToggle={handleInfiniteFossilsToggle}
+          allPokemonAndItems={activeTrackerAllPokemonAndItems}
+          onAllPokemonAndItemsToggle={handleAllPokemonAndItemsToggle}
+          isPublic={activeTrackerMeta?.isPublic ?? false}
+          onPublicToggle={handlePublicToggle}
+          members={trackerMembers}
+          guests={trackerGuests}
+          onInviteMember={handleInviteMember}
+          onRemoveMember={handleRemoveMember}
+          onRequestDeleteTracker={() => {
+            if (activeTrackerId) {
+              handleRequestTrackerDeletion(activeTrackerId);
+            }
+          }}
+          canManageMembers={canManageMembers}
+          currentUserId={user?.uid}
+          gameVersion={activeGameVersion}
+          rivalPreferences={currentUserRivalPreferences}
+          onRivalPreferenceChange={handleRivalPreferenceChange}
+          rulesets={rulesets}
+          selectedRulesetId={data.rulesetId}
+          onRulesetSelect={handleRulesetChange}
+          onSynchronizeRules={handleSynchronizeRules}
+          onOpenRulesetEditor={handleOpenRulesetEditor}
+          isGuest={isGuest}
+          onSaveRulesetToCollection={() => openRulesetSaveModal("manual")}
+          rulesetDirty={!rulesetInSync}
+        />
+      ) : (
+        <TrackerEditor
+          trackerId={activeTrackerId}
+          trackerTitle={trackerTitleDisplay}
+          isReadOnly={isReadOnly}
+          isGuest={isGuest}
+          readOnlyNotice={readOnlyNotice}
+          onReset={handleReset}
+          onOpenSettings={openSettingsPanel}
+          onNavigateHome={handleNavigateHome}
+          addLostModalProps={
+            manualLostSession
+              ? {
+                  onClose: () => setManualLostSession(null),
+                  onAdd: handleManualAddFromModal,
+                  playerNames: manualLostSession.playerLabels,
+                  initial: manualLostSession.initial,
+                  generationLimit: pokemonGenerationLimit,
+                  generationSpritePath,
+                  gameVersionId: activeGameVersionId || undefined,
+                }
+              : null
+          }
+          selectLossModalProps={{
+            isOpen: !isReadOnly && showLossModal,
+            onClose: () => {
+              setShowLossModal(false);
+              setPendingLossPair(null);
+            },
+            onConfirm: handleConfirmLoss,
+            pair: pendingLossPair,
+            playerNames: resolvedPlayerNames,
+            generationSpritePath,
+            nicknamesEnabled: data.nicknamesEnabled ?? true,
+          }}
+          deleteLinkModalProps={{
+            isOpen: !isReadOnly && showDeleteLinkModal,
+            onClose: () => {
+              setShowDeleteLinkModal(false);
+              setPendingDeletePair(null);
+            },
+            onConfirm: handleConfirmDeleteLink,
+            pair: pendingDeletePair,
+            generationSpritePath,
+            playerNames: resolvedPlayerNames,
+            nicknamesEnabled: data.nicknamesEnabled ?? true,
+          }}
+          resetModalProps={{
+            isOpen: !isReadOnly && showResetModal,
+            onClose: () => setShowResetModal(false),
+            onConfirm: handleConfirmReset,
+          }}
+          searchModalProps={{
+            playerNames: resolvedPlayerNames,
+            playerColors,
+            team: data.team,
+            box: data.box,
+            graveyard: data.graveyard,
+            fossils: data.fossils ?? [],
+            items: data.items ?? [],
+            generationSpritePath,
+            gameVersionId: activeGameVersionId || undefined,
+          }}
+          teamTableProps={{
+            title: t("team.teamTitle"),
+            data: data.team,
+            playerNames: resolvedPlayerNames,
+            playerColors,
+            onEditLink: (pairId, payload) =>
+              handleEditLink("team", pairId, payload),
+            onEvolveLink: (pairId, playerIndex, newId) =>
+              handleEvolveLink("team", pairId, playerIndex, newId),
+            canonicalLinkIds: editableLinkIds,
+            onAddToGraveyard: handleAddToGraveyard,
+            onAddLink: handleAddTeamPair,
+            emptyMessage: t("team.teamEmpty"),
+            addDisabled: data.team.length >= 6,
+            addDisabledReason: t("team.teamFull"),
+            context: "team",
+            onMoveToTeam: () => {},
+            onMoveToBox: (pair) => {
+              if (isReadOnly) return;
+              setData((previous) => ({
+                ...previous,
+                team: previous.team.filter((entry) => entry.id !== pair.id),
+                box: [...previous.box, pair],
+              }));
+            },
+            pokemonGenerationLimit,
+            gameVersionId: activeGameVersionId || undefined,
+            readOnly: isReadOnly,
+            generationSpritePath,
+            useSpritesInTeamTable: userUseSpritesInTeamTable,
+            wikiId: effectiveWikiId,
+            badLinkIds: hiddenLinkIds,
+            onToggleBadLink: isReadOnly ? undefined : toggleHiddenLink,
+            filtersExpanded: boxFiltersExpanded,
+            nicknamesEnabled: data.nicknamesEnabled ?? true,
+          }}
+          boxTableProps={{
+            title: t("team.boxTitle"),
+            data: filteredBox,
+            playerNames: resolvedPlayerNames,
+            playerColors,
+            onEditLink: (pairId, payload) =>
+              handleEditLink("box", pairId, payload),
+            onEvolveLink: (pairId, playerIndex, newId) =>
+              handleEvolveLink("box", pairId, playerIndex, newId),
+            canonicalLinkIds: editableLinkIds,
+            onAddToGraveyard: handleAddToGraveyard,
+            onDeleteLink: handleDeleteLink,
+            onAddLink: handleAddBoxPair,
+            emptyMessage: t("team.boxEmpty"),
+            context: "box",
+            onMoveToTeam: (pair) =>
+              setData((previous) => {
+                if (isReadOnly || previous.team.length >= 6) return previous;
+                return {
+                  ...previous,
+                  box: previous.box.filter((entry) => entry.id !== pair.id),
+                  team: [...previous.team, pair],
+                };
+              }),
+            onMoveToBox: () => {},
+            teamIsFull: data.team.length >= 6,
+            pokemonGenerationLimit,
+            gameVersionId: activeGameVersionId || undefined,
+            readOnly: isReadOnly,
+            generationSpritePath,
+            useSpritesInTeamTable: userUseSpritesInTeamTable,
+            wikiId: effectiveWikiId,
+            badLinkIds: hiddenLinkIds,
+            onToggleBadLink: isReadOnly ? undefined : toggleHiddenLink,
+            filtersExpanded: boxFiltersExpanded,
+            nicknamesEnabled: data.nicknamesEnabled ?? true,
+          }}
+          boxFiltersProps={{
+            playerNames: resolvedPlayerNames,
+            playerColors,
+            typeFilter: boxTypeFilter,
+            onTypeFilterChange: handleBoxTypeFilterChange,
+            hideHiddenLinks: boxHideHiddenLinks,
+            onHideHiddenLinksChange: handleBoxHideHiddenLinksChange,
+            hasHiddenLinks: hiddenLinkIds.size > 0,
+            onResetHiddenLinks: resetAllHiddenLinks,
+            playerTypeSlugs,
+            expanded: boxFiltersExpanded,
+            onExpandedChange: handleBoxFiltersExpandedChange,
+          }}
+          infoPanelProps={{
+            levelCaps: data.levelCaps,
+            rivalCaps: data.rivalCaps,
+            stats: data.stats,
+            playerNames: resolvedPlayerNames,
+            playerColors,
+            onLevelCapToggle: handleLevelCapToggle,
+            onRivalCapToggleDone: handleRivalCapToggleDone,
+            onRivalCapReveal: handleRivalCapReveal,
+            onStatChange: handleStatChange,
+            onPlayerStatChange: handlePlayerStatChange,
+            legendaryTrackerEnabled: data.legendaryTrackerEnabled ?? true,
+            rivalCensorEnabled: data.rivalCensorEnabled ?? true,
+            rivalCensorMode:
+              data.rivalCensorMode ??
+              (data.rivalCensorEnabled === false ? "off" : "on"),
+            hardcoreModeEnabled: data.hardcoreModeEnabled ?? true,
+            onlegendaryIncrement: handleLegendaryIncrement,
+            onlegendaryDecrement: handleLegendaryDecrement,
+            runStartedAt: data.runStartedAt ?? activeTrackerMeta?.createdAt,
+            gameVersion: activeGameVersion,
+            rivalPreferences: currentUserRivalPreferences,
+            activeTrackerId,
+            readOnly: isReadOnly,
+            generationSpritePath,
+            pokemonGenerationLimit,
+          }}
+          itemTrackerProps={{
+            playerNames: resolvedPlayerNames,
+            fossils: data.fossils || resolvedPlayerNames.map(() => []),
+            items: data.items || resolvedPlayerNames.map(() => []),
+            maxGeneration: itemGenerationLimit,
+            infiniteFossilsEnabled: data.infiniteFossilsEnabled ?? false,
+            onAddFossil: handleAddFossil,
+            onToggleBag: handleToggleFossilBag,
+            onRevive: (selectedIndices) =>
+              handleReviveFossils(selectedIndices, resolvedPlayerNames),
+            onUpdateFossils: handleUpdateFossilList,
+            onAddItems: handleAddItem,
+            onToggleItemBag: handleToggleItemBag,
+            onUseItem: handleUseStone,
+            onUpdateItems: handleUpdateStoneList,
+            readOnly: isReadOnly,
+            gameVersionId: activeGameVersionId || undefined,
+            allPokemonAndItems: activeTrackerAllPokemonAndItems,
+            generationSpritePath,
+            megaStoneSpriteStyle: data.megaStoneSpriteStyle ?? "item",
+            onMegaStoneSpriteStyleToggle: handleMegaStoneSpriteStyleToggle,
+          }}
+          rulesProps={{
+            rules: data.rules,
+            onRulesChange: (rules) =>
+              setData((previous) => ({ ...previous, rules })),
+            readOnly: isReadOnly,
+          }}
+          graveyardProps={{
+            graveyard: data.graveyard,
+            canonicalLinkIds: editableLinkIds,
+            playerNames: resolvedPlayerNames,
+            playerColors,
+            onManualAddClick: () => {
+              const playerLabels = [...resolvedPlayerNames];
+              setManualLostSession({
+                playerLabels,
+                initial: {
+                  location: "",
+                  locationSlug: null,
+                  members: playerLabels.map(() => ({
+                    id: null,
+                    nickname: "",
+                  })),
+                },
+              });
+            },
+            onEditPair: handleEditGraveyardPair,
+            onDeleteLink: handleDeleteLink,
+            readOnly: isReadOnly,
+            generationSpritePath,
+            pokemonGenerationLimit,
+            gameVersionId: activeGameVersionId || undefined,
+            wikiId: effectiveWikiId,
+            nicknamesEnabled: data.nicknamesEnabled ?? true,
+          }}
+          clearedLocationsProps={{ locations: clearedLocations }}
+          reviveModalProps={
+            reviveSession
+              ? {
+                  onClose: () => setReviveSession(null),
+                  onSave: (payload) => {
+                    handleAddBoxPair(payload);
+                    const pokemonIds = payload.members.map((member) =>
+                      normalizePokemonId(member.id),
+                    );
+                    const pokemonNames = payload.members.map(
+                      (member) => member.name ?? "",
+                    );
+                    confirmRevival(pokemonIds, pokemonNames);
+                    setReviveSession(null);
+                  },
+                  playerLabels: reviveSession.playerLabels,
+                  mode: "create",
+                  initial: reviveSession.initial,
+                  generationLimit: pokemonGenerationLimit,
+                  gameVersionId: activeGameVersionId || undefined,
+                  generationSpritePath,
+                  nicknamesEnabled: data.nicknamesEnabled ?? true,
+                }
+              : null
+          }
+        />
+      )}
     </MultiLocaleSearchContext.Provider>
   );
 };
