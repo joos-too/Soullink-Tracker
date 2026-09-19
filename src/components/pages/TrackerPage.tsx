@@ -1,3 +1,6 @@
+import RulesetSaveModal from "@/src/components/modals/RulesetSaveModal.tsx";
+import TrackerSearchModal from "@/src/components/modals/TrackerSearchModal.tsx";
+import SettingsPage from "@/src/components/pages/SettingsPage.tsx";
 import { useAppSession } from "@/src/app/AppSession";
 import { LAST_TRACKER_STORAGE_KEY } from "@/src/app/trackerStorage";
 import LoadingScreen from "@/src/app/LoadingScreen";
@@ -44,12 +47,12 @@ import Rules from "@/src/components/widgets/Rules.tsx";
 import Graveyard from "@/src/components/widgets/Graveyard.tsx";
 import ClearedLocations from "@/src/components/widgets/ClearedLocations.tsx";
 import AddLostPokemonModal from "@/src/components/modals/AddLostPokemonModal.tsx";
-import RulesetSaveModal from "@/src/components/modals/RulesetSaveModal.tsx";
+
 import ItemTracker from "@/src/components/widgets/ItemTracker.tsx";
 import { getGenerationSpritePath } from "@/src/services/sprites";
 import SelectLossModal from "@/src/components/modals/SelectLossModal.tsx";
 import DeleteLinkModal from "@/src/components/modals/DeleteLinkModal.tsx";
-import SettingsPage from "@/src/components/pages/SettingsPage.tsx";
+
 import ResetModal from "@/src/components/modals/ResetModal.tsx";
 import EditPairModal from "@/src/components/modals/EditPairModal.tsx";
 import { MultiLocaleSearchContext } from "@/src/hooks/useMultiLocaleSearch.ts";
@@ -58,7 +61,7 @@ import DarkModeToggle, {
   setDarkMode,
 } from "@/src/components/toggles/DarkModeToggle.tsx";
 import DeleteTrackerModal from "@/src/components/modals/DeleteTrackerModal.tsx";
-import TrackerSearchModal from "@/src/components/modals/TrackerSearchModal.tsx";
+
 import ReadOnlyNoticeBanner from "@/src/components/banners/ReadOnlyNoticeBanner.tsx";
 import { focusRingClasses } from "@/src/styles/focusRing";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
@@ -1821,19 +1824,21 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
         onClose={() => setShowResetModal(false)}
         onConfirm={handleConfirmReset}
       />
-      <TrackerSearchModal
-        isOpen={showSearchModal}
-        onClose={() => setShowSearchModal(false)}
-        playerNames={resolvedPlayerNames}
-        playerColors={playerColors}
-        team={data.team}
-        box={data.box}
-        graveyard={data.graveyard}
-        fossils={data.fossils ?? []}
-        items={data.items ?? []}
-        generationSpritePath={generationSpritePath}
-        gameVersionId={activeGameVersionId || undefined}
-      />
+      {showSearchModal && (
+        <TrackerSearchModal
+          isOpen={showSearchModal}
+          onClose={() => setShowSearchModal(false)}
+          playerNames={resolvedPlayerNames}
+          playerColors={playerColors}
+          team={data.team}
+          box={data.box}
+          graveyard={data.graveyard}
+          fossils={data.fossils ?? []}
+          items={data.items ?? []}
+          generationSpritePath={generationSpritePath}
+          gameVersionId={activeGameVersionId || undefined}
+        />
+      )}
       {readOnlyNotice && activeTrackerId && (
         <ReadOnlyNoticeBanner
           key={activeTrackerId}

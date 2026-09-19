@@ -42,6 +42,7 @@ Update the Handbook for any major changes.
 - Regenerate database types: `npm run supabase:types`
 - Create a database migration: `npm run supabase:migration:new -- <name>`
 - Create a production build: `npm run build`
+- Validate production bundle boundaries and run browser smoke tests with a mocked backend: `npm run test:bundle`
 - Preview the build: `npm run preview`
 - Format the repo: `npm run prettier`
 - Check formatting: `npm run prettier:check`
@@ -72,6 +73,8 @@ When changing tracker shape, add a database migration, update state schema/versi
 Runtime sanitization should only be used as a last resort. Prefer an idempotent SQL/data migration for existing rows.
 
 Tracker selection is driven by the URL, not shared active-tracker state. `src/app/TrackerRoute.tsx` resolves access before mounting the editor, keyed by tracker ID. Keep tracker loading, autosave, and modal effects inside that route boundary; home and account pages must not load a remembered tracker's state. Settings permissions control rendering and must not trigger search-parameter navigation from an effect. `useActiveTracker` flushes pending debounced edits on ordinary unmount; successful delete/leave flows navigate home with replacement, suspending and discarding pending writes before the operation and resuming on failure.
+
+Production chunk groups use Vite's `build.rolldownOptions.output.codeSplitting` with strict execution order. React, Supabase, i18n, and the three large generated datasets have separate cacheable chunks. Keep wiki preferences in `src/utils/wikiPreferences.ts`; importing Pokémon URL lookup helpers into the app session would eagerly load the Pokémon dataset. Registration is eagerly loaded with login. All UI inside the tracker, including Settings, search, and ruleset saving, is eagerly imported by TrackerPage to avoid interaction-time loading screens. Keep the tracker route itself lazy. Tracker creation is eagerly imported by the home route as well. `scripts/check-bundle.mjs` checks the build manifest for missing imports, static chunk cycles, the 500 kB chunk budget, and dataset/lazy-UI boundaries.
 
 ## Localization Rules
 

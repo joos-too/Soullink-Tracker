@@ -17,7 +17,7 @@ import {
   DEFAULT_WIKI_DE,
   DEFAULT_WIKI_EN,
   type WikiId,
-} from "@/src/utils/wiki";
+} from "@/src/utils/wikiPreferences";
 import { DEFAULT_RULESET_ID, DEFAULT_RULESET_ID_EN } from "@/src/data/rulesets";
 import { isTrackerUuid } from "./trackerStorage";
 import {

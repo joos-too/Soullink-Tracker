@@ -7,11 +7,11 @@ import {
   useLocation,
 } from "react-router-dom";
 import LoginPage from "@/src/components/pages/LoginPage";
-import RegisterPage from "@/src/components/pages/RegisterPage";
 import { AppSessionProvider, useAppSession } from "@/src/app/AppSession";
 import LoadingScreen from "@/src/app/LoadingScreen";
 import { getInitialActiveTrackerId } from "@/src/app/trackerStorage";
 
+import RegisterPage from "@/src/components/pages/RegisterPage";
 const HomeRoute = lazy(() => import("@/src/app/HomeRoute"));
 const TrackerRoute = lazy(() => import("@/src/app/TrackerRoute"));
 const AccountRoute = lazy(() => import("@/src/app/AccountRoute"));
