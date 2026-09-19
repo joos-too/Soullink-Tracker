@@ -256,10 +256,16 @@ select is(
   null::text,
   'an editor cannot read participant email addresses'
 );
+select set_config(
+  'test.tracker_initial_revision',
+  (select revision::text from public.tracker_states
+   where tracker_id = '30000000-0000-0000-0000-000000000001'),
+  true
+);
 select lives_ok(
   $$select public.update_tracker_state(
     '30000000-0000-0000-0000-000000000001',
-    8,
+    current_setting('test.tracker_initial_revision')::bigint,
     (select state || '{"hardcoreModeEnabled":true}'::jsonb
      from public.tracker_states
      where tracker_id = '30000000-0000-0000-0000-000000000001')
@@ -272,19 +278,19 @@ select is(
     from public.tracker_states
     where tracker_id = '30000000-0000-0000-0000-000000000001'
   ),
-  9::bigint,
+  current_setting('test.tracker_initial_revision')::bigint + 1,
   'state RPC increments the revision'
 );
 select throws_ok(
   $$select public.update_tracker_state(
     '30000000-0000-0000-0000-000000000001',
-    8,
+    current_setting('test.tracker_initial_revision')::bigint,
     (select state from public.tracker_states
      where tracker_id = '30000000-0000-0000-0000-000000000001')
   )$$,
-  '40001',
+  'PT409',
   'state_revision_conflict',
-  'a stale revision is rejected'
+  'a stale revision is rejected with a non-retryable HTTP conflict'
 );
 
 select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000003', true);

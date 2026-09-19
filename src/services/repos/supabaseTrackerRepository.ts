@@ -57,7 +57,7 @@ export class TrackerStateConflictError extends Error {
 }
 
 const toError = (error: { message: string; code?: string }): Error => {
-  if (error.code === "40001" || error.message === "state_revision_conflict") {
+  if (error.code === "PT409" || error.message === "state_revision_conflict") {
     return new TrackerStateConflictError();
   }
   return Object.assign(new Error(error.message), { code: error.code });

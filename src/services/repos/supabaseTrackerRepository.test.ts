@@ -1,5 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { subscribeToSupabaseTrackerState } from "./supabaseTrackerRepository.ts";
+import {
+  subscribeToSupabaseTrackerState,
+  TrackerStateConflictError,
+  updateSupabaseTrackerState,
+} from "./supabaseTrackerRepository.ts";
+import { createInitialState } from "@/src/services/init.ts";
 
 const realtime = vi.hoisted(() => {
   const channel = {
@@ -11,10 +16,46 @@ const realtime = vi.hoisted(() => {
   return {
     channel,
     client: {
+      rpc: vi.fn(),
       channel: vi.fn(() => channel),
       removeChannel: vi.fn(async () => "ok"),
     },
   };
+});
+
+describe("tracker state save errors", () => {
+  beforeEach(() => {
+    realtime.client.rpc.mockReset();
+  });
+
+  it.each([
+    { code: "PT409", message: "state_revision_conflict" },
+    { code: "PT409", message: "Conflict" },
+    { code: "40001", message: "state_revision_conflict" },
+  ])("recognizes revision conflicts: $code / $message", async (error) => {
+    realtime.client.rpc.mockResolvedValue({ data: null, error });
+
+    await expect(
+      updateSupabaseTrackerState("tracker-id", 8, createInitialState()),
+    ).rejects.toBeInstanceOf(TrackerStateConflictError);
+    expect(realtime.client.rpc).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not classify a real serialization failure as a revision conflict", async () => {
+    const error = {
+      code: "40001",
+      message: "could not serialize access due to concurrent update",
+    };
+    realtime.client.rpc.mockResolvedValue({ data: null, error });
+
+    const result = updateSupabaseTrackerState(
+      "tracker-id",
+      8,
+      createInitialState(),
+    );
+    await expect(result).rejects.toMatchObject(error);
+    await expect(result).rejects.not.toBeInstanceOf(TrackerStateConflictError);
+  });
 });
 
 vi.mock("@/src/services/backend/supabase.ts", () => ({

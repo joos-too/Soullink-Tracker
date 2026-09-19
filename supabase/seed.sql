@@ -112,8 +112,8 @@ set
     '10000000-0000-0000-0000-000000000001'::uuid,
     '10000000-0000-0000-0000-000000000002'::uuid
   ),
-  use_generation_sprites = id = '10000000-0000-0000-0000-000000000001'::uuid,
-  use_sprites_in_team_table = id = '10000000-0000-0000-0000-000000000001'::uuid,
+  use_generation_sprites = id = '10000000-0000-0000-0000-000000000003'::uuid,
+  use_sprites_in_team_table = id = '10000000-0000-0000-0000-000000000003'::uuid,
   wiki_id = case
     when id = '10000000-0000-0000-0000-000000000001'::uuid then 'pokewiki'
       end;
