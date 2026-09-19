@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { FiAlertTriangle, FiRefreshCw, FiWifi } from "react-icons/fi";
 import { useTranslation } from "react-i18next";
 import type { TrackerRealtimeStatus } from "@/src/hooks/useActiveTracker.ts";
@@ -7,15 +7,37 @@ import { focusRingClasses } from "@/src/styles/focusRing.ts";
 interface RealtimeConnectionBannerProps {
   status: Exclude<TrackerRealtimeStatus, "idle" | "connected">;
   onRetry: () => void;
+  delayMs?: number;
 }
 
 const RealtimeConnectionBanner: React.FC<RealtimeConnectionBannerProps> = ({
   status,
   onRetry,
+  delayMs = 500,
 }) => {
   const { t } = useTranslation();
   const isWarning = status === "disconnected" || status === "resync-error";
   const Icon = isWarning ? FiAlertTriangle : FiWifi;
+  const shouldDelay =
+    status === "connecting" ||
+    status === "resyncing" ||
+    status === "disconnected";
+  const [visibleStatus, setVisibleStatus] = useState<
+    RealtimeConnectionBannerProps["status"] | null
+  >(() => (shouldDelay ? null : status));
+
+  useEffect(() => {
+    if (!shouldDelay) {
+      setVisibleStatus(status);
+      return;
+    }
+
+    setVisibleStatus(null);
+    const timer = window.setTimeout(() => setVisibleStatus(status), delayMs);
+    return () => window.clearTimeout(timer);
+  }, [delayMs, shouldDelay, status]);
+
+  if (shouldDelay && visibleStatus !== status) return null;
 
   return (
     <div
