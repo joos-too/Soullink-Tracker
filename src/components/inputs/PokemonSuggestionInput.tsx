@@ -1,3 +1,4 @@
+import SpriteImage from "@/src/components/other/SpriteImage.tsx";
 import React, { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { searchPokemonNames } from "@/src/services/search/pokemonSearch.ts";
@@ -65,7 +66,7 @@ const PokemonSuggestionInput: React.FC<PokemonSuggestionInputProps> = ({
         return (
           <div className="flex items-center gap-2">
             {suggestionSpriteUrl ? (
-              <img
+              <SpriteImage
                 src={suggestionSpriteUrl}
                 alt=""
                 className="h-6 w-6 shrink-0 object-contain"
@@ -78,7 +79,7 @@ const PokemonSuggestionInput: React.FC<PokemonSuggestionInputProps> = ({
       }}
       endAdornment={
         spriteUrl ? (
-          <img
+          <SpriteImage
             src={spriteUrl}
             alt=""
             aria-hidden="true"

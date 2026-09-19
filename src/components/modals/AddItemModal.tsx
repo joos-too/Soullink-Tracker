@@ -1,3 +1,4 @@
+import SpriteImage from "@/src/components/other/SpriteImage.tsx";
 import React, { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { STONES, MEGA_STONES } from "@/src/data/special-items.ts";
@@ -232,7 +233,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
                           : "border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
                       }`}
                     >
-                      <img
+                      <SpriteImage
                         src={`/stone-sprites/${s.sprite}`}
                         alt=""
                         className="w-10 h-10 object-contain"
@@ -285,7 +286,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
                           : "border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
                       }`}
                     >
-                      <img
+                      <SpriteImage
                         src={
                           megaStoneSpriteStyle === "pokemon"
                             ? getSpriteUrlById(

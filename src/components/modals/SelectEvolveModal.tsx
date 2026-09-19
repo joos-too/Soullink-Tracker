@@ -1,3 +1,4 @@
+import SpriteImage from "@/src/components/other/SpriteImage.tsx";
 import React, { useEffect, useId, useMemo, useRef, useState } from "react";
 import {
   getOfficialArtworkUrlById,
@@ -352,7 +353,7 @@ const SelectEvolveModal: React.FC<SelectEvolveModalProps> = ({
                             }
                             className="h-4 w-4 accent-green-600"
                           />
-                          <img
+                          <SpriteImage
                             src={
                               useSpritesEverywhere
                                 ? getSpriteUrlById(ev.id, generationSpritePath)
