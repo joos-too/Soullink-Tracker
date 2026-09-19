@@ -18,7 +18,7 @@ import ToggleSwitch from "@/src/components/toggles/ToggleSwitch.tsx";
 import { useTranslation } from "react-i18next";
 import LanguageToggle from "@/src/components/toggles/LanguageToggle.tsx";
 import Tooltip from "@/src/components/other/Tooltip.tsx";
-import { WIKIS, type WikiId } from "@/src/utils/wiki.ts";
+import { WIKIS, type WikiId } from "@/src/utils/wikiPreferences";
 
 interface UserSettingsPageProps {
   email?: string | null;

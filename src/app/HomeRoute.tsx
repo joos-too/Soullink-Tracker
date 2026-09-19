@@ -11,6 +11,7 @@ import {
 import { sanitizeRules } from "@/src/services/init";
 import { createTracker, TrackerOperationError } from "@/src/services/trackers";
 import { useAppSession } from "./AppSession";
+
 export default function HomeRoute() {
   const navigate = useNavigate();
   const {
@@ -129,18 +130,20 @@ export default function HomeRoute() {
         onDisplayNameChange={handleDisplayNameChange}
         trackerSummaries={trackerSummaries}
       />{" "}
-      <CreateTrackerModal
-        isOpen={showCreateModal}
-        onClose={() => {
-          setShowCreateModal(false);
-          setCreateTrackerError(null);
-        }}
-        onSubmit={handleCreateTrackerSubmit}
-        isSubmitting={createTrackerLoading}
-        error={createTrackerError}
-        rulesets={rulesets}
-        defaultRulesetId={defaultLocaleRulesetId}
-      />
+      {showCreateModal && (
+        <CreateTrackerModal
+          isOpen={showCreateModal}
+          onClose={() => {
+            setShowCreateModal(false);
+            setCreateTrackerError(null);
+          }}
+          onSubmit={handleCreateTrackerSubmit}
+          isSubmitting={createTrackerLoading}
+          error={createTrackerError}
+          rulesets={rulesets}
+          defaultRulesetId={defaultLocaleRulesetId}
+        />
+      )}
     </>
   );
 }
