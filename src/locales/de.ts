@@ -399,6 +399,17 @@ export const de = {
         "Eine andere Sitzung hat neuere Änderungen gespeichert. Lade den Tracker neu, bevor du weiterarbeitest, damit nichts überschrieben wird.",
       reload: "Tracker neu laden",
     },
+    realtime: {
+      connecting:
+        "Live-Aktualisierungen werden verbunden… Du kannst weiterarbeiten.",
+      disconnected:
+        "Live-Aktualisierungen sind nicht verfügbar. Du kannst weiterarbeiten; Änderungen werden entweder gespeichert oder du wirst aufgefordert, die Serverversion zu laden.",
+      resyncing:
+        "Verbindung wiederhergestellt. Deine letzten Änderungen werden synchronisiert…",
+      "resync-error":
+        "Deine letzten Änderungen konnten nicht synchronisiert werden. Sie sind hier weiterhin sichtbar; versuche es erneut oder lade bei einem Konflikt die Serverversion.",
+      retry: "Erneut versuchen",
+    },
   },
   team: {
     teamTitle: "Team",
