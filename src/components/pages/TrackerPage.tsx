@@ -33,7 +33,7 @@ import { getGenerationSpritePath } from "@/src/services/sprites";
 import { MultiLocaleSearchContext } from "@/src/hooks/useMultiLocaleSearch.ts";
 import DeleteTrackerModal from "@/src/components/modals/DeleteTrackerModal.tsx";
 import RealtimeConnectionBanner from "@/src/components/banners/RealtimeConnectionBanner.tsx";
-import { focusRingClasses } from "@/src/styles/focusRing";
+import TrackerConflictBanner from "@/src/components/banners/TrackerConflictBanner.tsx";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {
   setTrackerVisibility,
@@ -1663,26 +1663,6 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
 
   return (
     <MultiLocaleSearchContext.Provider value={userMultiLocaleSearch}>
-      {stateConflict && (
-        <div
-          role="alert"
-          className="fixed inset-x-4 top-4 z-[100] mx-auto max-w-lg rounded-lg border border-amber-300 bg-amber-50 p-4 shadow-lg dark:border-amber-700 dark:bg-amber-950"
-        >
-          <p className="font-semibold text-amber-900 dark:text-amber-100">
-            {t("app.stateConflict.title")}
-          </p>
-          <p className="mt-1 text-sm text-amber-800 dark:text-amber-200">
-            {t("app.stateConflict.description")}
-          </p>
-          <button
-            type="button"
-            onClick={() => void handleReloadAfterStateConflict()}
-            className={`mt-3 rounded-md bg-amber-700 px-3 py-2 text-sm font-semibold text-white hover:bg-amber-800 ${focusRingClasses}`}
-          >
-            {t("app.stateConflict.reload")}
-          </button>
-        </div>
-      )}
       <DeleteTrackerModal
         isOpen={Boolean(trackerPendingDelete)}
         trackerTitle={trackerPendingDelete?.title}
@@ -1704,6 +1684,11 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
           hasUserRulesetWithSameId={hasUserRulesetWithSameId}
           rulesetCopyName={rulesetCopyName}
           rulesetOverwriteName={rulesetOverwriteName}
+        />
+      )}
+      {stateConflict && (
+        <TrackerConflictBanner
+          onReload={() => void handleReloadAfterStateConflict()}
         />
       )}
       {realtimeStatus !== "idle" && realtimeStatus !== "connected" && (
