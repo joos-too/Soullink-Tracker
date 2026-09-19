@@ -9,11 +9,21 @@ import {
 import type { AppState } from "@/types";
 import { createInitialState } from "@/src/services/init.ts";
 import {
+  acceptTrackerStateSnapshot,
+  fetchTrackerStateSnapshot,
   getTrackerState,
   saveTrackerState,
   subscribeToTrackerState,
   TrackerStateConflictError,
 } from "@/src/services/repos/trackerRepository.ts";
+
+export type TrackerRealtimeStatus =
+  | "idle"
+  | "connecting"
+  | "connected"
+  | "disconnected"
+  | "resyncing"
+  | "resync-error";
 
 export interface UseActiveTrackerOptions {
   activeTrackerId: string | null;
@@ -30,7 +40,9 @@ export interface UseActiveTrackerOptions {
 export interface ActiveTrackerController {
   dataLoaded: boolean;
   stateConflict: boolean;
+  realtimeStatus: TrackerRealtimeStatus;
   reloadAfterConflict: () => Promise<void>;
+  retryRealtimeSync: () => void;
   discardPendingWrites: () => void;
 }
 
@@ -47,6 +59,8 @@ export const useActiveTracker = ({
 }: UseActiveTrackerOptions): ActiveTrackerController => {
   const [dataLoaded, setDataLoaded] = useState(false);
   const [stateConflict, setStateConflict] = useState(false);
+  const [realtimeStatus, setRealtimeStatus] =
+    useState<TrackerRealtimeStatus>("idle");
   const skipNextWriteRef = useRef(false);
   const pendingWriteRef = useRef<Promise<void>>(Promise.resolve());
   const pendingWriteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
@@ -55,6 +69,13 @@ export const useActiveTracker = ({
   const writeSessionRef = useRef(0);
   const isHydratingRef = useRef(true);
   const pendingWriteTaskRef = useRef<(() => void) | null>(null);
+  const dirtyRef = useRef(false);
+  const editVersionRef = useRef(0);
+  const stateConflictRef = useRef(false);
+  const saveFailedRef = useRef(false);
+  const realtimeAttemptRef = useRef(0);
+  const latestDataRef = useRef(data);
+  latestDataRef.current = data;
 
   const clearPendingWriteTimer = useCallback(() => {
     if (!pendingWriteTimerRef.current) return;
@@ -65,17 +86,57 @@ export const useActiveTracker = ({
   const discardPendingWrites = useCallback(() => {
     clearPendingWriteTimer();
     pendingWriteTaskRef.current = null;
+    dirtyRef.current = false;
   }, [clearPendingWriteTimer]);
+
+  const flushPendingWrite = useCallback(() => {
+    clearPendingWriteTimer();
+    const task = pendingWriteTaskRef.current;
+    pendingWriteTaskRef.current = null;
+    task?.();
+  }, [clearPendingWriteTimer]);
+
+  const enqueueSave = useCallback(
+    (
+      trackerId: string,
+      stateToPersist: AppState,
+      session: number,
+      editVersion: number,
+    ) => {
+      pendingWriteRef.current = pendingWriteRef.current
+        .then(async () => {
+          await saveTrackerState(trackerId, stateToPersist);
+          if (
+            writeSessionRef.current === session &&
+            editVersionRef.current === editVersion
+          ) {
+            dirtyRef.current = false;
+            saveFailedRef.current = false;
+          }
+        })
+        .catch((error) => {
+          if (
+            error instanceof TrackerStateConflictError &&
+            writeSessionRef.current === session
+          ) {
+            stateConflictRef.current = true;
+            setStateConflict(true);
+            return;
+          }
+          if (writeSessionRef.current === session) saveFailedRef.current = true;
+          console.error("Tracker state write failed", error);
+        });
+    },
+    [],
+  );
 
   // Route navigation unmounts the editor. Persist its last debounced edit before
   // the subscription and autosave effects clean up. Delete/leave discard it first.
   useEffect(
     () => () => {
-      clearPendingWriteTimer();
-      pendingWriteTaskRef.current?.();
-      pendingWriteTaskRef.current = null;
+      flushPendingWrite();
     },
-    [clearPendingWriteTimer],
+    [flushPendingWrite],
   );
 
   const reloadAfterConflict = useCallback(async () => {
@@ -84,13 +145,82 @@ export const useActiveTracker = ({
       const remoteState = await getTrackerState(activeTrackerId);
       if (remoteState) {
         skipNextWriteRef.current = true;
+        dirtyRef.current = false;
+        saveFailedRef.current = false;
         setData((previous) => coerceState(remoteState, previous));
       }
+      stateConflictRef.current = false;
       setStateConflict(false);
     } catch (error) {
       console.error("Failed to reload tracker after state conflict", error);
     }
   }, [activeTrackerId, coerceState, setData]);
+
+  const reconcileTracker = useCallback(
+    async (trackerId: string, session: number, attempt: number) => {
+      setRealtimeStatus("resyncing");
+      flushPendingWrite();
+      await pendingWriteRef.current;
+      if (
+        writeSessionRef.current !== session ||
+        realtimeAttemptRef.current !== attempt
+      )
+        return;
+
+      if (stateConflictRef.current) {
+        setRealtimeStatus("connected");
+        return;
+      }
+      if (dirtyRef.current || saveFailedRef.current) {
+        setRealtimeStatus("resync-error");
+        return;
+      }
+
+      const versionBeforeFetch = editVersionRef.current;
+      try {
+        const snapshot = await fetchTrackerStateSnapshot(trackerId);
+        if (
+          writeSessionRef.current !== session ||
+          realtimeAttemptRef.current !== attempt
+        )
+          return;
+        if (editVersionRef.current !== versionBeforeFetch || dirtyRef.current) {
+          setRealtimeStatus("connected");
+          return;
+        }
+        if (snapshot) {
+          acceptTrackerStateSnapshot(trackerId, snapshot);
+          skipNextWriteRef.current = true;
+          setData((previous) => coerceState(snapshot.state, previous));
+        }
+        setRealtimeStatus("connected");
+      } catch (error) {
+        if (
+          writeSessionRef.current !== session ||
+          realtimeAttemptRef.current !== attempt
+        )
+          return;
+        console.error("Failed to resynchronize tracker", error);
+        setRealtimeStatus("resync-error");
+      }
+    },
+    [coerceState, flushPendingWrite, setData],
+  );
+
+  const retryRealtimeSync = useCallback(() => {
+    if (!activeTrackerId) return;
+    const attempt = ++realtimeAttemptRef.current;
+    saveFailedRef.current = false;
+    if (canWrite && dirtyRef.current && !stateConflictRef.current) {
+      enqueueSave(
+        activeTrackerId,
+        latestDataRef.current,
+        writeSessionRef.current,
+        editVersionRef.current,
+      );
+    }
+    void reconcileTracker(activeTrackerId, writeSessionRef.current, attempt);
+  }, [activeTrackerId, canWrite, enqueueSave, reconcileTracker]);
 
   useEffect(() => {
     isHydratingRef.current = true;
@@ -99,6 +229,7 @@ export const useActiveTracker = ({
       setData(createInitialState());
       setDataLoaded(false);
       isHydratingRef.current = false;
+      setRealtimeStatus("idle");
       return;
     }
 
@@ -106,8 +237,11 @@ export const useActiveTracker = ({
       setData(createInitialState());
       setDataLoaded(true);
       isHydratingRef.current = false;
+      setRealtimeStatus("idle");
       return;
     }
+
+    setRealtimeStatus("connecting");
 
     let unsubscribe: (() => void) | undefined;
     let cancelled = false;
@@ -125,6 +259,7 @@ export const useActiveTracker = ({
         if (cancelled) return;
         if (storedState) {
           skipNextWriteRef.current = true;
+          dirtyRef.current = false;
           setData((previous) => coerceState(storedState, previous));
         } else {
           setData(createInitialState(gameVersionId));
@@ -141,14 +276,32 @@ export const useActiveTracker = ({
             activeTrackerId,
             (liveState) => {
               if (cancelled) return;
+              if (dirtyRef.current || stateConflictRef.current) return false;
               if (liveState) {
                 skipNextWriteRef.current = true;
                 setData((previous) => coerceState(liveState, previous));
               }
               markInitialSnapshot();
+              return true;
             },
             (error) => {
               console.error("Tracker state listener error", error);
+            },
+            (status, error) => {
+              if (cancelled) return;
+              if (status === "disconnected") {
+                realtimeAttemptRef.current += 1;
+                if (error)
+                  console.error("Tracker realtime connection lost", error);
+                setRealtimeStatus("disconnected");
+                return;
+              }
+              const attempt = ++realtimeAttemptRef.current;
+              void reconcileTracker(
+                activeTrackerId,
+                writeSessionRef.current,
+                attempt,
+              );
             },
           );
         }
@@ -161,12 +314,23 @@ export const useActiveTracker = ({
       isHydratingRef.current = true;
       setDataLoaded(false);
     };
-  }, [activeTrackerId, canLoad, coerceState, gameVersionId, setData]);
+  }, [
+    activeTrackerId,
+    canLoad,
+    coerceState,
+    gameVersionId,
+    reconcileTracker,
+    setData,
+  ]);
 
   useEffect(() => {
     writeSessionRef.current += 1;
     discardPendingWrites();
     pendingWriteRef.current = Promise.resolve();
+    dirtyRef.current = false;
+    saveFailedRef.current = false;
+    stateConflictRef.current = false;
+    realtimeAttemptRef.current += 1;
     setStateConflict(false);
   }, [activeTrackerId, discardPendingWrites, userId]);
 
@@ -187,23 +351,15 @@ export const useActiveTracker = ({
     }
 
     clearPendingWriteTimer();
+    dirtyRef.current = true;
+    saveFailedRef.current = false;
+    const editVersion = ++editVersionRef.current;
     const trackerId = activeTrackerId;
     const session = writeSessionRef.current;
     const stateToPersist = data;
 
     pendingWriteTaskRef.current = () => {
-      pendingWriteRef.current = pendingWriteRef.current
-        .then(() => saveTrackerState(trackerId, stateToPersist))
-        .catch((error) => {
-          if (
-            error instanceof TrackerStateConflictError &&
-            writeSessionRef.current === session
-          ) {
-            setStateConflict(true);
-            return;
-          }
-          console.error("Tracker state write failed", error);
-        });
+      enqueueSave(trackerId, stateToPersist, session, editVersion);
     };
     pendingWriteTimerRef.current = setTimeout(() => {
       pendingWriteTimerRef.current = null;
@@ -220,13 +376,16 @@ export const useActiveTracker = ({
     data,
     dataLoaded,
     debounceMs,
+    enqueueSave,
     stateConflict,
   ]);
 
   return {
     dataLoaded,
+    realtimeStatus,
     stateConflict,
     reloadAfterConflict,
+    retryRealtimeSync,
     discardPendingWrites,
   };
 };
