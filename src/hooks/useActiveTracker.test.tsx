@@ -135,7 +135,7 @@ describe("tracker editor lifecycle", () => {
     });
   });
 
-  it("keeps local state after a failed offline save and retries it", async () => {
+  it("automatically retries a failed offline save when subscribed", async () => {
     repository.save
       .mockRejectedValueOnce(new Error("offline"))
       .mockResolvedValueOnce(undefined);
@@ -148,13 +148,8 @@ describe("tracker editor lifecycle", () => {
     act(() => result.current.setData(edited));
     await waitFor(() => expect(repository.save).toHaveBeenCalledTimes(1));
     act(() => onStatus("subscribed"));
-    await waitFor(() =>
-      expect(result.current.realtimeStatus).toBe("resync-error"),
-    );
-    expect(result.current.data).toEqual(edited);
-
-    act(() => result.current.retryRealtimeSync());
     await waitFor(() => expect(repository.save).toHaveBeenCalledTimes(2));
+    expect(repository.save).toHaveBeenLastCalledWith("tracker-id", edited);
     await waitFor(() =>
       expect(result.current.realtimeStatus).toBe("connected"),
     );
@@ -163,9 +158,7 @@ describe("tracker editor lifecycle", () => {
   it("keeps the conflict outcome when an offline edit is stale", async () => {
     repository.save.mockRejectedValueOnce(new repository.ConflictError());
     const serverState = { ...initialState, rules: ["Newer server state"] };
-    repository.get
-      .mockResolvedValueOnce(initialState)
-      .mockResolvedValueOnce(serverState);
+    repository.fetch.mockResolvedValue({ state: serverState, revision: 3 });
     const { result } = renderHook(() => useEditor(true, 0));
     await waitFor(() => expect(repository.subscribe).toHaveBeenCalled());
     const onStatus = repository.subscribe.mock.calls[0][3];
@@ -185,5 +178,55 @@ describe("tracker editor lifecycle", () => {
     await act(async () => result.current.reloadAfterConflict());
     expect(result.current.data).toEqual(serverState);
     expect(result.current.stateConflict).toBe(false);
+  });
+
+  it("preserves unsaved edits when automatic retry fails and manual retry recovers", async () => {
+    repository.save
+      .mockRejectedValueOnce(new Error("offline"))
+      .mockRejectedValueOnce(new Error("still offline"))
+      .mockResolvedValueOnce(undefined);
+    const { result } = renderHook(() => useEditor(true, 0));
+    await waitFor(() => expect(repository.subscribe).toHaveBeenCalled());
+    const onStatus = repository.subscribe.mock.calls[0][3];
+    const edited = { ...initialState, rules: ["Keep local edits"] };
+    act(() => onStatus("disconnected"));
+    act(() => result.current.setData(edited));
+    await waitFor(() => expect(repository.save).toHaveBeenCalledTimes(1));
+    act(() => onStatus("subscribed"));
+    await waitFor(() =>
+      expect(result.current.realtimeStatus).toBe("resync-error"),
+    );
+    expect(result.current.data).toEqual(edited);
+    expect(repository.fetch).not.toHaveBeenCalled();
+    act(() => result.current.retryRealtimeSync());
+    await waitFor(() =>
+      expect(result.current.realtimeStatus).toBe("connected"),
+    );
+    expect(repository.save).toHaveBeenCalledTimes(3);
+  });
+
+  it("surfaces a conflict detected during reconnect and retains local state until reload", async () => {
+    repository.save
+      .mockRejectedValueOnce(new Error("offline"))
+      .mockRejectedValueOnce(new repository.ConflictError());
+    const { result } = renderHook(() => useEditor(true, 0));
+    await waitFor(() => expect(repository.subscribe).toHaveBeenCalled());
+    const onStatus = repository.subscribe.mock.calls[0][3];
+    const onValue = repository.subscribe.mock.calls[0][1];
+    const edited = { ...initialState, rules: ["Conflicting edits"] };
+    act(() => onStatus("disconnected"));
+    act(() => result.current.setData(edited));
+    await waitFor(() => expect(repository.save).toHaveBeenCalledTimes(1));
+    act(() => onStatus("subscribed"));
+    await waitFor(() => expect(result.current.stateConflict).toBe(true));
+    expect(result.current.realtimeStatus).toBe("connected");
+    act(() => {
+      expect(onValue(initialState)).toBe(false);
+    });
+    expect(result.current.data).toEqual(edited);
+    expect(repository.fetch).not.toHaveBeenCalled();
+    await act(async () => result.current.reloadAfterConflict());
+    expect(result.current.stateConflict).toBe(false);
+    expect(result.current.data).toEqual(initialState);
   });
 });

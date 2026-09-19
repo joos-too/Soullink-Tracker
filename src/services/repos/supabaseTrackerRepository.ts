@@ -376,6 +376,12 @@ export const subscribeToSupabaseTrackerState = (
       () => void load(),
     )
     .subscribe((status, error) => {
+      console.info("[TrackerSync] Supabase channel status", {
+        trackerId,
+        status,
+        active,
+        errorName: error?.name,
+      });
       if (!active) return;
       if (status === "SUBSCRIBED") {
         onConnectionStatusChange?.("subscribed");
