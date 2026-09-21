@@ -1,3 +1,4 @@
+import SpriteImage from "@/src/components/other/SpriteImage.tsx";
 import React, { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FOSSILS } from "@/src/data/special-items.ts";
@@ -121,7 +122,7 @@ const AddFossilModal: React.FC<AddFossilModalProps> = ({
                         : "border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
                     }`}
                   >
-                    <img
+                    <SpriteImage
                       src={`/fossil-sprites/${f.sprite}`}
                       alt=""
                       className="w-10 h-10 object-contain"

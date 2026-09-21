@@ -7,21 +7,26 @@ import { useActiveTracker } from "./useActiveTracker";
 
 const repository = vi.hoisted(() => ({
   get: vi.fn<() => Promise<AppState | null>>(),
+  fetch: vi.fn(),
+  accept: vi.fn(),
   save: vi.fn(async () => {}),
   subscribe: vi.fn(),
   unsubscribe: vi.fn(),
+  ConflictError: class TrackerStateConflictError extends Error {},
 }));
 vi.mock("@/src/services/repos/trackerRepository", () => ({
+  acceptTrackerStateSnapshot: repository.accept,
+  fetchTrackerStateSnapshot: repository.fetch,
   getTrackerState: repository.get,
   saveTrackerState: repository.save,
   subscribeToTrackerState: repository.subscribe,
-  TrackerStateConflictError: class extends Error {},
+  TrackerStateConflictError: repository.ConflictError,
 }));
 
 const coerceState = (incoming: unknown) => incoming as AppState;
 const initialState = createInitialState();
 
-function useEditor(canWrite = true) {
+function useEditor(canWrite = true, debounceMs = 10000) {
   const [data, setData] = useState(initialState);
   const controller = useActiveTracker({
     activeTrackerId: "tracker-id",
@@ -31,7 +36,7 @@ function useEditor(canWrite = true) {
     data,
     setData,
     coerceState,
-    debounceMs: 10000,
+    debounceMs,
   });
   return { ...controller, data, setData };
 }
@@ -39,7 +44,11 @@ function useEditor(canWrite = true) {
 describe("tracker editor lifecycle", () => {
   beforeEach(() => {
     repository.get.mockReset().mockResolvedValue(initialState);
-    repository.save.mockClear();
+    repository.fetch
+      .mockReset()
+      .mockResolvedValue({ state: initialState, revision: 2 });
+    repository.accept.mockClear();
+    repository.save.mockReset().mockResolvedValue(undefined);
     repository.subscribe.mockReset().mockReturnValue(repository.unsubscribe);
     repository.unsubscribe.mockClear();
   });
@@ -90,5 +99,134 @@ describe("tracker editor lifecycle", () => {
     });
     expect(repository.subscribe).not.toHaveBeenCalled();
     expect(repository.save).not.toHaveBeenCalled();
+  });
+
+  it("reports a lost connection without blocking offline edits", async () => {
+    const { result } = renderHook(() => useEditor(true, 0));
+    await waitFor(() => expect(repository.subscribe).toHaveBeenCalled());
+    const onStatus = repository.subscribe.mock.calls[0][3];
+
+    act(() => onStatus("disconnected"));
+    expect(result.current.realtimeStatus).toBe("disconnected");
+
+    const edited = { ...initialState, rules: ["Offline edit"] };
+    act(() => result.current.setData(edited));
+    await waitFor(() =>
+      expect(repository.save).toHaveBeenCalledWith("tracker-id", edited),
+    );
+  });
+
+  it("refreshes the server snapshot after subscribing", async () => {
+    const refreshed = { ...initialState, rules: ["Server state"] };
+    repository.fetch.mockResolvedValueOnce({ state: refreshed, revision: 3 });
+    const { result } = renderHook(() => useEditor());
+    await waitFor(() => expect(repository.subscribe).toHaveBeenCalled());
+    const onStatus = repository.subscribe.mock.calls[0][3];
+
+    act(() => onStatus("subscribed"));
+
+    await waitFor(() =>
+      expect(result.current.realtimeStatus).toBe("connected"),
+    );
+    expect(result.current.data).toEqual(refreshed);
+    expect(repository.accept).toHaveBeenCalledWith("tracker-id", {
+      state: refreshed,
+      revision: 3,
+    });
+  });
+
+  it("automatically retries a failed offline save when subscribed", async () => {
+    repository.save
+      .mockRejectedValueOnce(new Error("offline"))
+      .mockResolvedValueOnce(undefined);
+    const { result } = renderHook(() => useEditor(true, 0));
+    await waitFor(() => expect(repository.subscribe).toHaveBeenCalled());
+    const onStatus = repository.subscribe.mock.calls[0][3];
+    act(() => onStatus("disconnected"));
+
+    const edited = { ...initialState, rules: ["Keep me"] };
+    act(() => result.current.setData(edited));
+    await waitFor(() => expect(repository.save).toHaveBeenCalledTimes(1));
+    act(() => onStatus("subscribed"));
+    await waitFor(() => expect(repository.save).toHaveBeenCalledTimes(2));
+    expect(repository.save).toHaveBeenLastCalledWith("tracker-id", edited);
+    await waitFor(() =>
+      expect(result.current.realtimeStatus).toBe("connected"),
+    );
+  });
+
+  it("keeps the conflict outcome when an offline edit is stale", async () => {
+    repository.save.mockRejectedValueOnce(new repository.ConflictError());
+    const serverState = { ...initialState, rules: ["Newer server state"] };
+    repository.fetch.mockResolvedValue({ state: serverState, revision: 3 });
+    const { result } = renderHook(() => useEditor(true, 0));
+    await waitFor(() => expect(repository.subscribe).toHaveBeenCalled());
+    const onStatus = repository.subscribe.mock.calls[0][3];
+    act(() => onStatus("disconnected"));
+
+    act(() =>
+      result.current.setData({ ...initialState, rules: ["Offline edit"] }),
+    );
+    await waitFor(() => expect(result.current.stateConflict).toBe(true));
+    act(() => onStatus("subscribed"));
+    await waitFor(() =>
+      expect(result.current.realtimeStatus).toBe("connected"),
+    );
+    expect(result.current.stateConflict).toBe(true);
+    expect(repository.fetch).not.toHaveBeenCalled();
+
+    await act(async () => result.current.reloadAfterConflict());
+    expect(result.current.data).toEqual(serverState);
+    expect(result.current.stateConflict).toBe(false);
+  });
+
+  it("preserves unsaved edits when automatic retry fails and manual retry recovers", async () => {
+    repository.save
+      .mockRejectedValueOnce(new Error("offline"))
+      .mockRejectedValueOnce(new Error("still offline"))
+      .mockResolvedValueOnce(undefined);
+    const { result } = renderHook(() => useEditor(true, 0));
+    await waitFor(() => expect(repository.subscribe).toHaveBeenCalled());
+    const onStatus = repository.subscribe.mock.calls[0][3];
+    const edited = { ...initialState, rules: ["Keep local edits"] };
+    act(() => onStatus("disconnected"));
+    act(() => result.current.setData(edited));
+    await waitFor(() => expect(repository.save).toHaveBeenCalledTimes(1));
+    act(() => onStatus("subscribed"));
+    await waitFor(() =>
+      expect(result.current.realtimeStatus).toBe("resync-error"),
+    );
+    expect(result.current.data).toEqual(edited);
+    expect(repository.fetch).not.toHaveBeenCalled();
+    act(() => result.current.retryRealtimeSync());
+    await waitFor(() =>
+      expect(result.current.realtimeStatus).toBe("connected"),
+    );
+    expect(repository.save).toHaveBeenCalledTimes(3);
+  });
+
+  it("surfaces a conflict detected during reconnect and retains local state until reload", async () => {
+    repository.save
+      .mockRejectedValueOnce(new Error("offline"))
+      .mockRejectedValueOnce(new repository.ConflictError());
+    const { result } = renderHook(() => useEditor(true, 0));
+    await waitFor(() => expect(repository.subscribe).toHaveBeenCalled());
+    const onStatus = repository.subscribe.mock.calls[0][3];
+    const onValue = repository.subscribe.mock.calls[0][1];
+    const edited = { ...initialState, rules: ["Conflicting edits"] };
+    act(() => onStatus("disconnected"));
+    act(() => result.current.setData(edited));
+    await waitFor(() => expect(repository.save).toHaveBeenCalledTimes(1));
+    act(() => onStatus("subscribed"));
+    await waitFor(() => expect(result.current.stateConflict).toBe(true));
+    expect(result.current.realtimeStatus).toBe("connected");
+    act(() => {
+      expect(onValue(initialState)).toBe(false);
+    });
+    expect(result.current.data).toEqual(edited);
+    expect(repository.fetch).not.toHaveBeenCalled();
+    await act(async () => result.current.reloadAfterConflict());
+    expect(result.current.stateConflict).toBe(false);
+    expect(result.current.data).toEqual(initialState);
   });
 });

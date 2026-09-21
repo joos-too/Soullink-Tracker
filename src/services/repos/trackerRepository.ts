@@ -10,11 +10,22 @@ import {
 } from "@/src/services/repos/supabaseTrackerRepository.ts";
 
 export { TrackerStateConflictError } from "@/src/services/repos/supabaseTrackerRepository.ts";
+export type { RealtimeConnectionStatus } from "@/src/services/repos/supabaseTrackerRepository.ts";
 
 export type RepositorySubscription = () => void;
 
 type ValueCallback<T> = (value: T | null) => void;
 type ErrorCallback = (error: Error) => void;
+type StateValueCallback = (value: Partial<AppState> | null) => boolean | void;
+type ConnectionStatusCallback = (
+  status: "subscribed" | "disconnected",
+  error?: Error,
+) => void;
+
+export interface VersionedTrackerState {
+  state: Partial<AppState>;
+  revision: number;
+}
 
 export interface TrackerListEntry {
   meta: TrackerMeta;
@@ -39,8 +50,9 @@ export const subscribeToTrackerMeta = (
 
 export const subscribeToTrackerState = (
   trackerId: string,
-  onValueChange: ValueCallback<Partial<AppState>>,
+  onValueChange: StateValueCallback,
   onError?: ErrorCallback,
+  onConnectionStatusChange?: ConnectionStatusCallback,
 ): RepositorySubscription =>
   subscribeToSupabaseTrackerState(
     trackerId,
@@ -50,11 +62,27 @@ export const subscribeToTrackerState = (
         onValueChange(null);
         return;
       }
-      stateRevisions.set(trackerId, snapshot.revision);
-      onValueChange(snapshot.state);
+      const accepted = onValueChange(snapshot.state);
+      if (accepted !== false) stateRevisions.set(trackerId, snapshot.revision);
     },
     onError,
+    onConnectionStatusChange,
   );
+
+export const fetchTrackerStateSnapshot = async (
+  trackerId: string,
+): Promise<VersionedTrackerState | null> => {
+  const snapshot = await getSupabaseTrackerState(trackerId);
+  if (!snapshot) return null;
+  return { state: snapshot.state, revision: snapshot.revision };
+};
+
+export const acceptTrackerStateSnapshot = (
+  trackerId: string,
+  snapshot: VersionedTrackerState,
+): void => {
+  stateRevisions.set(trackerId, snapshot.revision);
+};
 
 export const getTrackerState = async (
   trackerId: string,

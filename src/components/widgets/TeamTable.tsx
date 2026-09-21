@@ -1,3 +1,4 @@
+import SpriteImage from "@/src/components/other/SpriteImage.tsx";
 import React, { useEffect, useMemo, useState } from "react";
 import type { LinkEditPayload, LinkId, PokemonLink } from "@/types.ts";
 import EditPairModal from "@/src/components/modals/EditPairModal.tsx";
@@ -292,7 +293,7 @@ const TeamTable: React.FC<TeamTableProps> = ({
                         <td className="p-2 text-center border-l border-gray-200 dark:border-gray-700">
                           {imgURL ? (
                             <div className="mx-auto flex h-20 w-20 items-center justify-center">
-                              <img
+                              <SpriteImage
                                 src={imgURL}
                                 alt=""
                                 className="block max-h-full max-w-full object-contain"

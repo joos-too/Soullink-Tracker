@@ -1,3 +1,4 @@
+import SpriteImage from "@/src/components/other/SpriteImage.tsx";
 import React, { useEffect, useMemo, useState } from "react";
 import type { LinkEditPayload, LinkId, PokemonLink } from "@/types.ts";
 import { PLAYER_COLORS } from "@/src/services/init.ts";
@@ -219,7 +220,7 @@ const Graveyard: React.FC<GraveyardProps> = ({
                         >
                           <div className="inline-flex items-center gap-2 text-left mb-2">
                             {spriteUrl && (
-                              <img
+                              <SpriteImage
                                 src={spriteUrl}
                                 alt=""
                                 className="w-16 h-16 -my-3"

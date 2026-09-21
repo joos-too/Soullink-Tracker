@@ -1,3 +1,4 @@
+import SpriteImage from "@/src/components/other/SpriteImage.tsx";
 import React, { useEffect, useId, useMemo, useState } from "react";
 import type { FossilEntry, PokemonLink, ItemEntry } from "@/types";
 import { useTranslation } from "react-i18next";
@@ -418,7 +419,7 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
                                 >
                                   <div className="inline-flex items-center gap-2 text-left mb-2">
                                     {spriteUrl ? (
-                                      <img
+                                      <SpriteImage
                                         src={spriteUrl}
                                         alt=""
                                         className="w-16 h-16 -my-3"
@@ -480,7 +481,7 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
                         className="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md text-xs"
                       >
                         {item.spriteUrl ? (
-                          <img
+                          <SpriteImage
                             src={item.spriteUrl}
                             alt=""
                             className="w-6 h-6 object-contain shrink-0"

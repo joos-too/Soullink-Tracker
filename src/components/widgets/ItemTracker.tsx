@@ -1,3 +1,4 @@
+import SpriteImage from "@/src/components/other/SpriteImage.tsx";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FossilEntry, ItemEntry } from "@/types";
@@ -497,7 +498,7 @@ const ItemTracker: React.FC<ItemTrackerProps> = ({
                               : "border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-gray-300 cursor-pointer"
                       } ${isInteractive ? focusRingCardClasses : ""}`}
                     >
-                      <img
+                      <SpriteImage
                         src={`/fossil-sprites/${def?.sprite}`}
                         alt=""
                         className={`w-6 h-6 object-contain ${entry.revived ? "grayscale-[0.5]" : ""}`}
