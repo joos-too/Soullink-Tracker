@@ -112,8 +112,8 @@ set
     '10000000-0000-0000-0000-000000000001'::uuid,
     '10000000-0000-0000-0000-000000000002'::uuid
   ),
-  use_generation_sprites = id = '10000000-0000-0000-0000-000000000001'::uuid,
-  use_sprites_in_team_table = id = '10000000-0000-0000-0000-000000000001'::uuid,
+  use_generation_sprites = id = '10000000-0000-0000-0000-000000000003'::uuid,
+  use_sprites_in_team_table = id = '10000000-0000-0000-0000-000000000003'::uuid,
   wiki_id = case
     when id = '10000000-0000-0000-0000-000000000001'::uuid then 'pokewiki'
       end;
@@ -197,7 +197,7 @@ insert into public.tracker_states (
 values
   (
     '30000000-0000-0000-0000-000000000001',
-    $state${
+    private.migrate_tracker_link_ids('30000000-0000-0000-0000-000000000001', $state${
   "team": [
     {
       "id": 1,
@@ -573,14 +573,14 @@ values
     ]
   ],
   "runStartedAt": 1772150400000
-}$state$::jsonb,
-    1,
+}$state$::jsonb),
+    2,
     8,
     '10000000-0000-0000-0000-000000000001'
   ),
   (
     '30000000-0000-0000-0000-000000000002',
-    $state${
+    private.migrate_tracker_link_ids('30000000-0000-0000-0000-000000000002', $state${
   "team": [
     {
       "id": 1,
@@ -969,14 +969,14 @@ values
     ]
   ],
   "runStartedAt": 1789257600000
-}$state$::jsonb,
-    1,
+}$state$::jsonb),
+    2,
     5,
     '10000000-0000-0000-0000-000000000001'
   ),
   (
     '30000000-0000-0000-0000-000000000003',
-    $state${
+    private.migrate_tracker_link_ids('30000000-0000-0000-0000-000000000003', $state${
   "team": [
     {
       "id": 1,
@@ -1442,14 +1442,14 @@ values
     ]
   ],
   "runStartedAt": 1789689600000
-}$state$::jsonb,
-    1,
+}$state$::jsonb),
+    2,
     11,
     '10000000-0000-0000-0000-000000000001'
   ),
   (
     '30000000-0000-0000-0000-000000000004',
-    $state${
+    private.migrate_tracker_link_ids('30000000-0000-0000-0000-000000000004', $state${
   "team": [
     {
       "id": 1,
@@ -1882,8 +1882,8 @@ values
     ]
   ],
   "runStartedAt": 1763683200000
-}$state$::jsonb,
-    1,
+}$state$::jsonb),
+    2,
     3,
     '10000000-0000-0000-0000-000000000001'
   );

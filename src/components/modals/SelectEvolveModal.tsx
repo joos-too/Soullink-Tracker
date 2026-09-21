@@ -1,3 +1,4 @@
+import SpriteImage from "@/src/components/other/SpriteImage.tsx";
 import React, { useEffect, useId, useMemo, useRef, useState } from "react";
 import {
   getOfficialArtworkUrlById,
@@ -14,16 +15,16 @@ import TypeBadge from "@/src/components/badges/TypeBadge.tsx";
 import { getFilteredEvolutionEntriesForPokemon } from "@/src/services/filter/evolutionMethodFilter.ts";
 
 interface SelectEvolveModalProps {
-  isOpen: boolean;
   onClose: () => void;
   onConfirm: (playerIndex: number, newName: string, newId: number) => void;
-  pair: PokemonLink | null;
+  pair: PokemonLink;
   playerLabels: string[];
   maxGeneration?: number;
   gameVersionId?: string;
   generationSpritePath?: string | null;
   useSpritesEverywhere?: boolean;
   nicknamesEnabled?: boolean;
+  blockingError?: string;
 }
 
 interface EvoInfo {
@@ -58,7 +59,6 @@ function mergeLocationMethods(
 }
 
 const SelectEvolveModal: React.FC<SelectEvolveModalProps> = ({
-  isOpen,
   onClose,
   onConfirm,
   pair,
@@ -68,6 +68,7 @@ const SelectEvolveModal: React.FC<SelectEvolveModalProps> = ({
   generationSpritePath,
   useSpritesEverywhere = false,
   nicknamesEnabled = true,
+  blockingError,
 }) => {
   const [selectedPlayer, setSelectedPlayer] = useState<number | null>(null);
   const [availableEvos, setAvailableEvos] = useState<EvoInfo[] | null>(null);
@@ -80,20 +81,10 @@ const SelectEvolveModal: React.FC<SelectEvolveModalProps> = ({
   );
   const playerRadioRefs = useRef<(HTMLInputElement | null)[]>([]);
   const evoRadioRefs = useRef<(HTMLInputElement | null)[]>([]);
-  const { containerRef } = useFocusTrap(isOpen);
+  const { containerRef } = useFocusTrap(true);
   const titleId = useId();
 
-  useEffect(() => {
-    if (isOpen) {
-      setSelectedPlayer(null);
-      setAvailableEvos(null);
-      setSelectedEvoId(null);
-      setLoading(false);
-    }
-  }, [isOpen, playerLabels.length, language]);
-
   const evolvablePlayers = useMemo(() => {
-    if (!pair) return [];
     return playerLabels
       .map((label, index) => {
         const member = pair.members?.[index];
@@ -113,7 +104,6 @@ const SelectEvolveModal: React.FC<SelectEvolveModalProps> = ({
   }, [pair, playerLabels, language, t, maxGeneration, gameVersionId]);
 
   useEffect(() => {
-    if (!isOpen) return;
     if (
       selectedPlayer !== null &&
       evolvablePlayers.some((player) => player.index === selectedPlayer)
@@ -123,10 +113,10 @@ const SelectEvolveModal: React.FC<SelectEvolveModalProps> = ({
     const autoSelectIndex =
       evolvablePlayers.length === 1 ? evolvablePlayers[0].index : null;
     setSelectedPlayer(autoSelectIndex);
-  }, [evolvablePlayers, isOpen, selectedPlayer]);
+  }, [evolvablePlayers, selectedPlayer]);
 
   const currentName = useMemo(() => {
-    if (!pair || selectedPlayer === null) return "";
+    if (selectedPlayer === null) return "";
     const member = pair.members?.[selectedPlayer];
     return (
       getPokemonNameById(member?.id, language) ||
@@ -139,7 +129,7 @@ const SelectEvolveModal: React.FC<SelectEvolveModalProps> = ({
     async function loadEvos() {
       setAvailableEvos(null);
       setSelectedEvoId(null);
-      if (!pair || selectedPlayer === null) return;
+      if (selectedPlayer === null) return;
       const member = pair.members?.[selectedPlayer];
       const pokemonId = member?.id;
       if (!pokemonId) {
@@ -195,8 +185,6 @@ const SelectEvolveModal: React.FC<SelectEvolveModalProps> = ({
     if (selectedPlayer !== null) loadEvos();
   }, [selectedPlayer, pair, maxGeneration, gameVersionId, language, t]);
 
-  if (!isOpen) return null;
-
   const handleRadioTabNavigation = (
     event: React.KeyboardEvent<HTMLInputElement>,
     index: number,
@@ -216,7 +204,8 @@ const SelectEvolveModal: React.FC<SelectEvolveModalProps> = ({
 
   const handleConfirm = (e: React.SubmitEvent) => {
     e.preventDefault();
-    if (selectedPlayer === null || selectedEvoId === null) return;
+    if (blockingError || selectedPlayer === null || selectedEvoId === null)
+      return;
     const targetName = getPokemonNameById(selectedEvoId, language) || "";
     onConfirm(selectedPlayer, targetName, selectedEvoId);
   };
@@ -364,7 +353,7 @@ const SelectEvolveModal: React.FC<SelectEvolveModalProps> = ({
                             }
                             className="h-4 w-4 accent-green-600"
                           />
-                          <img
+                          <SpriteImage
                             src={
                               useSpritesEverywhere
                                 ? getSpriteUrlById(ev.id, generationSpritePath)
@@ -396,6 +385,15 @@ const SelectEvolveModal: React.FC<SelectEvolveModalProps> = ({
             )}
           </div>
 
+          {blockingError && (
+            <div
+              role="alert"
+              className="mt-4 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-800 dark:bg-red-950/40 dark:text-red-300"
+            >
+              {blockingError}
+            </div>
+          )}
+
           {/* footer buttons (kept visible) */}
           <div className="mt-4 flex justify-end gap-2">
             <button
@@ -407,8 +405,12 @@ const SelectEvolveModal: React.FC<SelectEvolveModalProps> = ({
             </button>
             <button
               type="submit"
-              disabled={selectedPlayer === null || selectedEvoId === null}
-              className={`px-4 py-2 rounded-md font-semibold shadow ${selectedEvoId ? "bg-green-600 text-white hover:bg-green-700" : "bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"} ${focusRingClasses}`}
+              disabled={
+                Boolean(blockingError) ||
+                selectedPlayer === null ||
+                selectedEvoId === null
+              }
+              className={`px-4 py-2 rounded-md font-semibold shadow ${selectedEvoId && !blockingError ? "bg-green-600 text-white hover:bg-green-700" : "bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"} ${focusRingClasses}`}
             >
               {t("tracker.evolveModal.buttonConfirm")}
             </button>

@@ -1,3 +1,4 @@
+import SpriteImage from "@/src/components/other/SpriteImage.tsx";
 import React, { useEffect, useId, useState } from "react";
 import type { PokemonLink } from "@/types.ts";
 import { Trans, useTranslation } from "react-i18next";
@@ -127,7 +128,11 @@ const SelectLossModal: React.FC<SelectLossModalProps> = ({
                         <div className="font-semibold">{name}</div>
                         <div className="flex items-center gap-1.5">
                           {spriteUrl && (
-                            <img src={spriteUrl} alt="" className="w-8 h-8" />
+                            <SpriteImage
+                              src={spriteUrl}
+                              alt=""
+                              className="w-8 h-8"
+                            />
                           )}
                           <span>
                             {displayName || "-"}
@@ -176,7 +181,11 @@ const SelectLossModal: React.FC<SelectLossModalProps> = ({
                         </div>
                         <div className="flex items-center gap-1.5 text-xs">
                           {spriteUrl && (
-                            <img src={spriteUrl} alt="" className="w-8 h-8" />
+                            <SpriteImage
+                              src={spriteUrl}
+                              alt=""
+                              className="w-8 h-8"
+                            />
                           )}
                           <span>
                             {displayName || "-"}

@@ -1,3 +1,4 @@
+import SpriteImage from "@/src/components/other/SpriteImage.tsx";
 import React from "react";
 import type { UserSettings, VariableRival } from "@/types.ts";
 import { getSpriteUrlForPokemonName } from "@/src/services/sprites.ts";
@@ -29,7 +30,7 @@ export const RivalImage: React.FC<{
 
   const imagePath = `/rival-sprites/${spriteName}.png`;
   return (
-    <img
+    <SpriteImage
       src={imagePath}
       alt=""
       title={resolvedDisplayName}
@@ -77,7 +78,7 @@ export const BadgeImage: React.FC<{
   const isPixelated = !arenaLabel.toLowerCase().includes("gym");
 
   return (
-    <img
+    <SpriteImage
       src={badgeUrl}
       alt=""
       className={className}
@@ -93,7 +94,7 @@ export const LegendaryImage: React.FC<{
   generationSpritePath?: string | null;
 }> = ({ pokemonName, className = "w-16 h-16", generationSpritePath }) => {
   return (
-    <img
+    <SpriteImage
       src={getSpriteUrlForPokemonName(pokemonName, generationSpritePath)}
       alt=""
       className={className}

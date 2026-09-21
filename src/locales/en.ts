@@ -71,6 +71,8 @@ export const en = {
     common: {
       loadingSuggestions: "Loading suggestions…",
       noMatches: "No matches found",
+      linkUnavailable:
+        "This link was removed by another user and can no longer be saved.",
     },
     addLost: {
       title: "Add lost Pokémon",
@@ -395,6 +397,15 @@ export const en = {
       description:
         "Another session saved newer changes. Reload the tracker before editing again so nothing is overwritten.",
       reload: "Reload tracker",
+    },
+    realtime: {
+      connecting: "Connecting to live updates… You can continue editing.",
+      disconnected:
+        "Live updates are unavailable. You can continue editing; saves will either succeed or ask you to reload the server version.",
+      resyncing: "Connection restored. Synchronizing your latest changes…",
+      "resync-error":
+        "Your latest changes could not be synchronized. They are still visible here; retry or reload the server version if a conflict appears.",
+      retry: "Retry",
     },
   },
   team: {

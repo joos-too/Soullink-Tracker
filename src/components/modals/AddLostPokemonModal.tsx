@@ -1,4 +1,4 @@
-import React, { useEffect, useId, useState } from "react";
+import React, { useId, useState } from "react";
 import { focusRingClasses } from "@/src/styles/focusRing.ts";
 import type { LinkEditPayload, Pokemon } from "@/types.ts";
 import { useTranslation } from "react-i18next";
@@ -16,7 +16,6 @@ import {
 import { normalizeLanguage } from "@/src/utils/language.ts";
 
 interface AddLostPokemonModalProps {
-  isOpen: boolean;
   onClose: () => void;
   onAdd: (payload: LinkEditPayload) => void;
   playerNames: string[];
@@ -29,10 +28,10 @@ interface AddLostPokemonModalProps {
     locationSlug?: string | null;
     members: Pokemon[];
   };
+  blockingError?: string;
 }
 
 const AddLostPokemonModal: React.FC<AddLostPokemonModalProps> = ({
-  isOpen,
   onClose,
   onAdd,
   playerNames,
@@ -41,40 +40,29 @@ const AddLostPokemonModal: React.FC<AddLostPokemonModalProps> = ({
   generationSpritePath,
   mode = "add",
   initial,
+  blockingError,
 }) => {
   const { t, i18n } = useTranslation();
   const locale = normalizeLanguage(i18n.language);
-  const { containerRef } = useFocusTrap(isOpen);
+  const { containerRef } = useFocusTrap(true);
   const titleId = useId();
-  const [location, setLocation] = useState("");
-  const [locationSlug, setLocationSlug] = useState("");
-  const [pokemonNames, setPokemonNames] = useState<string[]>(() =>
-    playerNames.map(() => ""),
+  const [location, setLocation] = useState(() =>
+    initial?.locationSlug
+      ? getLocationName(initial.locationSlug, locale)
+      : (initial?.location ?? ""),
   );
-
-  useEffect(() => {
-    if (isOpen) {
-      setLocation(
-        initial?.locationSlug
-          ? getLocationName(initial.locationSlug, locale)
-          : (initial?.location ?? ""),
+  const [locationSlug, setLocationSlug] = useState(
+    () => initial?.locationSlug ?? "",
+  );
+  const [pokemonNames, setPokemonNames] = useState<string[]>(() =>
+    playerNames.map((_, index) => {
+      const member = initial?.members?.[index];
+      return (
+        getPokemonNameById(member?.id, locale) ||
+        (typeof member?.name === "string" ? member.name : "")
       );
-      setLocationSlug(initial?.locationSlug ?? "");
-      setPokemonNames(
-        playerNames.map((_, index) => {
-          const member = initial?.members?.[index];
-          return (
-            getPokemonNameById(member?.id, locale) ||
-            (typeof member?.name === "string" ? member.name : "")
-          );
-        }),
-      );
-    }
-  }, [isOpen, playerNames, initial, locale]);
-
-  if (!isOpen) {
-    return null;
-  }
+    }),
+  );
 
   const title =
     mode === "add" ? t("modals.addLost.title") : t("modals.editLost.title");
@@ -82,6 +70,7 @@ const AddLostPokemonModal: React.FC<AddLostPokemonModalProps> = ({
 
   const handleSubmit = (e: React.SubmitEvent) => {
     e.preventDefault();
+    if (blockingError) return;
     const trimmedLocation = location.trim();
     const trimmedNames = pokemonNames.map((name) => name.trim());
     if (
@@ -159,7 +148,7 @@ const AddLostPokemonModal: React.FC<AddLostPokemonModalProps> = ({
                 onChange={setLocation}
                 selectedSlug={locationSlug}
                 onSelectedSlugChange={setLocationSlug}
-                isOpen={isOpen}
+                isOpen
                 gameVersionId={gameVersionId}
               />
             </div>
@@ -175,12 +164,21 @@ const AddLostPokemonModal: React.FC<AddLostPokemonModalProps> = ({
                     return next;
                   })
                 }
-                isOpen={isOpen}
+                isOpen
                 generationLimit={generationLimit}
                 generationSpritePath={generationSpritePath}
               />
             ))}
           </div>
+
+          {blockingError && (
+            <div
+              role="alert"
+              className="mt-4 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-800 dark:bg-red-950/40 dark:text-red-300"
+            >
+              {blockingError}
+            </div>
+          )}
 
           <div className="mt-6 flex justify-end gap-2">
             <button
@@ -192,8 +190,8 @@ const AddLostPokemonModal: React.FC<AddLostPokemonModalProps> = ({
             </button>
             <button
               type="submit"
-              disabled={!isValid}
-              className={`px-4 py-2 rounded-md font-semibold shadow ${isValid ? "bg-green-600 text-white hover:bg-green-700" : "bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"} ${focusRingClasses}`}
+              disabled={!isValid || Boolean(blockingError)}
+              className={`px-4 py-2 rounded-md font-semibold shadow ${isValid && !blockingError ? "bg-green-600 text-white hover:bg-green-700" : "bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"} ${focusRingClasses}`}
             >
               {submitLabel}
             </button>
