@@ -3,6 +3,8 @@ import {
   canonicalHash,
   firebaseTrackerIdToUuid,
   isRecord,
+  LINK_UUID_NAMESPACE,
+  uuidV5,
 } from "./canonical.ts";
 import type {
   AuthMapEntry,
@@ -98,10 +100,30 @@ const normalizeNestedArrays = (
   return result;
 };
 
+const normalizeLinks = (
+  value: unknown,
+  trackerId: string,
+  collection: "team" | "box" | "graveyard",
+): unknown[] =>
+  Array.isArray(value)
+    ? value.map((link, index) =>
+        isRecord(link)
+          ? {
+              ...link,
+              id: uuidV5(
+                `${trackerId}:${collection}:${index + 1}`,
+                LINK_UUID_NAMESPACE,
+              ),
+            }
+          : link,
+      )
+    : [];
+
 const normalizeState = (
   rawState: Record<string, unknown>,
   playerCount: number,
   createdAt: unknown,
+  trackerId: string,
 ): Record<string, unknown> => {
   const rawStats = isRecord(rawState.stats) ? rawState.stats : {};
   const rivalCensorMode = VALID_RIVAL_MODES.has(
@@ -116,9 +138,9 @@ const normalizeState = (
 
   const state: Record<string, unknown> = {
     ...rawState,
-    team: Array.isArray(rawState.team) ? rawState.team : [],
-    box: Array.isArray(rawState.box) ? rawState.box : [],
-    graveyard: Array.isArray(rawState.graveyard) ? rawState.graveyard : [],
+    team: normalizeLinks(rawState.team, trackerId, "team"),
+    box: normalizeLinks(rawState.box, trackerId, "box"),
+    graveyard: normalizeLinks(rawState.graveyard, trackerId, "graveyard"),
     rules: cleanStringArray(rawState.rules),
     levelCaps: Array.isArray(rawState.levelCaps) ? rawState.levelCaps : [],
     rivalCaps: Array.isArray(rawState.rivalCaps) ? rawState.rivalCaps : [],
@@ -602,7 +624,12 @@ export const transformFirebaseExport = (
     }
     if (quarantined || !owner) continue;
 
-    const state = normalizeState(rawState, playerNames.length, meta.createdAt);
+    const state = normalizeState(
+      rawState,
+      playerNames.length,
+      meta.createdAt,
+      targetTrackerId,
+    );
     rows.trackers.push({
       id: targetTrackerId,
       firebaseTrackerId,
@@ -619,7 +646,7 @@ export const transformFirebaseExport = (
     rows.trackerStates.push({
       trackerId: targetTrackerId,
       state,
-      schemaVersion: 1,
+      schemaVersion: 2,
       revision: 1,
       updatedBy: owner.supabaseUserId,
       canonicalHash: canonicalHash(state),

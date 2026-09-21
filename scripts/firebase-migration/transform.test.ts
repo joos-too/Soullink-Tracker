@@ -10,6 +10,8 @@ const OWNER_FIREBASE_UID = "firebase-owner";
 const EDITOR_FIREBASE_UID = "firebase-editor";
 const OWNER_SUPABASE_ID = "10000000-0000-4000-8000-000000000001";
 const EDITOR_SUPABASE_ID = "10000000-0000-4000-8000-000000000002";
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-5[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 
 const authMap = {
   users: [
@@ -114,7 +116,12 @@ describe("Firebase migration transformation", () => {
   });
 
   it("normalizes profiles, memberships, metadata, state, and custom rulesets", () => {
-    const result = transformFirebaseExport(validExport(), authMap);
+    const source = validExport();
+    source.trackers["legacy-tracker"].state.team = [{ id: 1, members: [] }];
+    Object.assign(source.trackers["legacy-tracker"].state, {
+      box: [{ id: 1, members: [] }],
+    });
+    const result = transformFirebaseExport(source, authMap);
 
     expect(
       result.issues.filter((entry) => entry.severity === "quarantine"),
@@ -164,6 +171,14 @@ describe("Firebase migration transformation", () => {
     expect(result.rows.trackerStates[0].state).not.toHaveProperty(
       "rivalCensorEnabled",
     );
+    expect(result.rows.trackerStates[0].schemaVersion).toBe(2);
+    const migratedState = result.rows.trackerStates[0].state as {
+      team: Array<{ id: string }>;
+      box: Array<{ id: string }>;
+    };
+    expect(migratedState.team[0].id).toMatch(UUID_PATTERN);
+    expect(migratedState.box[0].id).toMatch(UUID_PATTERN);
+    expect(migratedState.box[0].id).not.toBe(migratedState.team[0].id);
     expect(result.rows.rulesets[0]).toMatchObject({
       ownerId: OWNER_SUPABASE_ID,
       id: "custom",

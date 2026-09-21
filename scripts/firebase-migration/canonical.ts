@@ -53,6 +53,10 @@ export const TRACKER_UUID_NAMESPACE = uuidV5(
   "soullink-tracker.janlieder.de/firebase-tracker",
   DNS_UUID_NAMESPACE,
 );
+export const LINK_UUID_NAMESPACE = uuidV5(
+  "soullink-tracker.janlieder.de/pokemon-link",
+  DNS_UUID_NAMESPACE,
+);
 
 export const firebaseTrackerIdToUuid = (firebaseTrackerId: string): string =>
   uuidV5(firebaseTrackerId, TRACKER_UUID_NAMESPACE);

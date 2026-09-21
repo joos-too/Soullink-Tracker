@@ -1,4 +1,4 @@
-import React, { useEffect, useId, useState } from "react";
+import React, { useId, useState } from "react";
 import type { LinkEditPayload, Pokemon } from "@/types.ts";
 import {
   focusRingClasses,
@@ -20,9 +20,8 @@ import {
 import { normalizeLanguage } from "@/src/utils/language.ts";
 
 interface EditPairModalProps {
-  isOpen: boolean;
   onClose: () => void;
-  onSave: (payload: LinkEditPayload & { fossilSlugs?: string[] }) => void;
+  onSave: (payload: LinkEditPayload) => void;
   playerLabels: string[];
   mode?: "create" | "edit";
   initial: {
@@ -35,6 +34,7 @@ interface EditPairModalProps {
   gameVersionId?: string;
   generationSpritePath?: string | null;
   nicknamesEnabled?: boolean;
+  blockingError?: string;
 }
 
 interface PokemonFieldProps {
@@ -102,7 +102,6 @@ const PokemonField: React.FC<PokemonFieldProps> = ({
 };
 
 const EditPairModal: React.FC<EditPairModalProps> = ({
-  isOpen,
   onClose,
   onSave,
   playerLabels,
@@ -112,42 +111,38 @@ const EditPairModal: React.FC<EditPairModalProps> = ({
   gameVersionId,
   generationSpritePath,
   nicknamesEnabled = true,
+  blockingError,
 }) => {
   const { t, i18n } = useTranslation();
   const locale = normalizeLanguage(i18n.language);
-  const { containerRef } = useFocusTrap(isOpen);
+  const { containerRef } = useFocusTrap(true);
   const titleId = useId();
-  const [location, setLocation] = useState("");
-  const [locationSlug, setLocationSlug] = useState("");
-  const [fossilSlugs, setFossilSlugs] = useState<string[]>([]);
-  const [members, setMembers] = useState<PokemonDraft[]>([]);
-
   const memberToDraft = (member?: Pokemon): PokemonDraft => ({
     name:
       getPokemonNameById(member?.id, locale) ||
       (typeof member?.name === "string" ? member.name : ""),
     nickname: member?.nickname ?? "",
   });
-
-  useEffect(() => {
-    if (isOpen) {
-      setLocation(
-        initial.locationSlug
-          ? getLocationName(initial.locationSlug, locale)
-          : initial.fossilSlugs?.length
-            ? getFossilLocationName(initial.fossilSlugs)
-            : initial.location || "",
-      );
-      setLocationSlug(initial.locationSlug || "");
-      setFossilSlugs(initial.fossilSlugs || []);
-      setMembers(
-        playerLabels.map((_, index) => memberToDraft(initial.members?.[index])),
-      );
-    }
-  }, [isOpen, initial, playerLabels, locale]);
+  const [location, setLocation] = useState(() =>
+    initial.locationSlug
+      ? getLocationName(initial.locationSlug, locale)
+      : initial.fossilSlugs?.length
+        ? getFossilLocationName(initial.fossilSlugs)
+        : initial.location || "",
+  );
+  const [locationSlug, setLocationSlug] = useState(
+    () => initial.locationSlug || "",
+  );
+  const [fossilSlugs] = useState<string[]>(() => [
+    ...(initial.fossilSlugs || []),
+  ]);
+  const [members, setMembers] = useState<PokemonDraft[]>(() =>
+    playerLabels.map((_, index) => memberToDraft(initial.members?.[index])),
+  );
 
   const handleSubmit = (e: React.SubmitEvent) => {
     e.preventDefault();
+    if (blockingError) return;
     const trimmedRoute = location.trim();
     const trimmedMembers = playerLabels.map((_, index) => {
       const name = members[index]?.name.trim() ?? "";
@@ -200,8 +195,6 @@ const EditPairModal: React.FC<EditPairModalProps> = ({
     ? "grid grid-cols-1 md:grid-cols-2 gap-4"
     : "grid grid-cols-1 gap-4";
 
-  if (!isOpen) return null;
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
       <div
@@ -245,7 +238,7 @@ const EditPairModal: React.FC<EditPairModalProps> = ({
               disabled={fossilSlugs.length > 0}
               selectedSlug={locationSlug}
               onSelectedSlugChange={setLocationSlug}
-              isOpen={isOpen}
+              isOpen
               gameVersionId={gameVersionId}
             />
           </div>
@@ -282,7 +275,7 @@ const EditPairModal: React.FC<EditPairModalProps> = ({
                         return next;
                       })
                     }
-                    isOpen={isOpen}
+                    isOpen
                     generationLimit={generationLimit}
                     generationSpritePath={generationSpritePath}
                     nicknamesEnabled={nicknamesEnabled}
@@ -291,6 +284,15 @@ const EditPairModal: React.FC<EditPairModalProps> = ({
               );
             })}
           </div>
+
+          {blockingError && (
+            <div
+              role="alert"
+              className="rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-800 dark:bg-red-950/40 dark:text-red-300"
+            >
+              {blockingError}
+            </div>
+          )}
 
           <div className="mt-6 flex justify-end gap-3">
             <button
@@ -302,9 +304,9 @@ const EditPairModal: React.FC<EditPairModalProps> = ({
             </button>
             <button
               type="submit"
-              disabled={!isValid}
-              className={`px-4 py-2 rounded-md font-semibold shadow ${isValid ? "bg-green-600 text-white hover:bg-green-700" : "bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"} ${focusRingClasses}`}
-              aria-disabled={!isValid}
+              disabled={!isValid || Boolean(blockingError)}
+              className={`px-4 py-2 rounded-md font-semibold shadow ${isValid && !blockingError ? "bg-green-600 text-white hover:bg-green-700" : "bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"} ${focusRingClasses}`}
+              aria-disabled={!isValid || Boolean(blockingError)}
             >
               {submitLabel}
             </button>

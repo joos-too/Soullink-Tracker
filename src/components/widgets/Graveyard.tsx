@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import type { LinkEditPayload, PokemonLink } from "@/types.ts";
+import type { LinkEditPayload, LinkId, PokemonLink } from "@/types.ts";
 import { PLAYER_COLORS } from "@/src/services/init.ts";
 import { useTranslation } from "react-i18next";
 import { focusRingClasses } from "@/src/styles/focusRing.ts";
@@ -16,7 +16,7 @@ interface GraveyardProps {
   playerNames: string[];
   playerColors?: string[];
   onManualAddClick?: () => void;
-  onEditPair: (pairId: number, payload: LinkEditPayload) => void;
+  onEditPair: (pairId: LinkId, payload: LinkEditPayload) => void;
   onDeleteLink?: (pair: PokemonLink) => void;
   readOnly?: boolean;
   generationSpritePath?: string | null;
@@ -24,6 +24,14 @@ interface GraveyardProps {
   gameVersionId?: string;
   wikiId?: WikiId | string | null;
   nicknamesEnabled?: boolean;
+  canonicalLinkIds?: ReadonlySet<LinkId>;
+}
+
+interface GraveyardEditSession {
+  pairId: LinkId;
+  isLost: boolean;
+  initial: LinkEditPayload;
+  playerLabels: string[];
 }
 
 const Graveyard: React.FC<GraveyardProps> = ({
@@ -39,6 +47,7 @@ const Graveyard: React.FC<GraveyardProps> = ({
   readOnly = false,
   wikiId,
   nicknamesEnabled = true,
+  canonicalLinkIds,
 }) => {
   const { t, i18n } = useTranslation();
   const locale = normalizeLanguage(i18n.language);
@@ -55,39 +64,24 @@ const Graveyard: React.FC<GraveyardProps> = ({
   const colorForIndex = (index: number) =>
     playerColors?.[index] ?? PLAYER_COLORS[index] ?? "#4b5563";
 
-  const [editIndex, setEditIndex] = useState<number | null>(null);
+  const [editSession, setEditSession] = useState<GraveyardEditSession | null>(
+    null,
+  );
 
   useEffect(() => {
     if (readOnly) {
-      setEditIndex(null);
+      setEditSession(null);
     }
   }, [readOnly]);
 
-  useEffect(() => {
-    if (editIndex !== null && !graveyard[editIndex]) {
-      setEditIndex(null);
-    }
-  }, [editIndex, graveyard]);
-
-  const activePair = editIndex !== null ? graveyard[editIndex] : null;
-  const isLostPair = Boolean(activePair?.isLost);
-
-  const editInitial = useMemo(() => {
-    if (!activePair) return null;
-    return {
-      location: activePair.location ?? "",
-      locationSlug: activePair.locationSlug,
-      fossilSlugs: activePair.fossilSlugs,
-      members: names.map(
-        (_, index) => activePair.members?.[index] ?? { id: null, nickname: "" },
-      ),
-    };
-  }, [activePair, names]);
+  const linkExists = (pairId: LinkId) =>
+    canonicalLinkIds?.has(pairId) ??
+    graveyard.some((pair) => pair.id === pairId);
 
   const handleSave = (payload: LinkEditPayload) => {
-    if (!activePair) return;
-    onEditPair(activePair.id, payload);
-    setEditIndex(null);
+    if (!editSession || !linkExists(editSession.pairId)) return;
+    onEditPair(editSession.pairId, payload);
+    setEditSession(null);
   };
 
   return (
@@ -151,11 +145,27 @@ const Graveyard: React.FC<GraveyardProps> = ({
                       {canEdit && (
                         <button
                           type="button"
-                          onClick={() =>
-                            setEditIndex(
-                              graveyard.findIndex((g) => g.id === pair.id),
-                            )
-                          }
+                          onClick={() => {
+                            const playerLabels = [...names];
+                            setEditSession({
+                              pairId: pair.id,
+                              isLost: Boolean(pair.isLost),
+                              playerLabels,
+                              initial: {
+                                location: pair.location ?? "",
+                                locationSlug: pair.locationSlug,
+                                fossilSlugs: pair.fossilSlugs
+                                  ? [...pair.fossilSlugs]
+                                  : undefined,
+                                members: playerLabels.map((_, index) => ({
+                                  ...(pair.members?.[index] ?? {
+                                    id: null,
+                                    nickname: "",
+                                  }),
+                                })),
+                              },
+                            });
+                          }}
                           className={`p-1 rounded-full text-gray-500 hover:text-gray-800 dark:text-gray-300 dark:hover:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-600 ${focusRingClasses}`}
                           title={t("graveyard.titleEdit")}
                           aria-label={t("graveyard.titleEdit")}
@@ -265,40 +275,41 @@ const Graveyard: React.FC<GraveyardProps> = ({
           </p>
         )}
       </div>
-      <EditPairModal
-        isOpen={!readOnly && editIndex !== null && !isLostPair}
-        onClose={() => setEditIndex(null)}
-        onSave={handleSave}
-        playerLabels={names}
-        mode="edit"
-        initial={
-          editInitial || {
-            location: "",
-            fossilSlugs: [],
-            members: names.map(() => ({ id: null, nickname: "" })),
+      {!readOnly && editSession && !editSession.isLost && (
+        <EditPairModal
+          onClose={() => setEditSession(null)}
+          onSave={handleSave}
+          playerLabels={editSession.playerLabels}
+          mode="edit"
+          initial={editSession.initial}
+          generationLimit={pokemonGenerationLimit}
+          gameVersionId={gameVersionId}
+          generationSpritePath={generationSpritePath}
+          nicknamesEnabled={nicknamesEnabled}
+          blockingError={
+            linkExists(editSession.pairId)
+              ? undefined
+              : t("modals.common.linkUnavailable")
           }
-        }
-        generationLimit={pokemonGenerationLimit}
-        gameVersionId={gameVersionId}
-        generationSpritePath={generationSpritePath}
-        nicknamesEnabled={nicknamesEnabled}
-      />
-      <AddLostPokemonModal
-        isOpen={!readOnly && editIndex !== null && isLostPair}
-        onClose={() => setEditIndex(null)}
-        onAdd={handleSave}
-        playerNames={names}
-        generationLimit={pokemonGenerationLimit}
-        generationSpritePath={generationSpritePath}
-        gameVersionId={gameVersionId}
-        mode="edit"
-        initial={
-          editInitial || {
-            location: "",
-            members: names.map(() => ({ id: null, nickname: "" })),
+        />
+      )}
+      {!readOnly && editSession?.isLost && (
+        <AddLostPokemonModal
+          onClose={() => setEditSession(null)}
+          onAdd={handleSave}
+          playerNames={editSession.playerLabels}
+          generationLimit={pokemonGenerationLimit}
+          generationSpritePath={generationSpritePath}
+          gameVersionId={gameVersionId}
+          mode="edit"
+          initial={editSession.initial}
+          blockingError={
+            linkExists(editSession.pairId)
+              ? undefined
+              : t("modals.common.linkUnavailable")
           }
-        }
-      />
+        />
+      )}
     </div>
   );
 };

@@ -14,6 +14,7 @@ import type {
   FossilEntry,
   ItemEntry,
   LinkEditPayload,
+  LinkId,
   Pokemon,
   PokemonLink,
   RivalCensorMode,
@@ -21,6 +22,7 @@ import type {
   Ruleset,
   TrackerMeta,
 } from "@/types";
+import { createLinkId } from "@/src/services/linkIds.ts";
 import {
   createInitialState,
   ensureStatsForPlayers,
@@ -160,6 +162,15 @@ const normalizePokemonId = (id: unknown): number | null => {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
 };
 
+interface LinkCreationSession {
+  initial: LinkEditPayload;
+  playerLabels: string[];
+}
+
+interface ReviveSession extends LinkCreationSession {
+  targets: Array<{ fossilSlug: string; originalIndex: number }>;
+}
+
 const App: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -209,7 +220,8 @@ const App: React.FC = () => {
   const [publicTrackerLoading, setPublicTrackerLoading] = useState(() =>
     Boolean(routeTrackerId),
   );
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [manualLostSession, setManualLostSession] =
+    useState<LinkCreationSession | null>(null);
   const [userUseGenerationSprites, setUserUseGenerationSprites] =
     useState(false);
   const [userUseSpritesInTeamTable, setUserUseSpritesInTeamTable] =
@@ -267,11 +279,9 @@ const App: React.FC = () => {
   const [rulesetCopyName, setRulesetCopyName] = useState<string>("");
   const [rulesetOverwriteName, setRulesetOverwriteName] = useState<string>("");
 
-  const [reviveFossilSlugs, setReviveFossilSlugs] = useState<string[]>([]);
-  const [addRevivedPokemonOpen, setAddRevivedPokemonOpen] = useState(false);
-  const [pendingReviveIndices, setPendingReviveIndices] = useState<
-    number[] | null
-  >(null);
+  const [reviveSession, setReviveSession] = useState<ReviveSession | null>(
+    null,
+  );
 
   const activeTrackerMeta = activeTrackerId
     ? trackerMetas[activeTrackerId]
@@ -319,6 +329,11 @@ const App: React.FC = () => {
   const isMember = Boolean(user && activeTrackerMeta?.members?.[user.uid]);
   const isGuest = Boolean(user && activeTrackerMeta?.guests?.[user.uid]);
   const isReadOnly = !isMember;
+
+  useEffect(() => {
+    setManualLostSession(null);
+    setReviveSession(null);
+  }, [activeTrackerId, isReadOnly]);
 
   const currentUserRivalPreferences = useMemo(() => {
     if (!user || !activeTrackerMeta) return {};
@@ -616,7 +631,7 @@ const App: React.FC = () => {
           : [];
       };
 
-      const sanitizeLink = (p: any, fallbackId: number): PokemonLink => {
+      const sanitizeLink = (p: any): PokemonLink => {
         const members = sanitizeMembers(p);
         const hasNickname = members.some(
           (member) => member.nickname.trim().length > 0,
@@ -628,10 +643,7 @@ const App: React.FC = () => {
             ? p.location.trim()
             : "";
         return {
-          id:
-            Number.isFinite(Number(p?.id)) && Number(p?.id) > 0
-              ? Number(p?.id)
-              : fallbackId,
+          id: p.id,
           locationSlug: p?.locationSlug ?? null,
           ...(locationText ? { location: locationText } : {}),
           fossilSlugs: p.fossilSlugs || [],
@@ -642,7 +654,7 @@ const App: React.FC = () => {
 
       const sanitizeArray = (arr: any): PokemonLink[] => {
         const list = Array.isArray(arr) ? arr : [];
-        return list.map((p, index) => sanitizeLink(p, index + 1));
+        return list.map(sanitizeLink);
       };
 
       const sanitizeFossils = (playerFossils: any): FossilEntry[][] => {
@@ -1161,104 +1173,80 @@ const App: React.FC = () => {
     navigate("/");
   };
 
-  const updateLinkMember = useCallback(
+  const handleEditLink = useCallback(
     (
-      key: "team" | "box",
-      index: number,
-      playerIndex: number,
-      field: keyof Pokemon,
-      value: string | number | null,
+      key: "team" | "box" | "graveyard",
+      pairId: LinkId,
+      payload: LinkEditPayload,
     ) => {
       if (isReadOnly) return;
       setData((prev) => {
-        const list = [...prev[key]];
-        const target = list[index];
-        if (!target) return prev;
-        const members = [...target.members];
-        members[playerIndex] = {
-          ...(members[playerIndex] ?? { id: null, nickname: "" }),
-          [field]: value,
+        const collections: Array<"team" | "box" | "graveyard"> = [
+          key,
+          ...(["team", "box", "graveyard"] as const).filter(
+            (collection) => collection !== key,
+          ),
+        ];
+        const currentKey = collections.find((collection) =>
+          prev[collection].some((pair) => pair.id === pairId),
+        );
+        if (!currentKey) return prev;
+        return {
+          ...prev,
+          [currentKey]: prev[currentKey].map((pair) => {
+            if (pair.id !== pairId) return pair;
+            const isLost = currentKey === "graveyard" && Boolean(pair.isLost);
+            return {
+              ...pair,
+              location: payload.location?.trim() || "",
+              locationSlug: payload.locationSlug || null,
+              members: payload.members.map((member) => ({
+                id: normalizePokemonId(member.id),
+                ...(member.name?.trim() ? { name: member.name.trim() } : {}),
+                nickname: isLost ? "" : member.nickname.trim(),
+              })),
+            };
+          }),
         };
-        list[index] = { ...target, members };
-        return { ...prev, [key]: list };
       });
     },
     [isReadOnly],
   );
 
-  const updateLinkRoute = useCallback(
+  const handleEvolveLink = useCallback(
     (
       key: "team" | "box",
-      index: number,
-      value: string,
-      locationSlug?: string,
+      pairId: LinkId,
+      playerIndex: number,
+      newId: number,
     ) => {
       if (isReadOnly) return;
       setData((prev) => {
-        const list = [...prev[key]];
-        const target = list[index];
-        if (!target) return prev;
-        const next: PokemonLink = {
-          ...target,
-          location: value,
+        const collections: Array<"team" | "box" | "graveyard"> = [
+          key,
+          key === "team" ? "box" : "team",
+          "graveyard",
+        ];
+        const currentKey = collections.find((collection) =>
+          prev[collection].some((pair) => pair.id === pairId),
+        );
+        if (!currentKey) return prev;
+        return {
+          ...prev,
+          [currentKey]: prev[currentKey].map((pair) => {
+            if (pair.id !== pairId) return pair;
+            const members = [...pair.members];
+            members[playerIndex] = {
+              ...(members[playerIndex] ?? { nickname: "" }),
+              id: newId,
+              name: "",
+            };
+            return { ...pair, members };
+          }),
         };
-        if (locationSlug) {
-          next.locationSlug = locationSlug;
-        } else {
-          next.locationSlug = null;
-        }
-        list[index] = next;
-        return { ...prev, [key]: list };
       });
     },
     [isReadOnly],
-  );
-
-  const handleTeamChange = useCallback(
-    (
-      index: number,
-      playerIndex: number,
-      field: keyof Pokemon,
-      value: string | number | null,
-    ) => {
-      updateLinkMember("team", index, playerIndex, field, value);
-    },
-    [updateLinkMember],
-  );
-
-  const handleRouteChange = useCallback(
-    (index: number, value: string, locationSlug?: string) => {
-      updateLinkRoute("team", index, value, locationSlug);
-    },
-    [updateLinkRoute],
-  );
-
-  const handleBoxChange = useCallback(
-    (
-      index: number,
-      playerIndex: number,
-      field: keyof Pokemon,
-      value: string | number | null,
-    ) => {
-      // index is relative to filteredBox; resolve to data.box index via ID
-      const link = filteredBox[index];
-      if (!link) return;
-      const realIndex = data.box.findIndex((p) => p.id === link.id);
-      if (realIndex === -1) return;
-      updateLinkMember("box", realIndex, playerIndex, field, value);
-    },
-    [updateLinkMember, filteredBox, data.box],
-  );
-
-  const handleBoxRouteChange = useCallback(
-    (index: number, value: string, locationSlug?: string) => {
-      const link = filteredBox[index];
-      if (!link) return;
-      const realIndex = data.box.findIndex((p) => p.id === link.id);
-      if (realIndex === -1) return;
-      updateLinkRoute("box", realIndex, value, locationSlug);
-    },
-    [updateLinkRoute, filteredBox, data.box],
   );
 
   const handleLevelCapToggle = useCallback(
@@ -1396,7 +1384,7 @@ const App: React.FC = () => {
   const handleManualAddFromModal = (payload: LinkEditPayload) => {
     if (isReadOnly) return;
     const newPair: PokemonLink = {
-      id: Date.now(),
+      id: createLinkId(),
       location: payload.location?.trim() || "",
       locationSlug: payload.locationSlug,
       members: payload.members.map((member) => ({
@@ -1407,38 +1395,14 @@ const App: React.FC = () => {
       isLost: true,
     };
     handleManualAddToGraveyard(newPair);
-    setIsModalOpen(false);
+    setManualLostSession(null);
   };
 
   const handleEditGraveyardPair = (
-    pairId: number,
+    pairId: LinkId,
     payload: LinkEditPayload,
   ) => {
-    if (isReadOnly) return;
-    setData((prev) => ({
-      ...prev,
-      graveyard: prev.graveyard.map((pair) => {
-        if (pair.id !== pairId) return pair;
-        const isLost = pair.isLost ?? false;
-        const members = payload.members.map((member) => ({
-          id: normalizePokemonId(member.id),
-          ...(member.name?.trim() ? { name: member.name.trim() } : {}),
-          nickname: isLost ? "" : member.nickname.trim(),
-        }));
-        const next: PokemonLink = {
-          ...pair,
-          location: payload.location?.trim() || "",
-          members,
-          isLost,
-        };
-        if (payload.locationSlug) {
-          next.locationSlug = payload.locationSlug;
-        } else {
-          next.locationSlug = null;
-        }
-        return next;
-      }),
-    }));
+    handleEditLink("graveyard", pairId, payload);
   };
 
   const handleAddTeamPair = (payload: LinkEditPayload) => {
@@ -1450,9 +1414,10 @@ const App: React.FC = () => {
         team: [
           ...prev.team,
           {
-            id: Date.now(),
+            id: createLinkId(),
             location: payload.location?.trim() || "",
             locationSlug: payload.locationSlug,
+            fossilSlugs: payload.fossilSlugs,
             members: payload.members.map((member) => ({
               id: normalizePokemonId(member.id),
               ...(member.name?.trim() ? { name: member.name.trim() } : {}),
@@ -1471,9 +1436,10 @@ const App: React.FC = () => {
       box: [
         ...prev.box,
         {
-          id: Date.now(),
+          id: createLinkId(),
           location: payload.location?.trim() || "",
           locationSlug: payload.locationSlug,
+          fossilSlugs: payload.fossilSlugs,
           members: payload.members.map((member) => ({
             id: normalizePokemonId(member.id),
             ...(member.name?.trim() ? { name: member.name.trim() } : {}),
@@ -1613,30 +1579,52 @@ const App: React.FC = () => {
     });
   };
 
-  const handleReviveFossils = (selectedIndices: number[]) => {
+  const handleReviveFossils = (
+    selectedIndices: number[],
+    playerLabels: string[],
+  ) => {
     if (isReadOnly || !data.fossils) return;
 
     const selectedFossils = selectedIndices.map(
       (fIdx, pIdx) => data.fossils[pIdx][fIdx].fossilId,
     );
 
-    setReviveFossilSlugs(selectedFossils);
-    setPendingReviveIndices(selectedIndices);
-    setAddRevivedPokemonOpen(true);
+    setReviveSession({
+      playerLabels: [...playerLabels],
+      targets: selectedIndices.map((originalIndex, playerIndex) => ({
+        fossilSlug: selectedFossils[playerIndex],
+        originalIndex,
+      })),
+      initial: {
+        fossilSlugs: [...selectedFossils],
+        locationSlug: null,
+        members: playerLabels.map(() => ({ id: null, nickname: "" })),
+      },
+    });
   };
 
   const confirmRevival = (
     revivedIds: (number | null)[],
     revivedNames: string[] = [],
   ) => {
-    if (!pendingReviveIndices) return;
+    const targets = reviveSession?.targets;
+    if (!targets) return;
 
     setData((prev) => {
       const newFossils = [...(prev.fossils || [])];
-      pendingReviveIndices.forEach((fIdx, pIdx) => {
-        if (newFossils[pIdx] && newFossils[pIdx][fIdx]) {
-          newFossils[pIdx] = newFossils[pIdx].map((f, i) =>
-            i === fIdx
+      targets.forEach(({ fossilSlug, originalIndex }, pIdx) => {
+        const playerFossils = newFossils[pIdx];
+        if (playerFossils) {
+          const original = playerFossils[originalIndex];
+          const targetIndex =
+            original?.fossilId === fossilSlug && !original.revived
+              ? originalIndex
+              : playerFossils.findIndex(
+                  (fossil) => fossil.fossilId === fossilSlug && !fossil.revived,
+                );
+          if (targetIndex === -1) return;
+          newFossils[pIdx] = playerFossils.map((f, index) =>
+            index === targetIndex
               ? {
                   ...f,
                   revived: true,
@@ -1651,8 +1639,6 @@ const App: React.FC = () => {
       });
       return { ...prev, fossils: newFossils };
     });
-
-    setPendingReviveIndices(null);
   };
 
   const handleUpdateFossilList = useCallback(
@@ -2179,6 +2165,13 @@ const App: React.FC = () => {
     }
     return [];
   }, [data.playerNames, activeTrackerMeta?.playerNames]);
+  const editableLinkIds = useMemo(
+    () =>
+      new Set(
+        [...data.team, ...data.box, ...data.graveyard].map((pair) => pair.id),
+      ),
+    [data.team, data.box, data.graveyard],
+  );
 
   const playerColors = useMemo(
     () => resolvedPlayerNames.map((_, index) => PLAYER_COLORS[index]),
@@ -2370,15 +2363,17 @@ const App: React.FC = () => {
     />
   ) : (
     <div className="bg-[#f0f0f0] dark:bg-gray-900 min-h-screen p-2 sm:p-4 md:p-8 text-gray-800 dark:text-gray-200">
-      <AddLostPokemonModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onAdd={handleManualAddFromModal}
-        playerNames={resolvedPlayerNames}
-        generationLimit={pokemonGenerationLimit}
-        generationSpritePath={generationSpritePath}
-        gameVersionId={activeGameVersionId || undefined}
-      />
+      {manualLostSession && (
+        <AddLostPokemonModal
+          onClose={() => setManualLostSession(null)}
+          onAdd={handleManualAddFromModal}
+          playerNames={manualLostSession.playerLabels}
+          initial={manualLostSession.initial}
+          generationLimit={pokemonGenerationLimit}
+          generationSpritePath={generationSpritePath}
+          gameVersionId={activeGameVersionId || undefined}
+        />
+      )}
       <SelectLossModal
         isOpen={!isReadOnly && showLossModal}
         onClose={() => {
@@ -2592,12 +2587,18 @@ const App: React.FC = () => {
         <main className="grid grid-cols-1 xl:grid-cols-[64fr_36fr] gap-6 mt-6">
           <div className="space-y-8">
             <TeamTable
+              key={`team-${activeTrackerId}`}
               title={t("team.teamTitle")}
               data={data.team}
               playerNames={resolvedPlayerNames}
               playerColors={playerColors}
-              onPokemonChange={handleTeamChange}
-              onRouteChange={handleRouteChange}
+              onEditLink={(pairId, payload) =>
+                handleEditLink("team", pairId, payload)
+              }
+              onEvolveLink={(pairId, playerIndex, newId) =>
+                handleEvolveLink("team", pairId, playerIndex, newId)
+              }
+              canonicalLinkIds={editableLinkIds}
               onAddToGraveyard={handleAddToGraveyard}
               onAddLink={handleAddTeamPair}
               emptyMessage={t("team.teamEmpty")}
@@ -2625,12 +2626,18 @@ const App: React.FC = () => {
               nicknamesEnabled={data.nicknamesEnabled ?? true}
             />
             <TeamTable
+              key={`box-${activeTrackerId}`}
               title={t("team.boxTitle")}
               data={filteredBox}
               playerNames={resolvedPlayerNames}
               playerColors={playerColors}
-              onPokemonChange={handleBoxChange}
-              onRouteChange={handleBoxRouteChange}
+              onEditLink={(pairId, payload) =>
+                handleEditLink("box", pairId, payload)
+              }
+              onEvolveLink={(pairId, playerIndex, newId) =>
+                handleEvolveLink("box", pairId, playerIndex, newId)
+              }
+              canonicalLinkIds={editableLinkIds}
               onAddToGraveyard={handleAddToGraveyard}
               onDeleteLink={handleDeleteLink}
               onAddLink={handleAddBoxPair}
@@ -2713,7 +2720,9 @@ const App: React.FC = () => {
               infiniteFossilsEnabled={data.infiniteFossilsEnabled ?? false}
               onAddFossil={handleAddFossil}
               onToggleBag={handleToggleFossilBag}
-              onRevive={handleReviveFossils}
+              onRevive={(selectedIndices) =>
+                handleReviveFossils(selectedIndices, resolvedPlayerNames)
+              }
               onUpdateFossils={handleUpdateFossilList}
               onAddItems={handleAddItem}
               onToggleItemBag={handleToggleItemBag}
@@ -2732,10 +2741,25 @@ const App: React.FC = () => {
               readOnly={isReadOnly}
             />
             <Graveyard
+              key={`graveyard-${activeTrackerId}`}
               graveyard={data.graveyard}
+              canonicalLinkIds={editableLinkIds}
               playerNames={resolvedPlayerNames}
               playerColors={playerColors}
-              onManualAddClick={() => setIsModalOpen(true)}
+              onManualAddClick={() => {
+                const playerLabels = [...resolvedPlayerNames];
+                setManualLostSession({
+                  playerLabels,
+                  initial: {
+                    location: "",
+                    locationSlug: null,
+                    members: playerLabels.map(() => ({
+                      id: null,
+                      nickname: "",
+                    })),
+                  },
+                });
+              }}
               onEditPair={handleEditGraveyardPair}
               onDeleteLink={handleDeleteLink}
               readOnly={isReadOnly}
@@ -2762,32 +2786,29 @@ const App: React.FC = () => {
         </footer>
       </div>
 
-      <EditPairModal
-        isOpen={addRevivedPokemonOpen}
-        onClose={() => {
-          setAddRevivedPokemonOpen(false);
-          setPendingReviveIndices(null);
-        }}
-        onSave={(payload) => {
-          handleAddBoxPair(payload);
-          const pokemonIds = payload.members.map((m) =>
-            normalizePokemonId(m.id),
-          );
-          const pokemonNames = payload.members.map((m) => m.name ?? "");
-          confirmRevival(pokemonIds, pokemonNames);
-          setAddRevivedPokemonOpen(false);
-        }}
-        playerLabels={resolvedPlayerNames}
-        mode="create"
-        initial={{
-          fossilSlugs: reviveFossilSlugs,
-          members: resolvedPlayerNames.map(() => ({ id: null, nickname: "" })),
-        }}
-        generationLimit={pokemonGenerationLimit}
-        gameVersionId={activeGameVersionId || undefined}
-        generationSpritePath={generationSpritePath}
-        nicknamesEnabled={data.nicknamesEnabled ?? true}
-      />
+      {reviveSession && (
+        <EditPairModal
+          onClose={() => {
+            setReviveSession(null);
+          }}
+          onSave={(payload) => {
+            handleAddBoxPair(payload);
+            const pokemonIds = payload.members.map((m) =>
+              normalizePokemonId(m.id),
+            );
+            const pokemonNames = payload.members.map((m) => m.name ?? "");
+            confirmRevival(pokemonIds, pokemonNames);
+            setReviveSession(null);
+          }}
+          playerLabels={reviveSession.playerLabels}
+          mode="create"
+          initial={reviveSession.initial}
+          generationLimit={pokemonGenerationLimit}
+          gameVersionId={activeGameVersionId || undefined}
+          generationSpritePath={generationSpritePath}
+          nicknamesEnabled={data.nicknamesEnabled ?? true}
+        />
+      )}
     </div>
   );
 
