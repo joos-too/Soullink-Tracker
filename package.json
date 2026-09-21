@@ -24,6 +24,7 @@
     "firebase:migrate": "tsx scripts/migrate-firebase-to-supabase.ts",
     "test": "vitest run",
     "test:unit": "vitest run",
+    "test:bundle": "npm run build && node scripts/check-bundle.mjs && playwright test --config playwright.bundle.config.ts",
     "test:migration": "vitest run scripts/firebase-migration",
     "test:migration:integration": "node scripts/run-migrated-data-integration.mjs",
     "typecheck:migration": "tsc --project tsconfig.migration.json",
