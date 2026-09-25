@@ -1,5 +1,6 @@
 import SpriteImage from "@/src/components/other/SpriteImage.tsx";
-import ItemSprite from "@/src/components/other/ItemSprite.tsx";
+import ItemGroupCard from "@/src/components/other/ItemGroupCard.tsx";
+import PlayerColumnHeader from "@/src/components/other/PlayerColumnHeader.tsx";
 import React, { useEffect, useId, useMemo, useState } from "react";
 import type { FossilEntry, PokemonLink, ItemEntry } from "@/types";
 import { useTranslation } from "react-i18next";
@@ -13,11 +14,6 @@ import {
   getPokemonNameById,
 } from "@/src/services/search/pokemonSearch.ts";
 import { resolvePokemonDisplay } from "@/src/services/pokemons/pokemonDisplay.ts";
-import { FOSSILS, STONES, MEGA_STONES } from "@/src/data/special-items.ts";
-import {
-  getItemName,
-  getItemSpriteUrl,
-} from "@/src/services/search/itemSearch.ts";
 import {
   locationMatchesQuery,
   resolveLocationDisplay,
@@ -27,15 +23,20 @@ import { normalizeLanguage } from "@/src/utils/language";
 import {
   groupFossilEntries,
   groupItemEntries,
-  isGroupUsedUp,
-  splitPendingIndices,
-  type EntryGroup,
 } from "@/src/services/items/itemGroups.ts";
+import {
+  getFossilSpriteUrl,
+  getFossilStatus,
+  getItemStatus,
+  resolveItemDisplay,
+  summarizeEntryGroup,
+  type EntryGroupSummary,
+  type ItemCategory,
+} from "@/src/services/items/itemDisplay.ts";
 import { useMultiLocaleSearch } from "@/src/hooks/useMultiLocaleSearch.ts";
 
 type SearchMode = "pokemon" | "items";
 type PokemonSectionKey = "team" | "box" | "graveyard";
-type ItemCategory = "fossils" | "stones" | "megaStones" | "items";
 
 interface TrackerSearchModalProps {
   isOpen: boolean;
@@ -64,23 +65,14 @@ interface ItemRow {
   category: ItemCategory;
   id: string;
   name: string;
-  spriteUrl: string;
+  spriteUrl: string | null;
   playerIndex: number;
-  status: string;
-  /** Further uncollected duplicates, each rendered as its own row */
-  extraStatuses: string[];
-  /** Items in the bag, shown as a ×N badge for grouped duplicates */
-  bagCount: number;
-  isGrouped: boolean;
+  summary: EntryGroupSummary;
   locations: string[];
-  used: boolean;
 }
 
 const USED_ROW_CLASS =
   "border-red-300 bg-red-50 dark:border-red-900/50 dark:bg-red-900/20";
-
-// Same card styling as the item tracker
-const USED_CARD_CLASS = `${USED_ROW_CLASS} text-red-700 dark:text-red-400`;
 
 // Header colors match the item/fossil tracker headers
 const ITEM_CATEGORY_COLORS: Record<ItemCategory, string> = {
@@ -89,8 +81,6 @@ const ITEM_CATEGORY_COLORS: Record<ItemCategory, string> = {
   megaStones: "#6d4c9f",
   items: "#2c7b90",
 };
-
-const MEGA_STONE_IDS = new Set(MEGA_STONES.map((m) => m.id));
 
 const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
   isOpen,
@@ -206,80 +196,22 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
   const allItems = useMemo<ItemRow[]>(() => {
     const rows: ItemRow[] = [];
 
-    // Shared by fossils and items, same layout as the item tracker
-    const buildGroupStatus = <T,>(
-      group: EntryGroup<T>,
-      entries: T[],
-      getEntryStatus: (entry: T) => string,
-      usedCountKey: string,
-    ) => {
-      const { headerPendingIdx, extraPendingIndices } =
-        splitPendingIndices(group);
-      const extraStatuses = extraPendingIndices.map((idx) =>
-        getEntryStatus(entries[idx]),
-      );
-
-      let status: string;
-      if (headerPendingIdx !== undefined) {
-        status = getEntryStatus(entries[headerPendingIdx]);
-      } else if (group.indices.length === 1) {
-        status = getEntryStatus(group.entry);
-      } else {
-        const parts: string[] = [];
-        if (group.bagIndices.length > 0) {
-          parts.push(
-            t("tracker.infoPanel.itemCountBag", {
-              amount: group.bagIndices.length,
-            }),
-          );
-        }
-        if (group.usedIndices.length > 0) {
-          parts.push(t(usedCountKey, { amount: group.usedIndices.length }));
-        }
-        status = parts.join(" · ");
-      }
-
-      return {
-        status,
-        extraStatuses,
-        bagCount: group.bagIndices.length,
-        isGrouped: group.indices.length > 1,
-        used: isGroupUsedUp(group),
-      };
-    };
-
     // Fossils, identical fossils grouped per player
     (fossils ?? []).forEach((playerFossils, pIdx) => {
       groupFossilEntries(playerFossils ?? []).forEach((group) => {
         const { fossilId } = group.entry;
-        const def = FOSSILS.find((f) => f.id === fossilId);
-        const fossilStatus = (entry: FossilEntry) => {
-          if (entry.revived) {
-            const pokemonName =
-              getPokemonNameById(entry.pokemonId, locale) ||
-              entry.pokemonName ||
-              "";
-            return pokemonName
-              ? `${t("tracker.infoPanel.fossilRevived")}: ${pokemonName}`
-              : t("tracker.infoPanel.fossilRevived");
-          }
-          return entry.inBag
-            ? t("tracker.infoPanel.fossilBag")
-            : t("tracker.infoPanel.fossilLocation", {
-                location: resolveLocationDisplay(entry, locale),
-              });
-        };
         rows.push({
           category: "fossils",
           id: fossilId,
           name: t(`fossils.${fossilId}`),
-          spriteUrl: def ? `/fossil-sprites/${def.sprite}` : "",
+          spriteUrl: getFossilSpriteUrl(fossilId),
           playerIndex: pIdx,
-          ...buildGroupStatus(
+          summary: summarizeEntryGroup(
             group,
             playerFossils,
-            fossilStatus,
+            (entry) => getFossilStatus(entry, locale, t),
             "tracker.infoPanel.fossilCountRevived",
+            t,
           ),
           locations: group.indices.map((idx) =>
             resolveLocationDisplay(playerFossils[idx], locale),
@@ -292,62 +224,27 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
     (items ?? []).forEach((playerItems, pIdx) => {
       groupItemEntries(playerItems ?? []).forEach((group) => {
         const { entry } = group;
-        const itemId = entry.id ?? "";
-        const customName = entry.name?.trim() ?? "";
-        const isCustomItem = itemId.startsWith("item:");
-        const itemSlug = isCustomItem ? itemId.replace("item:", "") : null;
-        const isMega = itemSlug ? MEGA_STONE_IDS.has(itemSlug) : false;
-        const stoneDef = isCustomItem
-          ? null
-          : STONES.find((s) => s.id === itemId);
-
-        let category: ItemCategory;
-        let name: string;
-        let spriteUrl: string;
-
-        if (!isCustomItem && stoneDef) {
-          category = "stones";
-          name = t(`stones.${itemId}`);
-          spriteUrl = `/stone-sprites/${stoneDef.sprite}`;
-        } else if (isMega && itemSlug) {
-          category = "megaStones";
-          name = getItemName(itemSlug, locale);
-          spriteUrl = getItemSpriteUrl(itemSlug);
-        } else if (itemSlug) {
-          category = "items";
-          name = getItemName(itemSlug, locale);
-          spriteUrl = getItemSpriteUrl(itemSlug);
-        } else {
-          category = "items";
-          name = customName || itemId;
-          spriteUrl = "";
-        }
-
-        const locations = group.indices.map((idx) =>
-          resolveLocationDisplay(playerItems[idx], locale),
+        const { category, name, spriteUrl } = resolveItemDisplay(
+          entry,
+          locale,
+          t,
         );
-        const itemStatus = (item: ItemEntry) =>
-          item.used
-            ? t("tracker.infoPanel.stoneUsed")
-            : item.inBag
-              ? t("tracker.infoPanel.stoneBag")
-              : t("tracker.infoPanel.stoneLocation", {
-                  location: resolveLocationDisplay(item, locale),
-                });
-
         rows.push({
           category,
-          id: itemId || customName,
+          id: entry.id || entry.name?.trim() || "",
           name,
           spriteUrl,
           playerIndex: pIdx,
-          ...buildGroupStatus(
+          summary: summarizeEntryGroup(
             group,
             playerItems,
-            itemStatus,
+            (item) => getItemStatus(item, locale, t),
             "tracker.infoPanel.itemCountUsed",
+            t,
           ),
-          locations,
+          locations: group.indices.map((idx) =>
+            resolveLocationDisplay(playerItems[idx], locale),
+          ),
         });
       });
     });
@@ -398,56 +295,6 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
   const playerGridStyle: React.CSSProperties = {
     gridTemplateColumns: `repeat(${playerNames.length}, minmax(0, 1fr))`,
   };
-
-  const renderItemText = (item: ItemRow, status: string, showBadge = false) => (
-    <div className="flex-1 min-w-0">
-      <div className="flex items-center gap-1 min-w-0">
-        <span className="font-bold truncate" title={item.name}>
-          {item.name}
-        </span>
-        {showBadge && item.isGrouped && item.bagCount > 0 && (
-          <span className="shrink-0 px-1 rounded bg-gray-200 dark:bg-gray-700 font-bold">
-            ×{item.bagCount}
-          </span>
-        )}
-      </div>
-      <div className="opacity-70 truncate" title={status}>
-        {status}
-      </div>
-    </div>
-  );
-
-  // Same card as the item/fossil tracker widget
-  const renderItemCard = (item: ItemRow, key: string) => (
-    <div
-      key={key}
-      className={`p-1.5 rounded border text-[10px] ${
-        item.used
-          ? USED_CARD_CLASS
-          : item.bagCount === 0
-            ? "border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-300 opacity-60"
-            : "border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-300"
-      }`}
-    >
-      <div className="flex items-center gap-2 h-7.5">
-        <ItemSprite src={item.spriteUrl || null} used={item.used} />
-        {renderItemText(item, item.status, true)}
-      </div>
-      {/* Row spacing (18px) matches the padding, border and gap between two
-          separate cards */}
-      {item.extraStatuses.map((line, lineIdx) => (
-        <div
-          key={lineIdx}
-          className="mt-2 pt-2.25 border-t border-dashed border-gray-200 dark:border-gray-700"
-        >
-          <div className="flex items-center gap-2 h-7.5">
-            <div className="w-6 shrink-0" />
-            {renderItemText(item, line)}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
 
   const hasPokemonResults = pokemonSections.length > 0;
   const hasItemResults = itemSections.length > 0;
@@ -647,20 +494,30 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
                         key={`${section.key}-player-${pIdx}`}
                         className="space-y-2 min-w-0"
                       >
-                        <div className="px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
-                          <span
-                            className="block text-xs font-press-start truncate"
-                            title={playerNames[pIdx]}
-                            style={{ color: playerColors[pIdx] ?? "#4b5563" }}
-                          >
-                            {playerNames[pIdx]}
-                          </span>
-                        </div>
+                        <PlayerColumnHeader
+                          name={playerNames[pIdx]}
+                          color={playerColors[pIdx] ?? "#4b5563"}
+                        />
                         <div className="space-y-1 px-1">
-                          {playerItems.map((item, idx) =>
-                            renderItemCard(
-                              item,
-                              `${section.key}-${item.id}-${pIdx}-${idx}`,
+                          {playerItems.map(
+                            ({ id, name, spriteUrl, summary }, idx) => (
+                              <ItemGroupCard
+                                key={`${section.key}-${id}-${pIdx}-${idx}`}
+                                name={name}
+                                spriteUrl={spriteUrl}
+                                status={summary.status}
+                                badgeCount={
+                                  summary.isGrouped ? summary.bagCount : 0
+                                }
+                                used={summary.usedUp}
+                                dimmed={summary.bagCount === 0}
+                                extraRows={summary.extraPending.map(
+                                  ({ index, status }) => ({
+                                    key: index,
+                                    status,
+                                  }),
+                                )}
+                              />
                             ),
                           )}
                         </div>
