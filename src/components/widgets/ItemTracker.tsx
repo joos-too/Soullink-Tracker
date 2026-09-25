@@ -24,8 +24,10 @@ import AddFossilModal from "@/src/components/modals/AddFossilModal.tsx";
 import AddItemModal from "@/src/components/modals/AddItemModal.tsx";
 import ItemSprite from "@/src/components/other/ItemSprite.tsx";
 import {
+  groupFossilEntries,
   groupItemEntries,
-  isItemGroupUsedUp,
+  isGroupUsedUp,
+  type FossilGroup,
   type ItemGroup,
 } from "@/src/services/items/itemGroups.ts";
 import {
@@ -293,18 +295,48 @@ const ItemTracker: React.FC<ItemTrackerProps> = ({
       <ItemSprite />
     );
 
-  const renderCollectButton = (pIdx: number, sIdx: number) => (
+  const renderCollectButton = (onCollect: () => void, title: string) => (
     <button
       onClick={(e) => {
         e.stopPropagation();
-        onToggleItemBag(pIdx, sIdx);
+        onCollect();
       }}
       className="p-1 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 hover:bg-blue-200 shrink-0"
-      title={t("tracker.infoPanel.stoneBag")}
+      title={title}
     >
       <FiCheck size={12} />
     </button>
   );
+
+  // Each further uncollected duplicate gets its own row. Rows are spaced like
+  // separate cards (padding, border and gap = 18px), so a group is exactly as
+  // tall as the same entries listed individually.
+  const renderPendingRow = (
+    key: string,
+    name: string,
+    status: string,
+    collectButton: React.ReactNode,
+  ) => (
+    <div
+      key={key}
+      className="mt-2 pt-2.25 border-t border-dashed border-gray-200 dark:border-gray-700"
+    >
+      <div className="flex items-center gap-2 h-7.5">
+        <div className="w-6 shrink-0" />
+        <div className="flex-1 min-w-0">
+          <div className="font-bold truncate">{name}</div>
+          <div className="opacity-70 truncate">{status}</div>
+        </div>
+        {!readOnly && collectButton}
+      </div>
+    </div>
+  );
+
+  const collectItem = (pIdx: number, sIdx: number) =>
+    renderCollectButton(
+      () => onToggleItemBag(pIdx, sIdx),
+      t("tracker.infoPanel.stoneBag"),
+    );
 
   const renderEditableItem = (entry: ItemEntry, pIdx: number, sIdx: number) => {
     const { displayName, spriteSrc } = resolveItemDisplay(entry);
@@ -337,11 +369,10 @@ const ItemTracker: React.FC<ItemTrackerProps> = ({
 
   const renderItemGroup = (group: ItemGroup, pIdx: number) => {
     const { displayName, spriteSrc } = resolveItemDisplay(group.entry);
-    const usedUp = isItemGroupUsedUp(group);
+    const usedUp = isGroupUsedUp(group);
     const isSingle = group.indices.length === 1;
     const bagCount = group.bagIndices.length;
     const usedCount = group.usedIndices.length;
-    const pendingCount = group.pendingIndices.length;
 
     const statusParts: string[] = [];
     if (bagCount > 0) {
@@ -354,14 +385,19 @@ const ItemTracker: React.FC<ItemTrackerProps> = ({
         t("tracker.infoPanel.itemCountUsed", { amount: usedCount }),
       );
     }
-    if (statusParts.length === 0 && pendingCount > 0) {
-      statusParts.push(
-        t("tracker.infoPanel.itemCountPending", { amount: pendingCount }),
-      );
-    }
-    const status = isSingle
-      ? getEntryStatus(group.entry)
-      : statusParts.join(" · ");
+    // Without bag or used items, the first uncollected item is shown in the
+    // header row, so a group of N uncollected items is exactly N rows tall.
+    const headerPendingIdx =
+      bagCount === 0 && usedCount === 0 ? group.pendingIndices[0] : undefined;
+    const extraPendingIndices = group.pendingIndices.filter(
+      (sIdx) => sIdx !== headerPendingIdx,
+    );
+    const status =
+      headerPendingIdx !== undefined
+        ? getEntryStatus(displayStones[pIdx][headerPendingIdx])
+        : isSingle
+          ? getEntryStatus(group.entry)
+          : statusParts.join(" · ");
 
     return (
       <div
@@ -374,7 +410,7 @@ const ItemTracker: React.FC<ItemTrackerProps> = ({
               : "border-gray-200 dark:border-gray-700 dark:text-gray-300"
         }`}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 h-7.5">
           {renderItemSprite(spriteSrc, usedUp)}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1 min-w-0">
@@ -388,11 +424,10 @@ const ItemTracker: React.FC<ItemTrackerProps> = ({
             <div className="opacity-70 truncate">{status}</div>
           </div>
 
-          {/* Move to bag button for a single uncollected item */}
-          {isSingle &&
-            pendingCount > 0 &&
+          {/* Move to bag button for the uncollected item in the header */}
+          {headerPendingIdx !== undefined &&
             !readOnly &&
-            renderCollectButton(pIdx, group.indices[0])}
+            collectItem(pIdx, headerPendingIdx)}
 
           {/* Use one item from the bag */}
           {bagCount > 0 && !readOnly && (
@@ -409,21 +444,189 @@ const ItemTracker: React.FC<ItemTrackerProps> = ({
           )}
         </div>
 
-        {/* Uncollected items keep their own location */}
-        {!isSingle && pendingCount > 0 && (
-          <div className="mt-1 ml-8 space-y-1">
-            {group.pendingIndices.map((sIdx) => (
-              <div
-                key={`${pIdx}-${group.key}-pending-${sIdx}`}
-                className="flex items-center gap-2"
-              >
-                <span className="flex-1 min-w-0 opacity-70 truncate">
-                  {getEntryStatus(displayStones[pIdx][sIdx])}
+        {extraPendingIndices.map((sIdx) =>
+          renderPendingRow(
+            `${pIdx}-${group.key}-pending-${sIdx}`,
+            displayName,
+            getEntryStatus(displayStones[pIdx][sIdx]),
+            collectItem(pIdx, sIdx),
+          ),
+        )}
+      </div>
+    );
+  };
+
+  // --- Fossil rendering helpers ---
+  const getFossilStatus = (entry: FossilEntry) => {
+    if (entry.revived) {
+      const pokemonName =
+        getPokemonNameById(entry.pokemonId, locale) || entry.pokemonName || "";
+      return pokemonName
+        ? `${t("tracker.infoPanel.fossilRevived")}: ${pokemonName}`
+        : t("tracker.infoPanel.fossilRevived");
+    }
+    return entry.inBag
+      ? t("tracker.infoPanel.fossilBag")
+      : t("tracker.infoPanel.fossilLocation", {
+          location: resolveLocationDisplay(entry, locale),
+        });
+  };
+
+  const renderFossilSprite = (fossilId: string, revived: boolean) => {
+    const def = FOSSILS.find((f) => f.id === fossilId);
+    return (
+      <SpriteImage
+        src={`/fossil-sprites/${def?.sprite}`}
+        alt=""
+        className={`w-6 h-6 object-contain shrink-0 ${revived ? "grayscale-[0.5]" : ""}`}
+      />
+    );
+  };
+
+  const collectFossil = (pIdx: number, fIdx: number) =>
+    renderCollectButton(
+      () => onToggleBag(pIdx, fIdx),
+      t("tracker.infoPanel.fossilBag"),
+    );
+
+  const renderEditableFossil = (
+    entry: FossilEntry,
+    pIdx: number,
+    fIdx: number,
+  ) => (
+    <div
+      key={`${pIdx}-${entry.fossilId}-${fIdx}`}
+      className={`flex items-center gap-2 p-1.5 rounded border text-[10px] transition-all ${
+        entry.revived
+          ? "border-red-300 bg-red-50 dark:border-red-900/50 dark:bg-red-900/20 text-red-700 dark:text-red-400"
+          : "border-gray-200 dark:border-gray-700 dark:text-gray-300"
+      }`}
+    >
+      {renderFossilSprite(entry.fossilId, entry.revived)}
+      <div className="flex-1 min-w-0">
+        <div className="font-bold truncate">
+          {t(`fossils.${entry.fossilId}`)}
+        </div>
+        <div className="opacity-70 truncate">{getFossilStatus(entry)}</div>
+      </div>
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          deleteFossil(pIdx, fIdx);
+        }}
+        className={`p-1 rounded bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 hover:bg-red-200 shrink-0 ${focusRingRedClasses}`}
+      >
+        <FiX size={12} />
+      </button>
+    </div>
+  );
+
+  const renderFossilGroup = (group: FossilGroup, pIdx: number) => {
+    const name = t(`fossils.${group.entry.fossilId}`);
+    const revivedUp = isGroupUsedUp(group);
+    const isSingle = group.indices.length === 1;
+    const bagCount = group.bagIndices.length;
+    const revivedCount = group.usedIndices.length;
+    const playerFossils = displayFossils[pIdx];
+
+    // Any fossil of the group in the bag can be revived, so the group selects
+    // its first one.
+    const isSelected = group.bagIndices.includes(fossilSelections[pIdx]);
+    const isInteractive = !readOnly && bagCount > 0;
+    const toggleSelection = () =>
+      setFossilSelections((prev) => {
+        const next = [...prev];
+        next[pIdx] = isSelected ? -1 : group.bagIndices[0];
+        return next;
+      });
+
+    const statusParts: string[] = [];
+    if (bagCount > 0) {
+      statusParts.push(
+        t("tracker.infoPanel.itemCountBag", { amount: bagCount }),
+      );
+    }
+    if (revivedCount > 0) {
+      statusParts.push(
+        t("tracker.infoPanel.fossilCountRevived", { amount: revivedCount }),
+      );
+    }
+    // Same layout as items: the first uncollected fossil is the header when
+    // nothing is in the bag or revived.
+    const headerPendingIdx =
+      bagCount === 0 && revivedCount === 0
+        ? group.pendingIndices[0]
+        : undefined;
+    const extraPendingIndices = group.pendingIndices.filter(
+      (fIdx) => fIdx !== headerPendingIdx,
+    );
+    const status =
+      headerPendingIdx !== undefined
+        ? getFossilStatus(playerFossils[headerPendingIdx])
+        : isSingle
+          ? getFossilStatus(group.entry)
+          : statusParts.join(" · ");
+    // Revived Pokémon are only listed in the tooltip of grouped fossils
+    const statusTitle =
+      !isSingle && revivedCount > 0
+        ? group.usedIndices
+            .map((fIdx) => getFossilStatus(playerFossils[fIdx]))
+            .join("\n")
+        : status;
+
+    return (
+      <div
+        key={`${pIdx}-${group.key}`}
+        onClick={() => {
+          if (isInteractive) toggleSelection();
+        }}
+        onKeyDown={(e) => {
+          if (!isInteractive) return;
+          if (e.key !== "Enter" && e.key !== " ") return;
+          e.preventDefault();
+          toggleSelection();
+        }}
+        role={isInteractive ? "button" : undefined}
+        aria-pressed={isInteractive ? isSelected : undefined}
+        tabIndex={isInteractive ? 0 : -1}
+        className={`p-1.5 rounded border text-[10px] transition-all ${
+          revivedUp
+            ? "border-red-300 bg-red-50 dark:border-red-900/50 dark:bg-red-900/20 text-red-700 dark:text-red-400 cursor-default"
+            : isSelected
+              ? "border-green-500 bg-green-50 dark:bg-green-900/20 ring-1 ring-green-500 cursor-pointer"
+              : bagCount === 0
+                ? "border-gray-200 dark:border-gray-700 opacity-60 cursor-default"
+                : "border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-gray-300 cursor-pointer"
+        } ${isInteractive ? focusRingCardClasses : ""}`}
+      >
+        <div className="flex items-center gap-2 h-7.5">
+          {renderFossilSprite(group.entry.fossilId, revivedUp)}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1 min-w-0">
+              <span className="font-bold truncate">{name}</span>
+              {!isSingle && bagCount > 0 && (
+                <span className="shrink-0 px-1 rounded bg-gray-200 dark:bg-gray-700 font-bold">
+                  ×{bagCount}
                 </span>
-                {!readOnly && renderCollectButton(pIdx, sIdx)}
-              </div>
-            ))}
+              )}
+            </div>
+            <div className="opacity-70 truncate" title={statusTitle}>
+              {status}
+            </div>
           </div>
+
+          {headerPendingIdx !== undefined &&
+            !readOnly &&
+            collectFossil(pIdx, headerPendingIdx)}
+        </div>
+
+        {extraPendingIndices.map((fIdx) =>
+          renderPendingRow(
+            `${pIdx}-${group.key}-pending-${fIdx}`,
+            name,
+            getFossilStatus(playerFossils[fIdx]),
+            collectFossil(pIdx, fIdx),
+          ),
         )}
       </div>
     );
@@ -538,105 +741,13 @@ const ItemTracker: React.FC<ItemTrackerProps> = ({
               </div>
 
               <div className="space-y-1 px-1">
-                {displayFossils[pIdx]?.map((entry, fIdx) => {
-                  const def = FOSSILS.find((f) => f.id === entry.fossilId);
-                  const locale = normalizeLanguage(i18n.language);
-                  const locationLabel = resolveLocationDisplay(entry, locale);
-                  const isSelected = fossilSelections[pIdx] === fIdx;
-                  const canBeSelected =
-                    entry.inBag && !entry.revived && !isFossilEditing;
-                  const isInteractive = !readOnly && canBeSelected;
-                  const revivedPokemonName =
-                    getPokemonNameById(entry.pokemonId, locale) ||
-                    entry.pokemonName ||
-                    "";
-
-                  return (
-                    <div
-                      key={`${pIdx}-${entry.fossilId}-${fIdx}`}
-                      onClick={() => {
-                        if (!isInteractive) return;
-                        setFossilSelections((prev) => {
-                          const next = [...prev];
-                          next[pIdx] = next[pIdx] === fIdx ? -1 : fIdx;
-                          return next;
-                        });
-                      }}
-                      onKeyDown={(e) => {
-                        if (!isInteractive) return;
-                        if (e.key !== "Enter" && e.key !== " ") return;
-                        e.preventDefault();
-                        setFossilSelections((prev) => {
-                          const next = [...prev];
-                          next[pIdx] = next[pIdx] === fIdx ? -1 : fIdx;
-                          return next;
-                        });
-                      }}
-                      role={isInteractive ? "button" : undefined}
-                      aria-pressed={isInteractive ? isSelected : undefined}
-                      tabIndex={isInteractive ? 0 : -1}
-                      className={`flex items-center gap-2 p-1.5 rounded border text-[10px] transition-all ${
-                        entry.revived
-                          ? "border-red-300 bg-red-50 dark:border-red-900/50 dark:bg-red-900/20 text-red-700 dark:text-red-400 cursor-default"
-                          : isSelected
-                            ? "border-green-500 bg-green-50 dark:bg-green-900/20 ring-1 ring-green-500 cursor-pointer"
-                            : !entry.inBag && !isFossilEditing
-                              ? "border-gray-200 dark:border-gray-700 opacity-60 cursor-default"
-                              : "border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-gray-300 cursor-pointer"
-                      } ${isInteractive ? focusRingCardClasses : ""}`}
-                    >
-                      <SpriteImage
-                        src={`/fossil-sprites/${def?.sprite}`}
-                        alt=""
-                        className={`w-6 h-6 object-contain ${entry.revived ? "grayscale-[0.5]" : ""}`}
-                      />
-                      <div className="flex-1 min-w-0">
-                        <div className="font-bold truncate">
-                          {t(`fossils.${entry.fossilId}`)}
-                        </div>
-                        <div className="opacity-70 truncate">
-                          {entry.revived
-                            ? revivedPokemonName
-                              ? `${t("tracker.infoPanel.fossilRevived")}: ${revivedPokemonName}`
-                              : t("tracker.infoPanel.fossilRevived")
-                            : entry.inBag
-                              ? t("tracker.infoPanel.fossilBag")
-                              : t("tracker.infoPanel.fossilLocation", {
-                                  location: locationLabel,
-                                })}
-                        </div>
-                      </div>
-
-                      {isFossilEditing && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            deleteFossil(pIdx, fIdx);
-                          }}
-                          className={`p-1 rounded bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 hover:bg-red-200 shrink-0 ${focusRingRedClasses}`}
-                        >
-                          <FiX size={12} />
-                        </button>
-                      )}
-
-                      {!isFossilEditing &&
-                        !entry.inBag &&
-                        !entry.revived &&
-                        !readOnly && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onToggleBag(pIdx, fIdx);
-                            }}
-                            className="p-1 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 hover:bg-blue-200 shrink-0"
-                            title={t("tracker.infoPanel.fossilBag")}
-                          >
-                            <FiCheck size={12} />
-                          </button>
-                        )}
-                    </div>
-                  );
-                })}
+                {isFossilEditing
+                  ? displayFossils[pIdx]?.map((entry, fIdx) =>
+                      renderEditableFossil(entry, pIdx, fIdx),
+                    )
+                  : groupFossilEntries(displayFossils[pIdx] ?? []).map(
+                      (group) => renderFossilGroup(group, pIdx),
+                    )}
               </div>
             </div>
           ))}

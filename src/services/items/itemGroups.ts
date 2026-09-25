@@ -1,17 +1,21 @@
-import type { ItemEntry } from "@/types";
+import type { FossilEntry, ItemEntry } from "@/types";
 
-export interface ItemGroup {
+export interface EntryGroup<T> {
   key: string;
   /** First entry of the group, used for name and sprite resolution. */
-  entry: ItemEntry;
-  /** Indices into the player's item list, in original order. */
+  entry: T;
+  /** Indices into the player's list, in original order. */
   indices: number[];
-  /** Collected and not yet used. */
+  /** Collected and not yet used / revived. */
   bagIndices: number[];
+  /** Used items or revived fossils. */
   usedIndices: number[];
   /** Not yet collected; each keeps its own location. */
   pendingIndices: number[];
 }
+
+export type ItemGroup = EntryGroup<ItemEntry>;
+export type FossilGroup = EntryGroup<FossilEntry>;
 
 export const getItemGroupKey = (entry: ItemEntry): string => {
   const id = entry.id?.trim();
@@ -20,14 +24,18 @@ export const getItemGroupKey = (entry: ItemEntry): string => {
 };
 
 /**
- * Groups identical items of one player. Entries stay stored individually;
- * groups are ordered by the first occurrence of each item.
+ * Groups identical entries of one player. Entries stay stored individually;
+ * groups are ordered by the first occurrence of each entry.
  */
-export const groupItemEntries = (entries: ItemEntry[]): ItemGroup[] => {
-  const groups = new Map<string, ItemGroup>();
+const groupEntries = <T extends { inBag: boolean }>(
+  entries: T[],
+  getKey: (entry: T) => string,
+  isUsed: (entry: T) => boolean,
+): EntryGroup<T>[] => {
+  const groups = new Map<string, EntryGroup<T>>();
 
   entries.forEach((entry, index) => {
-    const key = getItemGroupKey(entry);
+    const key = getKey(entry);
     let group = groups.get(key);
     if (!group) {
       group = {
@@ -42,7 +50,7 @@ export const groupItemEntries = (entries: ItemEntry[]): ItemGroup[] => {
     }
 
     group.indices.push(index);
-    if (entry.used) {
+    if (isUsed(entry)) {
       group.usedIndices.push(index);
     } else if (entry.inBag) {
       group.bagIndices.push(index);
@@ -54,5 +62,16 @@ export const groupItemEntries = (entries: ItemEntry[]): ItemGroup[] => {
   return [...groups.values()];
 };
 
-export const isItemGroupUsedUp = (group: ItemGroup): boolean =>
+export const groupItemEntries = (entries: ItemEntry[]): ItemGroup[] =>
+  groupEntries(entries, getItemGroupKey, (entry) => entry.used);
+
+/** Revived fossils count as used. */
+export const groupFossilEntries = (entries: FossilEntry[]): FossilGroup[] =>
+  groupEntries(
+    entries,
+    (entry) => `fossil:${entry.fossilId}`,
+    (entry) => entry.revived,
+  );
+
+export const isGroupUsedUp = <T>(group: EntryGroup<T>): boolean =>
   group.usedIndices.length === group.indices.length;

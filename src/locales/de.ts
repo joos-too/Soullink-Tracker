@@ -325,7 +325,7 @@ export const de = {
       stoneUse: "Benutzen",
       itemCountBag: "{{amount}} im Beutel",
       itemCountUsed: "{{amount}} benutzt",
-      itemCountPending: "{{amount}} nicht eingesammelt",
+      fossilCountRevived: "{{amount}} wiederbelebt",
     },
     evolveModal: {
       title: "Entwickeln",

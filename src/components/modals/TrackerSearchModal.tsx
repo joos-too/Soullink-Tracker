@@ -24,8 +24,10 @@ import {
 } from "@/src/services/search/locationSearch.ts";
 import { normalizeLanguage } from "@/src/utils/language";
 import {
+  groupFossilEntries,
   groupItemEntries,
-  isItemGroupUsedUp,
+  isGroupUsedUp,
+  type EntryGroup,
 } from "@/src/services/items/itemGroups.ts";
 import { useMultiLocaleSearch } from "@/src/hooks/useMultiLocaleSearch.ts";
 
@@ -62,7 +64,11 @@ interface ItemRow {
   name: string;
   spriteUrl: string;
   playerIndex: number;
-  statusLines: string[];
+  status: string;
+  /** Further uncollected duplicates, each rendered as its own row */
+  extraStatuses: string[];
+  /** Items in the bag, shown as a ×N badge for grouped duplicates */
+  bagCount: number;
   locations: string[];
   pixelated: boolean;
   used: boolean;
@@ -187,32 +193,88 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
   const allItems = useMemo<ItemRow[]>(() => {
     const rows: ItemRow[] = [];
 
-    // Fossils
+    // Shared by fossils and items, same layout as the item tracker: without
+    // bag or used entries, the first uncollected one is the header; every
+    // other uncollected one gets its own row.
+    const buildGroupStatus = <T,>(
+      group: EntryGroup<T>,
+      entries: T[],
+      getEntryStatus: (entry: T) => string,
+      usedCountKey: string,
+    ) => {
+      const headerPendingIdx =
+        group.bagIndices.length === 0 && group.usedIndices.length === 0
+          ? group.pendingIndices[0]
+          : undefined;
+      const extraStatuses = group.pendingIndices
+        .filter((idx) => idx !== headerPendingIdx)
+        .map((idx) => getEntryStatus(entries[idx]));
+
+      let status: string;
+      if (headerPendingIdx !== undefined) {
+        status = getEntryStatus(entries[headerPendingIdx]);
+      } else if (group.indices.length === 1) {
+        status = getEntryStatus(group.entry);
+      } else {
+        const parts: string[] = [];
+        if (group.bagIndices.length > 0) {
+          parts.push(
+            t("tracker.infoPanel.itemCountBag", {
+              amount: group.bagIndices.length,
+            }),
+          );
+        }
+        if (group.usedIndices.length > 0) {
+          parts.push(t(usedCountKey, { amount: group.usedIndices.length }));
+        }
+        status = parts.join(" · ");
+      }
+
+      return {
+        status,
+        extraStatuses,
+        bagCount: group.indices.length > 1 ? group.bagIndices.length : 0,
+        used: isGroupUsedUp(group),
+      };
+    };
+
+    // Fossils, identical fossils grouped per player
     (fossils ?? []).forEach((playerFossils, pIdx) => {
-      (playerFossils ?? []).forEach((entry) => {
-        const def = FOSSILS.find((f) => f.id === entry.fossilId);
-        const location = resolveLocationDisplay(entry, locale);
-        const status = entry.revived
-          ? entry.pokemonId
-            ? `${t("tracker.infoPanel.fossilRevived")}: ${getPokemonNameById(entry.pokemonId, locale) || ""}`
-            : entry.pokemonName
-              ? `${t("tracker.infoPanel.fossilRevived")}: ${entry.pokemonName}`
-              : t("tracker.infoPanel.fossilRevived")
-          : entry.inBag
+      groupFossilEntries(playerFossils ?? []).forEach((group) => {
+        const { fossilId } = group.entry;
+        const def = FOSSILS.find((f) => f.id === fossilId);
+        const fossilStatus = (entry: FossilEntry) => {
+          if (entry.revived) {
+            const pokemonName =
+              getPokemonNameById(entry.pokemonId, locale) ||
+              entry.pokemonName ||
+              "";
+            return pokemonName
+              ? `${t("tracker.infoPanel.fossilRevived")}: ${pokemonName}`
+              : t("tracker.infoPanel.fossilRevived");
+          }
+          return entry.inBag
             ? t("tracker.infoPanel.fossilBag")
             : t("tracker.infoPanel.fossilLocation", {
-                location,
+                location: resolveLocationDisplay(entry, locale),
               });
+        };
         rows.push({
           category: "fossils",
-          id: entry.fossilId,
-          name: t(`fossils.${entry.fossilId}`),
+          id: fossilId,
+          name: t(`fossils.${fossilId}`),
           spriteUrl: def ? `/fossil-sprites/${def.sprite}` : "",
           playerIndex: pIdx,
-          statusLines: [status],
-          locations: [location],
+          ...buildGroupStatus(
+            group,
+            playerFossils,
+            fossilStatus,
+            "tracker.infoPanel.fossilCountRevived",
+          ),
+          locations: group.indices.map((idx) =>
+            resolveLocationDisplay(playerFossils[idx], locale),
+          ),
           pixelated: true,
-          used: Boolean(entry.revived),
         });
       });
     });
@@ -255,43 +317,14 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
         const locations = group.indices.map((idx) =>
           resolveLocationDisplay(playerItems[idx], locale),
         );
-        const statusLines: string[] = [];
-        if (group.indices.length === 1) {
-          statusLines.push(
-            entry.used
-              ? t("tracker.infoPanel.stoneUsed")
-              : entry.inBag
-                ? t("tracker.infoPanel.stoneBag")
-                : t("tracker.infoPanel.stoneLocation", {
-                    location: locations[0],
-                  }),
-          );
-        } else {
-          const parts: string[] = [];
-          if (group.bagIndices.length > 0) {
-            parts.push(
-              t("tracker.infoPanel.itemCountBag", {
-                amount: group.bagIndices.length,
-              }),
-            );
-          }
-          if (group.usedIndices.length > 0) {
-            parts.push(
-              t("tracker.infoPanel.itemCountUsed", {
-                amount: group.usedIndices.length,
-              }),
-            );
-          }
-          if (parts.length > 0) statusLines.push(parts.join(" · "));
-          // One line per uncollected item, like in the item tracker
-          group.pendingIndices.forEach((idx) => {
-            statusLines.push(
-              t("tracker.infoPanel.stoneLocation", {
-                location: resolveLocationDisplay(playerItems[idx], locale),
-              }),
-            );
-          });
-        }
+        const itemStatus = (item: ItemEntry) =>
+          item.used
+            ? t("tracker.infoPanel.stoneUsed")
+            : item.inBag
+              ? t("tracker.infoPanel.stoneBag")
+              : t("tracker.infoPanel.stoneLocation", {
+                  location: resolveLocationDisplay(item, locale),
+                });
 
         rows.push({
           category,
@@ -299,10 +332,14 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
           name,
           spriteUrl,
           playerIndex: pIdx,
-          statusLines,
+          ...buildGroupStatus(
+            group,
+            playerItems,
+            itemStatus,
+            "tracker.infoPanel.itemCountUsed",
+          ),
           locations,
           pixelated: true,
-          used: isItemGroupUsedUp(group),
         });
       });
     });
@@ -353,6 +390,38 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
   const playerGridStyle: React.CSSProperties = {
     gridTemplateColumns: `repeat(${playerNames.length}, minmax(0, 1fr))`,
   };
+
+  const renderItemText = (item: ItemRow, status: string, showBadge = false) => (
+    <div className="flex-1 min-w-0">
+      <div className="flex items-center gap-1 min-w-0">
+        <span
+          className={`font-bold truncate ${
+            item.used
+              ? "text-red-700 dark:text-red-400"
+              : "text-gray-800 dark:text-gray-100"
+          }`}
+          title={item.name}
+        >
+          {item.name}
+        </span>
+        {showBadge && item.bagCount > 0 && (
+          <span className="shrink-0 px-1 rounded bg-gray-200 dark:bg-gray-600 font-bold text-gray-800 dark:text-gray-100">
+            ×{item.bagCount}
+          </span>
+        )}
+      </div>
+      <div
+        className={`truncate ${
+          item.used
+            ? "text-red-700 dark:text-red-400"
+            : "text-gray-500 dark:text-gray-400"
+        }`}
+        title={status}
+      >
+        {status}
+      </div>
+    </div>
+  );
 
   const hasPokemonResults = pokemonSections.length > 0;
   const hasItemResults = itemSections.length > 0;
@@ -534,13 +603,14 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
           ) : hasItemResults ? (
             <div className="pb-2">
               <div
-                className="sticky top-0 z-10 -mt-4 pt-2 pb-2 grid gap-3 bg-white dark:bg-gray-800"
+                className="sticky -top-4 z-10 -mt-4 pt-2 pb-2 grid gap-3 bg-white dark:bg-gray-800"
                 style={playerGridStyle}
               >
                 {playerNames.map((name, pIdx) => (
                   <span
                     key={`item-player-${pIdx}`}
-                    className="block text-xs font-press-start truncate"
+                    className="block text-xl font-bold text-center truncate"
+                    title={name}
                     style={{ color: playerColors[pIdx] ?? "#4b5563" }}
                   >
                     {name}
@@ -562,52 +632,43 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
                           {playerItems.map((item, idx) => (
                             <div
                               key={`${section.key}-${item.id}-${pIdx}-${idx}`}
-                              className={`flex items-center gap-2 px-2 py-1.5 border rounded-md text-xs ${
+                              className={`px-2 py-1.5 border rounded-md text-xs ${
                                 item.used
                                   ? USED_ROW_CLASS
                                   : "bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600"
                               }`}
                             >
-                              {item.spriteUrl ? (
-                                <SpriteImage
-                                  src={item.spriteUrl}
-                                  alt=""
-                                  className="w-6 h-6 object-contain shrink-0"
-                                  style={
-                                    item.pixelated
-                                      ? { imageRendering: "pixelated" }
-                                      : undefined
-                                  }
-                                  loading="lazy"
-                                />
-                              ) : (
-                                <div className="w-6 h-6 shrink-0" />
-                              )}
-                              <div className="flex-1 min-w-0">
-                                <div
-                                  className={`font-bold truncate ${
-                                    item.used
-                                      ? "text-red-700 dark:text-red-400"
-                                      : "text-gray-800 dark:text-gray-100"
-                                  }`}
-                                  title={item.name}
-                                >
-                                  {item.name}
-                                </div>
-                                {item.statusLines.map((line, lineIdx) => (
-                                  <div
-                                    key={lineIdx}
-                                    className={`truncate ${
-                                      item.used
-                                        ? "text-red-700 dark:text-red-400"
-                                        : "text-gray-500 dark:text-gray-400"
-                                    }`}
-                                    title={line}
-                                  >
-                                    {line}
-                                  </div>
-                                ))}
+                              <div className="flex items-center gap-2 h-8">
+                                {item.spriteUrl ? (
+                                  <SpriteImage
+                                    src={item.spriteUrl}
+                                    alt=""
+                                    className="w-6 h-6 object-contain shrink-0"
+                                    style={
+                                      item.pixelated
+                                        ? { imageRendering: "pixelated" }
+                                        : undefined
+                                    }
+                                    loading="lazy"
+                                  />
+                                ) : (
+                                  <div className="w-6 h-6 shrink-0" />
+                                )}
+                                {renderItemText(item, item.status, true)}
                               </div>
+                              {/* Row spacing (18px) matches the padding, border
+                                  and gap between two separate cards */}
+                              {item.extraStatuses.map((line, lineIdx) => (
+                                <div
+                                  key={lineIdx}
+                                  className="mt-2 pt-2.25 border-t border-dashed border-gray-200 dark:border-gray-600"
+                                >
+                                  <div className="flex items-center gap-2 h-8">
+                                    <div className="w-6 shrink-0" />
+                                    {renderItemText(item, line)}
+                                  </div>
+                                </div>
+                              ))}
                             </div>
                           ))}
                         </div>

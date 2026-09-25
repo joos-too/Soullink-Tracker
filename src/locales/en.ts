@@ -325,7 +325,7 @@ export const en = {
       stoneUse: "Use",
       itemCountBag: "{{amount}} in bag",
       itemCountUsed: "{{amount}} used",
-      itemCountPending: "{{amount}} not collected",
+      fossilCountRevived: "{{amount}} revived",
     },
     evolveModal: {
       title: "Evolve Pokémon",

@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
-import type { ItemEntry } from "@/types";
-import { groupItemEntries, isItemGroupUsedUp } from "./itemGroups.ts";
+import type { FossilEntry, ItemEntry } from "@/types";
+import {
+  groupFossilEntries,
+  groupItemEntries,
+  isGroupUsedUp,
+} from "./itemGroups.ts";
 
 const bag = (id: string, used = false): ItemEntry => ({
   id,
@@ -50,7 +54,35 @@ describe("groupItemEntries", () => {
     const [partial] = groupItemEntries([bag("x", true), bag("x")]);
     const [full] = groupItemEntries([bag("x", true), bag("x", true)]);
 
-    expect(isItemGroupUsedUp(partial)).toBe(false);
-    expect(isItemGroupUsedUp(full)).toBe(true);
+    expect(isGroupUsedUp(partial)).toBe(false);
+    expect(isGroupUsedUp(full)).toBe(true);
+  });
+});
+
+describe("groupFossilEntries", () => {
+  const fossil = (
+    fossilId: string,
+    state: Partial<FossilEntry> = {},
+  ): FossilEntry => ({
+    fossilId,
+    locationSlug: null,
+    inBag: true,
+    revived: false,
+    ...state,
+  });
+
+  it("groups by fossil and treats revived fossils as used", () => {
+    const groups = groupFossilEntries([
+      fossil("helix"),
+      fossil("dome", { inBag: false, location: "Mt. Moon" }),
+      fossil("helix", { revived: true, pokemonId: 138 }),
+      fossil("helix", { inBag: false, location: "Route 3" }),
+    ]);
+
+    expect(groups.map((g) => g.key)).toEqual(["fossil:helix", "fossil:dome"]);
+    expect(groups[0].bagIndices).toEqual([0]);
+    expect(groups[0].usedIndices).toEqual([2]);
+    expect(groups[0].pendingIndices).toEqual([3]);
+    expect(groups[1].pendingIndices).toEqual([1]);
   });
 });
