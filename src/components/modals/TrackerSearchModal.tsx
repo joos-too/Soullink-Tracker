@@ -61,7 +61,11 @@ interface ItemRow {
   status: string;
   location: string;
   pixelated: boolean;
+  used: boolean;
 }
+
+const USED_ROW_CLASS =
+  "border-red-300 bg-red-50 dark:border-red-900/50 dark:bg-red-900/20";
 
 const MEGA_STONE_IDS = new Set(MEGA_STONES.map((m) => m.id));
 
@@ -204,6 +208,7 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
           status,
           location,
           pixelated: true,
+          used: Boolean(entry.revived),
         });
       });
     });
@@ -260,6 +265,7 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
           status,
           location,
           pixelated: true,
+          used: Boolean(entry.used),
         });
       });
     });
@@ -385,7 +391,11 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
                       {section.pairs.map((pair) => (
                         <div
                           key={`${section.key}-${pair.id}`}
-                          className="p-2 border border-gray-200 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-700 text-xs"
+                          className={`p-2 border rounded-md text-xs ${
+                            section.key === "graveyard"
+                              ? USED_ROW_CLASS
+                              : "border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700"
+                          }`}
                         >
                           <p className="text-center font-bold text-gray-600 dark:text-gray-300 mb-1">
                             {t("graveyard.areaLabel", {
@@ -478,7 +488,11 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
                     {section.items.map((item, idx) => (
                       <div
                         key={`${section.key}-${item.id}-${item.playerIndex}-${idx}`}
-                        className="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md text-xs"
+                        className={`flex items-center gap-2 px-3 py-2 border rounded-md text-xs ${
+                          item.used
+                            ? USED_ROW_CLASS
+                            : "bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600"
+                        }`}
                       >
                         {item.spriteUrl ? (
                           <SpriteImage
@@ -496,10 +510,22 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
                           <div className="w-6 h-6 shrink-0" />
                         )}
                         <div className="flex-1 min-w-0">
-                          <span className="font-bold text-gray-800 dark:text-gray-100">
+                          <span
+                            className={`font-bold ${
+                              item.used
+                                ? "text-red-700 dark:text-red-400"
+                                : "text-gray-800 dark:text-gray-100"
+                            }`}
+                          >
                             {item.name}
                           </span>
-                          <span className="ml-2 text-gray-500 dark:text-gray-400">
+                          <span
+                            className={`ml-2 ${
+                              item.used
+                                ? "text-red-700 dark:text-red-400"
+                                : "text-gray-500 dark:text-gray-400"
+                            }`}
+                          >
                             {item.status}
                           </span>
                         </div>
