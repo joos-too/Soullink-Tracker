@@ -27,6 +27,7 @@ import {
   groupFossilEntries,
   groupItemEntries,
   isGroupUsedUp,
+  splitPendingIndices,
   type EntryGroup,
 } from "@/src/services/items/itemGroups.ts";
 import { useMultiLocaleSearch } from "@/src/hooks/useMultiLocaleSearch.ts";
@@ -193,22 +194,18 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
   const allItems = useMemo<ItemRow[]>(() => {
     const rows: ItemRow[] = [];
 
-    // Shared by fossils and items, same layout as the item tracker: without
-    // bag or used entries, the first uncollected one is the header; every
-    // other uncollected one gets its own row.
+    // Shared by fossils and items, same layout as the item tracker
     const buildGroupStatus = <T,>(
       group: EntryGroup<T>,
       entries: T[],
       getEntryStatus: (entry: T) => string,
       usedCountKey: string,
     ) => {
-      const headerPendingIdx =
-        group.bagIndices.length === 0 && group.usedIndices.length === 0
-          ? group.pendingIndices[0]
-          : undefined;
-      const extraStatuses = group.pendingIndices
-        .filter((idx) => idx !== headerPendingIdx)
-        .map((idx) => getEntryStatus(entries[idx]));
+      const { headerPendingIdx, extraPendingIndices } =
+        splitPendingIndices(group);
+      const extraStatuses = extraPendingIndices.map((idx) =>
+        getEntryStatus(entries[idx]),
+      );
 
       let status: string;
       if (headerPendingIdx !== undefined) {

@@ -4,6 +4,7 @@ import {
   groupFossilEntries,
   groupItemEntries,
   isGroupUsedUp,
+  splitPendingIndices,
 } from "./itemGroups.ts";
 
 const bag = (id: string, used = false): ItemEntry => ({
@@ -56,6 +57,23 @@ describe("groupItemEntries", () => {
 
     expect(isGroupUsedUp(partial)).toBe(false);
     expect(isGroupUsedUp(full)).toBe(true);
+  });
+
+  it("shows the first uncollected entry in the header only without bag or used entries", () => {
+    const [pendingOnly] = groupItemEntries([
+      pending("x", "Route 1"),
+      pending("x", "Route 2"),
+    ]);
+    const [withBag] = groupItemEntries([pending("x", "Route 1"), bag("x")]);
+
+    expect(splitPendingIndices(pendingOnly)).toEqual({
+      headerPendingIdx: 0,
+      extraPendingIndices: [1],
+    });
+    expect(splitPendingIndices(withBag)).toEqual({
+      headerPendingIdx: undefined,
+      extraPendingIndices: [0],
+    });
   });
 });
 

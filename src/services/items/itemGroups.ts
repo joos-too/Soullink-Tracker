@@ -17,7 +17,7 @@ export interface EntryGroup<T> {
 export type ItemGroup = EntryGroup<ItemEntry>;
 export type FossilGroup = EntryGroup<FossilEntry>;
 
-export const getItemGroupKey = (entry: ItemEntry): string => {
+const getItemGroupKey = (entry: ItemEntry): string => {
   const id = entry.id?.trim();
   if (id) return `id:${id}`;
   return `name:${entry.name?.trim().toLowerCase() ?? ""}`;
@@ -75,3 +75,21 @@ export const groupFossilEntries = (entries: FossilEntry[]): FossilGroup[] =>
 
 export const isGroupUsedUp = <T>(group: EntryGroup<T>): boolean =>
   group.usedIndices.length === group.indices.length;
+
+/**
+ * Without bag or used entries, the first uncollected entry is shown in the
+ * group's header row, so a group of N uncollected entries is exactly N rows
+ * tall. Every other uncollected entry gets its own row.
+ */
+export const splitPendingIndices = <T>(group: EntryGroup<T>) => {
+  const headerPendingIdx =
+    group.bagIndices.length === 0 && group.usedIndices.length === 0
+      ? group.pendingIndices[0]
+      : undefined;
+  return {
+    headerPendingIdx,
+    extraPendingIndices: group.pendingIndices.filter(
+      (idx) => idx !== headerPendingIdx,
+    ),
+  };
+};

@@ -27,6 +27,7 @@ import {
   groupFossilEntries,
   groupItemEntries,
   isGroupUsedUp,
+  splitPendingIndices,
   type FossilGroup,
   type ItemGroup,
 } from "@/src/services/items/itemGroups.ts";
@@ -71,6 +72,9 @@ interface ItemTrackerProps {
   megaStoneSpriteStyle?: "item" | "pokemon";
   onMegaStoneSpriteStyleToggle?: (usePokemon: boolean) => void;
 }
+
+const USED_CARD_CLASS =
+  "border-red-300 bg-red-50 dark:border-red-900/50 dark:bg-red-900/20 text-red-700 dark:text-red-400";
 
 const ItemTracker: React.FC<ItemTrackerProps> = ({
   playerNames,
@@ -332,7 +336,7 @@ const ItemTracker: React.FC<ItemTrackerProps> = ({
     </div>
   );
 
-  const collectItem = (pIdx: number, sIdx: number) =>
+  const renderCollectItemButton = (pIdx: number, sIdx: number) =>
     renderCollectButton(
       () => onToggleItemBag(pIdx, sIdx),
       t("tracker.infoPanel.stoneBag"),
@@ -345,7 +349,7 @@ const ItemTracker: React.FC<ItemTrackerProps> = ({
         key={`${pIdx}-${entry.id || entry.name}-${sIdx}`}
         className={`flex items-center gap-2 p-1.5 rounded border text-[10px] transition-all ${
           entry.used
-            ? "border-red-300 bg-red-50 dark:border-red-900/50 dark:bg-red-900/20 text-red-700 dark:text-red-400"
+            ? USED_CARD_CLASS
             : "border-gray-200 dark:border-gray-700 dark:text-gray-300"
         }`}
       >
@@ -385,13 +389,8 @@ const ItemTracker: React.FC<ItemTrackerProps> = ({
         t("tracker.infoPanel.itemCountUsed", { amount: usedCount }),
       );
     }
-    // Without bag or used items, the first uncollected item is shown in the
-    // header row, so a group of N uncollected items is exactly N rows tall.
-    const headerPendingIdx =
-      bagCount === 0 && usedCount === 0 ? group.pendingIndices[0] : undefined;
-    const extraPendingIndices = group.pendingIndices.filter(
-      (sIdx) => sIdx !== headerPendingIdx,
-    );
+    const { headerPendingIdx, extraPendingIndices } =
+      splitPendingIndices(group);
     const status =
       headerPendingIdx !== undefined
         ? getEntryStatus(displayStones[pIdx][headerPendingIdx])
@@ -404,7 +403,7 @@ const ItemTracker: React.FC<ItemTrackerProps> = ({
         key={`${pIdx}-${group.key}`}
         className={`p-1.5 rounded border text-[10px] transition-all ${
           usedUp
-            ? "border-red-300 bg-red-50 dark:border-red-900/50 dark:bg-red-900/20 text-red-700 dark:text-red-400"
+            ? USED_CARD_CLASS
             : bagCount === 0
               ? "border-gray-200 dark:border-gray-700 opacity-60"
               : "border-gray-200 dark:border-gray-700 dark:text-gray-300"
@@ -427,7 +426,7 @@ const ItemTracker: React.FC<ItemTrackerProps> = ({
           {/* Move to bag button for the uncollected item in the header */}
           {headerPendingIdx !== undefined &&
             !readOnly &&
-            collectItem(pIdx, headerPendingIdx)}
+            renderCollectItemButton(pIdx, headerPendingIdx)}
 
           {/* Use one item from the bag */}
           {bagCount > 0 && !readOnly && (
@@ -449,7 +448,7 @@ const ItemTracker: React.FC<ItemTrackerProps> = ({
             `${pIdx}-${group.key}-pending-${sIdx}`,
             displayName,
             getEntryStatus(displayStones[pIdx][sIdx]),
-            collectItem(pIdx, sIdx),
+            renderCollectItemButton(pIdx, sIdx),
           ),
         )}
       </div>
@@ -483,7 +482,7 @@ const ItemTracker: React.FC<ItemTrackerProps> = ({
     );
   };
 
-  const collectFossil = (pIdx: number, fIdx: number) =>
+  const renderCollectFossilButton = (pIdx: number, fIdx: number) =>
     renderCollectButton(
       () => onToggleBag(pIdx, fIdx),
       t("tracker.infoPanel.fossilBag"),
@@ -498,7 +497,7 @@ const ItemTracker: React.FC<ItemTrackerProps> = ({
       key={`${pIdx}-${entry.fossilId}-${fIdx}`}
       className={`flex items-center gap-2 p-1.5 rounded border text-[10px] transition-all ${
         entry.revived
-          ? "border-red-300 bg-red-50 dark:border-red-900/50 dark:bg-red-900/20 text-red-700 dark:text-red-400"
+          ? USED_CARD_CLASS
           : "border-gray-200 dark:border-gray-700 dark:text-gray-300"
       }`}
     >
@@ -523,7 +522,7 @@ const ItemTracker: React.FC<ItemTrackerProps> = ({
 
   const renderFossilGroup = (group: FossilGroup, pIdx: number) => {
     const name = t(`fossils.${group.entry.fossilId}`);
-    const revivedUp = isGroupUsedUp(group);
+    const allRevived = isGroupUsedUp(group);
     const isSingle = group.indices.length === 1;
     const bagCount = group.bagIndices.length;
     const revivedCount = group.usedIndices.length;
@@ -551,15 +550,8 @@ const ItemTracker: React.FC<ItemTrackerProps> = ({
         t("tracker.infoPanel.fossilCountRevived", { amount: revivedCount }),
       );
     }
-    // Same layout as items: the first uncollected fossil is the header when
-    // nothing is in the bag or revived.
-    const headerPendingIdx =
-      bagCount === 0 && revivedCount === 0
-        ? group.pendingIndices[0]
-        : undefined;
-    const extraPendingIndices = group.pendingIndices.filter(
-      (fIdx) => fIdx !== headerPendingIdx,
-    );
+    const { headerPendingIdx, extraPendingIndices } =
+      splitPendingIndices(group);
     const status =
       headerPendingIdx !== undefined
         ? getFossilStatus(playerFossils[headerPendingIdx])
@@ -590,8 +582,8 @@ const ItemTracker: React.FC<ItemTrackerProps> = ({
         aria-pressed={isInteractive ? isSelected : undefined}
         tabIndex={isInteractive ? 0 : -1}
         className={`p-1.5 rounded border text-[10px] transition-all ${
-          revivedUp
-            ? "border-red-300 bg-red-50 dark:border-red-900/50 dark:bg-red-900/20 text-red-700 dark:text-red-400 cursor-default"
+          allRevived
+            ? `${USED_CARD_CLASS} cursor-default`
             : isSelected
               ? "border-green-500 bg-green-50 dark:bg-green-900/20 ring-1 ring-green-500 cursor-pointer"
               : bagCount === 0
@@ -600,7 +592,7 @@ const ItemTracker: React.FC<ItemTrackerProps> = ({
         } ${isInteractive ? focusRingCardClasses : ""}`}
       >
         <div className="flex items-center gap-2 h-7.5">
-          {renderFossilSprite(group.entry.fossilId, revivedUp)}
+          {renderFossilSprite(group.entry.fossilId, allRevived)}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1 min-w-0">
               <span className="font-bold truncate">{name}</span>
@@ -617,7 +609,7 @@ const ItemTracker: React.FC<ItemTrackerProps> = ({
 
           {headerPendingIdx !== undefined &&
             !readOnly &&
-            collectFossil(pIdx, headerPendingIdx)}
+            renderCollectFossilButton(pIdx, headerPendingIdx)}
         </div>
 
         {extraPendingIndices.map((fIdx) =>
@@ -625,7 +617,7 @@ const ItemTracker: React.FC<ItemTrackerProps> = ({
             `${pIdx}-${group.key}-pending-${fIdx}`,
             name,
             getFossilStatus(playerFossils[fIdx]),
-            collectFossil(pIdx, fIdx),
+            renderCollectFossilButton(pIdx, fIdx),
           ),
         )}
       </div>
