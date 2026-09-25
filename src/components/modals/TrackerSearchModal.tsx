@@ -313,9 +313,9 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-160 max-h-[85vh] overflow-hidden"
+        className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-160 max-h-[85vh] overflow-hidden flex flex-col"
       >
-        <div className="px-6 py-4 flex justify-between items-center border-b border-gray-100 dark:border-gray-700">
+        <div className="shrink-0 px-6 py-4 flex justify-between items-center border-b border-gray-100 dark:border-gray-700">
           <h2 id={titleId} className="text-lg font-bold dark:text-gray-100">
             {t("tracker.search.title")}
           </h2>
@@ -341,7 +341,7 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
           </button>
         </div>
 
-        <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 space-y-4">
+        <div className="shrink-0 px-6 py-4 border-b border-gray-100 dark:border-gray-700 space-y-4">
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
@@ -378,7 +378,7 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
           />
         </div>
 
-        <div className="px-6 pb-8 pt-4 overflow-y-auto max-h-[calc(85vh-170px)] custom-scrollbar">
+        <div className="flex-1 min-h-0 mb-2 px-6 pb-6 pt-4 overflow-y-auto overscroll-contain custom-scrollbar">
           {mode === "pokemon" ? (
             hasPokemonResults ? (
               <div className="space-y-6 pb-2">
