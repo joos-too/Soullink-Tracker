@@ -1,4 +1,5 @@
 import SpriteImage from "@/src/components/other/SpriteImage.tsx";
+import ItemSprite from "@/src/components/other/ItemSprite.tsx";
 import React, { useEffect, useId, useMemo, useState } from "react";
 import type { FossilEntry, PokemonLink, ItemEntry } from "@/types";
 import { useTranslation } from "react-i18next";
@@ -70,13 +71,24 @@ interface ItemRow {
   extraStatuses: string[];
   /** Items in the bag, shown as a ×N badge for grouped duplicates */
   bagCount: number;
+  isGrouped: boolean;
   locations: string[];
-  pixelated: boolean;
   used: boolean;
 }
 
 const USED_ROW_CLASS =
   "border-red-300 bg-red-50 dark:border-red-900/50 dark:bg-red-900/20";
+
+// Same card styling as the item tracker
+const USED_CARD_CLASS = `${USED_ROW_CLASS} text-red-700 dark:text-red-400`;
+
+// Header colors match the item/fossil tracker headers
+const ITEM_CATEGORY_COLORS: Record<ItemCategory, string> = {
+  fossils: "#895338",
+  stones: "#3b8a5a",
+  megaStones: "#6d4c9f",
+  items: "#2c7b90",
+};
 
 const MEGA_STONE_IDS = new Set(MEGA_STONES.map((m) => m.id));
 
@@ -230,7 +242,8 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
       return {
         status,
         extraStatuses,
-        bagCount: group.indices.length > 1 ? group.bagIndices.length : 0,
+        bagCount: group.bagIndices.length,
+        isGrouped: group.indices.length > 1,
         used: isGroupUsedUp(group),
       };
     };
@@ -271,7 +284,6 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
           locations: group.indices.map((idx) =>
             resolveLocationDisplay(playerFossils[idx], locale),
           ),
-          pixelated: true,
         });
       });
     });
@@ -336,7 +348,6 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
             "tracker.infoPanel.itemCountUsed",
           ),
           locations,
-          pixelated: true,
         });
       });
     });
@@ -391,32 +402,50 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
   const renderItemText = (item: ItemRow, status: string, showBadge = false) => (
     <div className="flex-1 min-w-0">
       <div className="flex items-center gap-1 min-w-0">
-        <span
-          className={`font-bold truncate ${
-            item.used
-              ? "text-red-700 dark:text-red-400"
-              : "text-gray-800 dark:text-gray-100"
-          }`}
-          title={item.name}
-        >
+        <span className="font-bold truncate" title={item.name}>
           {item.name}
         </span>
-        {showBadge && item.bagCount > 0 && (
-          <span className="shrink-0 px-1 rounded bg-gray-200 dark:bg-gray-600 font-bold text-gray-800 dark:text-gray-100">
+        {showBadge && item.isGrouped && item.bagCount > 0 && (
+          <span className="shrink-0 px-1 rounded bg-gray-200 dark:bg-gray-700 font-bold">
             ×{item.bagCount}
           </span>
         )}
       </div>
-      <div
-        className={`truncate ${
-          item.used
-            ? "text-red-700 dark:text-red-400"
-            : "text-gray-500 dark:text-gray-400"
-        }`}
-        title={status}
-      >
+      <div className="opacity-70 truncate" title={status}>
         {status}
       </div>
+    </div>
+  );
+
+  // Same card as the item/fossil tracker widget
+  const renderItemCard = (item: ItemRow, key: string) => (
+    <div
+      key={key}
+      className={`p-1.5 rounded border text-[10px] ${
+        item.used
+          ? USED_CARD_CLASS
+          : item.bagCount === 0
+            ? "border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-300 opacity-60"
+            : "border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-300"
+      }`}
+    >
+      <div className="flex items-center gap-2 h-7.5">
+        <ItemSprite src={item.spriteUrl || null} used={item.used} />
+        {renderItemText(item, item.status, true)}
+      </div>
+      {/* Row spacing (18px) matches the padding, border and gap between two
+          separate cards */}
+      {item.extraStatuses.map((line, lineIdx) => (
+        <div
+          key={lineIdx}
+          className="mt-2 pt-2.25 border-t border-dashed border-gray-200 dark:border-gray-700"
+        >
+          <div className="flex items-center gap-2 h-7.5">
+            <div className="w-6 shrink-0" />
+            {renderItemText(item, line)}
+          </div>
+        </div>
+      ))}
     </div>
   );
 
@@ -598,82 +627,48 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
               </p>
             )
           ) : hasItemResults ? (
-            <div className="pb-2">
-              <div
-                className="sticky -top-4 z-10 -mt-4 pt-2 pb-2 grid gap-3 bg-white dark:bg-gray-800"
-                style={playerGridStyle}
-              >
-                {playerNames.map((name, pIdx) => (
-                  <span
-                    key={`item-player-${pIdx}`}
-                    className="block text-xl font-bold text-center truncate"
-                    title={name}
-                    style={{ color: playerColors[pIdx] ?? "#4b5563" }}
+            <div className="space-y-4 pb-2">
+              {itemSections.map((section) => (
+                <div
+                  key={section.key}
+                  className="rounded-lg shadow-md border border-gray-300 dark:border-gray-700 overflow-hidden"
+                >
+                  <h3
+                    className="text-center p-2 text-white font-press-start text-xs"
+                    style={{
+                      backgroundColor: ITEM_CATEGORY_COLORS[section.key],
+                    }}
                   >
-                    {name}
-                  </span>
-                ))}
-              </div>
-              <div className="space-y-6">
-                {itemSections.map((section) => (
-                  <div key={section.key} className="space-y-2">
-                    <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200">
-                      {section.title}
-                    </h3>
-                    <div className="grid gap-3" style={playerGridStyle}>
-                      {section.itemsByPlayer.map((playerItems, pIdx) => (
-                        <div
-                          key={`${section.key}-player-${pIdx}`}
-                          className="space-y-1 min-w-0"
-                        >
-                          {playerItems.map((item, idx) => (
-                            <div
-                              key={`${section.key}-${item.id}-${pIdx}-${idx}`}
-                              className={`px-2 py-1.5 border rounded-md text-xs ${
-                                item.used
-                                  ? USED_ROW_CLASS
-                                  : "bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600"
-                              }`}
-                            >
-                              <div className="flex items-center gap-2 h-8">
-                                {item.spriteUrl ? (
-                                  <SpriteImage
-                                    src={item.spriteUrl}
-                                    alt=""
-                                    className="w-6 h-6 object-contain shrink-0"
-                                    style={
-                                      item.pixelated
-                                        ? { imageRendering: "pixelated" }
-                                        : undefined
-                                    }
-                                    loading="lazy"
-                                  />
-                                ) : (
-                                  <div className="w-6 h-6 shrink-0" />
-                                )}
-                                {renderItemText(item, item.status, true)}
-                              </div>
-                              {/* Row spacing (18px) matches the padding, border
-                                  and gap between two separate cards */}
-                              {item.extraStatuses.map((line, lineIdx) => (
-                                <div
-                                  key={lineIdx}
-                                  className="mt-2 pt-2.25 border-t border-dashed border-gray-200 dark:border-gray-600"
-                                >
-                                  <div className="flex items-center gap-2 h-8">
-                                    <div className="w-6 shrink-0" />
-                                    {renderItemText(item, line)}
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          ))}
+                    {section.title}
+                  </h3>
+                  <div className="grid gap-3 p-3" style={playerGridStyle}>
+                    {section.itemsByPlayer.map((playerItems, pIdx) => (
+                      <div
+                        key={`${section.key}-player-${pIdx}`}
+                        className="space-y-2 min-w-0"
+                      >
+                        <div className="px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+                          <span
+                            className="block text-xs font-press-start truncate"
+                            title={playerNames[pIdx]}
+                            style={{ color: playerColors[pIdx] ?? "#4b5563" }}
+                          >
+                            {playerNames[pIdx]}
+                          </span>
                         </div>
-                      ))}
-                    </div>
+                        <div className="space-y-1 px-1">
+                          {playerItems.map((item, idx) =>
+                            renderItemCard(
+                              item,
+                              `${section.key}-${item.id}-${pIdx}-${idx}`,
+                            ),
+                          )}
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
           ) : (
             <p className="text-center text-gray-500 dark:text-gray-400 text-sm py-8">
