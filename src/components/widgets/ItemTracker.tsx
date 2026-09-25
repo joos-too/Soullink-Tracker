@@ -24,6 +24,11 @@ import AddFossilModal from "@/src/components/modals/AddFossilModal.tsx";
 import AddItemModal from "@/src/components/modals/AddItemModal.tsx";
 import ItemSprite from "@/src/components/other/ItemSprite.tsx";
 import {
+  groupItemEntries,
+  isItemGroupUsedUp,
+  type ItemGroup,
+} from "@/src/services/items/itemGroups.ts";
+import {
   focusRingCardClasses,
   focusRingClasses,
   focusRingRedClasses,
@@ -243,6 +248,187 @@ const ItemTracker: React.FC<ItemTrackerProps> = ({
     );
   };
 
+  // --- Item rendering helpers ---
+  const locale = normalizeLanguage(i18n.language);
+
+  const resolveItemDisplay = (entry: ItemEntry) => {
+    const itemId = entry.id ?? "";
+    const customName = entry.name?.trim() ?? "";
+    const isCustomItem = itemId.startsWith("item:");
+    const itemSlug = isCustomItem ? itemId.replace("item:", "") : null;
+    const megaDef = itemSlug
+      ? MEGA_STONES.find((m) => m.id === itemSlug)
+      : null;
+    const def = isCustomItem ? null : STONES.find((s) => s.id === itemId);
+    const displayName = customName
+      ? customName
+      : isCustomItem
+        ? getItemName(itemSlug ?? "", locale)
+        : t(`stones.${itemId}`);
+    const spriteSrc = def
+      ? `/stone-sprites/${def.sprite}`
+      : megaDef || itemSlug
+        ? getItemSpriteUrl(megaDef?.id ?? itemSlug ?? "")
+        : null;
+    return { displayName, spriteSrc };
+  };
+
+  const getEntryStatus = (entry: ItemEntry) =>
+    entry.used
+      ? t("tracker.infoPanel.stoneUsed")
+      : entry.inBag
+        ? t("tracker.infoPanel.stoneBag")
+        : t("tracker.infoPanel.stoneLocation", {
+            location: resolveLocationDisplay(entry, locale),
+          });
+
+  const renderItemSprite = (spriteSrc: string | null, used: boolean) =>
+    spriteSrc ? (
+      <ItemSprite
+        src={spriteSrc}
+        className="w-6 h-6 object-contain shrink-0"
+        used={used}
+      />
+    ) : (
+      <ItemSprite />
+    );
+
+  const renderCollectButton = (pIdx: number, sIdx: number) => (
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        onToggleItemBag(pIdx, sIdx);
+      }}
+      className="p-1 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 hover:bg-blue-200 shrink-0"
+      title={t("tracker.infoPanel.stoneBag")}
+    >
+      <FiCheck size={12} />
+    </button>
+  );
+
+  const renderEditableItem = (entry: ItemEntry, pIdx: number, sIdx: number) => {
+    const { displayName, spriteSrc } = resolveItemDisplay(entry);
+    return (
+      <div
+        key={`${pIdx}-${entry.id || entry.name}-${sIdx}`}
+        className={`flex items-center gap-2 p-1.5 rounded border text-[10px] transition-all ${
+          entry.used
+            ? "border-red-300 bg-red-50 dark:border-red-900/50 dark:bg-red-900/20 text-red-700 dark:text-red-400"
+            : "border-gray-200 dark:border-gray-700 dark:text-gray-300"
+        }`}
+      >
+        {renderItemSprite(spriteSrc, entry.used)}
+        <div className="flex-1 min-w-0">
+          <div className="font-bold truncate">{displayName}</div>
+          <div className="opacity-70 truncate">{getEntryStatus(entry)}</div>
+        </div>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            deleteStone(pIdx, sIdx);
+          }}
+          className={`p-1 rounded bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 hover:bg-red-200 shrink-0 ${focusRingRedClasses}`}
+        >
+          <FiX size={12} />
+        </button>
+      </div>
+    );
+  };
+
+  const renderItemGroup = (group: ItemGroup, pIdx: number) => {
+    const { displayName, spriteSrc } = resolveItemDisplay(group.entry);
+    const usedUp = isItemGroupUsedUp(group);
+    const isSingle = group.indices.length === 1;
+    const bagCount = group.bagIndices.length;
+    const usedCount = group.usedIndices.length;
+    const pendingCount = group.pendingIndices.length;
+
+    const statusParts: string[] = [];
+    if (bagCount > 0) {
+      statusParts.push(
+        t("tracker.infoPanel.itemCountBag", { amount: bagCount }),
+      );
+    }
+    if (usedCount > 0) {
+      statusParts.push(
+        t("tracker.infoPanel.itemCountUsed", { amount: usedCount }),
+      );
+    }
+    if (statusParts.length === 0 && pendingCount > 0) {
+      statusParts.push(
+        t("tracker.infoPanel.itemCountPending", { amount: pendingCount }),
+      );
+    }
+    const status = isSingle
+      ? getEntryStatus(group.entry)
+      : statusParts.join(" · ");
+
+    return (
+      <div
+        key={`${pIdx}-${group.key}`}
+        className={`p-1.5 rounded border text-[10px] transition-all ${
+          usedUp
+            ? "border-red-300 bg-red-50 dark:border-red-900/50 dark:bg-red-900/20 text-red-700 dark:text-red-400"
+            : bagCount === 0
+              ? "border-gray-200 dark:border-gray-700 opacity-60"
+              : "border-gray-200 dark:border-gray-700 dark:text-gray-300"
+        }`}
+      >
+        <div className="flex items-center gap-2">
+          {renderItemSprite(spriteSrc, usedUp)}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1 min-w-0">
+              <span className="font-bold truncate">{displayName}</span>
+              {!isSingle && bagCount > 0 && (
+                <span className="shrink-0 px-1 rounded bg-gray-200 dark:bg-gray-700 font-bold">
+                  ×{bagCount}
+                </span>
+              )}
+            </div>
+            <div className="opacity-70 truncate">{status}</div>
+          </div>
+
+          {/* Move to bag button for a single uncollected item */}
+          {isSingle &&
+            pendingCount > 0 &&
+            !readOnly &&
+            renderCollectButton(pIdx, group.indices[0])}
+
+          {/* Use one item from the bag */}
+          {bagCount > 0 && !readOnly && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onUseItem(pIdx, group.bagIndices[0]);
+              }}
+              className={`p-1 rounded bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 hover:bg-red-200 shrink-0 ${focusRingRedClasses}`}
+              title={t("tracker.infoPanel.stoneUse")}
+            >
+              <FiZap size={12} />
+            </button>
+          )}
+        </div>
+
+        {/* Uncollected items keep their own location */}
+        {!isSingle && pendingCount > 0 && (
+          <div className="mt-1 ml-8 space-y-1">
+            {group.pendingIndices.map((sIdx) => (
+              <div
+                key={`${pIdx}-${group.key}-pending-${sIdx}`}
+                className="flex items-center gap-2"
+              >
+                <span className="flex-1 min-w-0 opacity-70 truncate">
+                  {getEntryStatus(displayStones[pIdx][sIdx])}
+                </span>
+                {!readOnly && renderCollectButton(pIdx, sIdx)}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   // --- Render stone content ---
   const renderStoneContent = () => (
     <div className="flex flex-col max-h-87.5">
@@ -290,112 +476,13 @@ const ItemTracker: React.FC<ItemTrackerProps> = ({
               </div>
 
               <div className="space-y-1 px-1">
-                {displayStones[pIdx]?.map((entry, sIdx) => {
-                  const itemId = entry.id ?? "";
-                  const customName = entry.name?.trim() ?? "";
-                  const isCustomItem = itemId.startsWith("item:");
-                  const itemSlug = isCustomItem
-                    ? itemId.replace("item:", "")
-                    : null;
-                  const megaDef = itemSlug
-                    ? MEGA_STONES.find((m) => m.id === itemSlug)
-                    : null;
-                  const def = isCustomItem
-                    ? null
-                    : STONES.find((s) => s.id === itemId);
-                  const locale = normalizeLanguage(i18n.language);
-                  const displayName = customName
-                    ? customName
-                    : isCustomItem
-                      ? getItemName(itemId.replace("item:", ""), locale)
-                      : t(`stones.${itemId}`);
-                  const locationLabel = resolveLocationDisplay(entry, locale);
-
-                  return (
-                    <div
-                      key={`${pIdx}-${itemId || customName}-${sIdx}`}
-                      className={`flex items-center gap-2 p-1.5 rounded border text-[10px] transition-all ${
-                        entry.used
-                          ? "border-red-300 bg-red-50 dark:border-red-900/50 dark:bg-red-900/20 text-red-700 dark:text-red-400"
-                          : !entry.inBag && !isItemEditing
-                            ? "border-gray-200 dark:border-gray-700 opacity-60"
-                            : "border-gray-200 dark:border-gray-700 dark:text-gray-300"
-                      }`}
-                    >
-                      {def || megaDef || itemSlug ? (
-                        <ItemSprite
-                          src={
-                            def
-                              ? `/stone-sprites/${def.sprite}`
-                              : getItemSpriteUrl(megaDef?.id ?? itemSlug ?? "")
-                          }
-                          className="w-6 h-6 object-contain shrink-0"
-                          used={entry.used}
-                        />
-                      ) : (
-                        <ItemSprite />
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <div className="font-bold truncate">{displayName}</div>
-                        <div className="opacity-70 truncate">
-                          {entry.used
-                            ? t("tracker.infoPanel.stoneUsed")
-                            : entry.inBag
-                              ? t("tracker.infoPanel.stoneBag")
-                              : t("tracker.infoPanel.stoneLocation", {
-                                  location: locationLabel,
-                                })}
-                        </div>
-                      </div>
-
-                      {isItemEditing && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            deleteStone(pIdx, sIdx);
-                          }}
-                          className={`p-1 rounded bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 hover:bg-red-200 shrink-0 ${focusRingRedClasses}`}
-                        >
-                          <FiX size={12} />
-                        </button>
-                      )}
-
-                      {/* Move to bag button */}
-                      {!isItemEditing &&
-                        !entry.inBag &&
-                        !entry.used &&
-                        !readOnly && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onToggleItemBag(pIdx, sIdx);
-                            }}
-                            className="p-1 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 hover:bg-blue-200 shrink-0"
-                            title={t("tracker.infoPanel.stoneBag")}
-                          >
-                            <FiCheck size={12} />
-                          </button>
-                        )}
-
-                      {/* Use stone button — per-player, directly on the card */}
-                      {!isItemEditing &&
-                        entry.inBag &&
-                        !entry.used &&
-                        !readOnly && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onUseItem(pIdx, sIdx);
-                            }}
-                            className={`p-1 rounded bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 hover:bg-red-200 shrink-0 ${focusRingRedClasses}`}
-                            title={t("tracker.infoPanel.stoneUse")}
-                          >
-                            <FiZap size={12} />
-                          </button>
-                        )}
-                    </div>
-                  );
-                })}
+                {isItemEditing
+                  ? displayStones[pIdx]?.map((entry, sIdx) =>
+                      renderEditableItem(entry, pIdx, sIdx),
+                    )
+                  : groupItemEntries(displayStones[pIdx] ?? []).map((group) =>
+                      renderItemGroup(group, pIdx),
+                    )}
               </div>
             </div>
           ))}

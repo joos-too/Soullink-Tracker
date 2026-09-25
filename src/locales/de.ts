@@ -323,6 +323,9 @@ export const de = {
       stoneBag: "Im Beutel",
       stoneLocation: "Ort: {{location}}",
       stoneUse: "Benutzen",
+      itemCountBag: "{{amount}} im Beutel",
+      itemCountUsed: "{{amount}} benutzt",
+      itemCountPending: "{{amount}} nicht eingesammelt",
     },
     evolveModal: {
       title: "Entwickeln",

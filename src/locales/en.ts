@@ -323,6 +323,9 @@ export const en = {
       stoneBag: "In Bag",
       stoneLocation: "Loc: {{location}}",
       stoneUse: "Use",
+      itemCountBag: "{{amount}} in bag",
+      itemCountUsed: "{{amount}} used",
+      itemCountPending: "{{amount}} not collected",
     },
     evolveModal: {
       title: "Evolve Pokémon",
