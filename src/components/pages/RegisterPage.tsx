@@ -110,7 +110,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onSwitchToLogin }) => {
     return (
       <div className="bg-[#f0f0f0] dark:bg-gray-900 min-h-screen p-2 sm:p-4 md:p-8 text-gray-800 flex items-center justify-center">
         <div className="w-full max-w-md">
-          <div className="bg-white dark:bg-gray-800 shadow-[6px_6px_0_0_rgba(31,41,55,0.25)] border border-gray-200 dark:border-gray-700 p-6 sm:p-8 rounded-lg">
+          <div className="bg-white dark:bg-gray-800 shadow-[6px_6px_0_0_rgba(31,41,55,0.25)] dark:shadow-[6px_6px_0_0_rgba(0,0,0,0.35)] border border-gray-200 dark:border-gray-700 p-6 sm:p-8 rounded-lg">
             <header className="text-center pb-4 border-b border-gray-200 dark:border-gray-700">
               <img
                 src="/Soullinktracker-Logo.png"
@@ -198,7 +198,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onSwitchToLogin }) => {
   return (
     <div className="bg-[#f0f0f0] dark:bg-gray-900 min-h-screen p-2 sm:p-4 md:p-8 text-gray-800 flex items-center justify-center">
       <div className="w-full max-w-md">
-        <div className="bg-white dark:bg-gray-800 shadow-[6px_6px_0_0_rgba(31,41,55,0.25)] border border-gray-200 dark:border-gray-700 p-6 sm:p-8 rounded-lg">
+        <div className="bg-white dark:bg-gray-800 shadow-[6px_6px_0_0_rgba(31,41,55,0.25)] dark:shadow-[6px_6px_0_0_rgba(0,0,0,0.35)] border border-gray-200 dark:border-gray-700 p-6 sm:p-8 rounded-lg">
           <header className="text-center pb-4 border-b border-gray-200 dark:border-gray-700">
             <img
               src="/Soullinktracker-Logo.png"

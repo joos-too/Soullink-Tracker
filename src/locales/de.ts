@@ -218,9 +218,6 @@ export const de = {
   },
   tracker: {
     defaultTitle: "Tracker",
-    header: {
-      subtitle: "Pokémon Soullink Tracker",
-    },
     progress: {
       eliteFour: "Top 4 | {{count}}/4",
     },

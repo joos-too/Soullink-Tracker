@@ -126,7 +126,7 @@ const UserSettingsPage: React.FC<UserSettingsPageProps> = ({
           <FiArrowLeft /> {t("userSettings.buttons.back")}
         </button>
 
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-6 py-8 shadow-[6px_6px_0_0_rgba(31,41,55,0.25)]">
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-6 py-8 shadow-[6px_6px_0_0_rgba(31,41,55,0.25)] dark:shadow-[6px_6px_0_0_rgba(0,0,0,0.35)]">
           <header className="mb-6">
             <p className="text-xs uppercase tracking-[0.3em] text-green-600">
               {t("userSettings.header.badge")}
