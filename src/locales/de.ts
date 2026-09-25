@@ -30,9 +30,10 @@ export const de = {
   home: {
     logoAlt: "Soullink Tracker Logo",
     heroTitle: "Soullink Tracker",
-    heroSubtitle: "Willkommen Trainer – verwalte hier deine Abenteuer",
-    trackersBadge: "Deine Tracker",
-    trackersTitle: "Alle Tracker auf einen Blick",
+    heroSubtitle:
+      "Tracke Begegnungen, Tode, Items und Level Caps deiner Soullink Runs",
+    trackersBadge: "Übersicht",
+    trackersTitle: "Deine Tracker",
     createTracker: "Neuer Tracker",
     loading: "Tracker werden geladen…",
     emptyTitle: "Noch keine Tracker vorhanden",
@@ -218,7 +219,7 @@ export const de = {
   tracker: {
     defaultTitle: "Tracker",
     header: {
-      subtitle: "Pokémon Soullink – Challenge Tracker",
+      subtitle: "Pokémon Soullink Tracker",
     },
     progress: {
       eliteFour: "Top 4 | {{count}}/4",
@@ -528,7 +529,7 @@ export const de = {
       configuration: "Tracker-Konfiguration",
       variableRivals: "Rivalen-Auswahl",
       variableRivalsDescription:
-        "Wähle deinen Antagonisten für die korrekte Darstellung in den Rivalenkämpfen aus.",
+        "Wähle deinen Antagonisten, damit in den Rivalenkämpfen der richtige Trainer angezeigt wird.",
     },
     features: {
       hardcore: {

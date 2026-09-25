@@ -30,9 +30,10 @@ export const en = {
   home: {
     logoAlt: "Soullink Tracker logo",
     heroTitle: "Soullink Tracker",
-    heroSubtitle: "Hi Trainer – keep track of your adventures here",
-    trackersBadge: "Your trackers",
-    trackersTitle: "All trackers at a glance",
+    heroSubtitle:
+      "Keep track of encounters, deaths, items and level caps in your Soullink runs",
+    trackersBadge: "Overview",
+    trackersTitle: "Your trackers",
     createTracker: "New tracker",
     loading: "Loading trackers…",
     emptyTitle: "No trackers yet",
@@ -216,7 +217,7 @@ export const en = {
   tracker: {
     defaultTitle: "Tracker",
     header: {
-      subtitle: "Pokémon Soullink – Challenge Tracker",
+      subtitle: "Pokémon Soullink Tracker",
     },
     progress: {
       eliteFour: "Elite 4 | {{count}}/4",
@@ -541,7 +542,7 @@ export const en = {
       rivalCensor: {
         title: "Censor rival battles",
         tooltipLabel: "Rival info",
-        tooltip: `To avoid spoilers and keep the story fresh, rival battles are hidden and must be revealed manually.\n\nOnce uncovered they stay visible, even on future runs. You can also decide to only show the level of upcoming rival battles.`,
+        tooltip: `To avoid story spoilers, rival battles are hidden until you reveal them manually.\n\nOnce revealed, they stay visible, including in later runs. You can also show only the levels of upcoming rival battles.`,
         description: "Hides rival battles until you reveal them manually.",
         modes: {
           off: "Off",
