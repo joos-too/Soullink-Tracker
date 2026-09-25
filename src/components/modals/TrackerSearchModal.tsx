@@ -1,4 +1,4 @@
-import SpriteImage from "@/src/components/other/SpriteImage.tsx";
+import PokemonPairCard from "@/src/components/other/PokemonPairCard.tsx";
 import ItemGroupCard from "@/src/components/other/ItemGroupCard.tsx";
 import PlayerColumnHeader from "@/src/components/other/PlayerColumnHeader.tsx";
 import React, { useEffect, useId, useMemo, useState } from "react";
@@ -13,7 +13,6 @@ import {
   getPokemonFamilyIdsMatchingQuery,
   getPokemonNameById,
 } from "@/src/services/search/pokemonSearch.ts";
-import { resolvePokemonDisplay } from "@/src/services/pokemons/pokemonDisplay.ts";
 import {
   locationMatchesQuery,
   resolveLocationDisplay,
@@ -385,82 +384,18 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
                     </h3>
                     <div className="space-y-3">
                       {section.pairs.map((pair) => (
-                        <div
+                        <PokemonPairCard
                           key={`${section.key}-${pair.id}`}
-                          className={`p-2 border rounded-md text-xs ${
+                          pair={pair}
+                          playerNames={playerNames}
+                          playerColors={playerColors}
+                          className={
                             section.key === "graveyard"
                               ? USED_ROW_CLASS
                               : "border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700"
-                          }`}
-                        >
-                          <p className="text-center font-bold text-gray-600 dark:text-gray-300 mb-1">
-                            {t("graveyard.areaLabel", {
-                              location:
-                                resolvePokemonLocationDisplay(pair, locale) ||
-                                t("common.unknownLocation"),
-                            })}
-                          </p>
-                          <div
-                            className="grid gap-2 justify-items-center"
-                            style={{
-                              gridTemplateColumns: `repeat(${playerNames.length}, minmax(0, 1fr))`,
-                            }}
-                          >
-                            {playerNames.map((name, index) => {
-                              const member = pair.members?.[index] ?? {
-                                id: null,
-                                nickname: "",
-                              };
-                              const { displayName, spriteUrl } =
-                                resolvePokemonDisplay(
-                                  member,
-                                  locale,
-                                  generationSpritePath,
-                                );
-
-                              return (
-                                <div
-                                  key={`${section.key}-${pair.id}-player-${index}`}
-                                  className="flex justify-center w-full"
-                                >
-                                  <div className="inline-flex items-center gap-2 text-left mb-2">
-                                    {spriteUrl ? (
-                                      <SpriteImage
-                                        src={spriteUrl}
-                                        alt=""
-                                        className="w-16 h-16 -my-3"
-                                        loading="lazy"
-                                      />
-                                    ) : null}
-                                    <div className="flex flex-col items-start">
-                                      <p
-                                        className="font-bold"
-                                        style={{
-                                          color:
-                                            playerColors[index] ?? "#4b5563",
-                                        }}
-                                      >
-                                        {t("graveyard.memberTitle", {
-                                          name,
-                                          pokemon:
-                                            displayName ||
-                                            t("graveyard.unknownPokemon"),
-                                        })}
-                                      </p>
-                                      <p className="text-gray-700 dark:text-gray-400">
-                                        {t("graveyard.nicknameLabel", {
-                                          nickname:
-                                            member.nickname ||
-                                            t("graveyard.noNickname"),
-                                        })}
-                                      </p>
-                                    </div>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
+                          }
+                          generationSpritePath={generationSpritePath}
+                        />
                       ))}
                     </div>
                   </div>

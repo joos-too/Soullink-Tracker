@@ -456,7 +456,7 @@ export const de = {
     statusDead: "Tot",
     statusLost: "Verloren",
     areaLabel: "Gebiet: {{location}}",
-    memberTitle: "{{name}}'s {{pokemon}}",
+    memberTitle: "{{name}}'s <pokemon>{{pokemon}}</pokemon>",
     nicknameLabel: "Spitzname: {{nickname}}",
     noNickname: "-",
     unknownPokemon: "Pokémon",

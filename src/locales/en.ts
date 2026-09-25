@@ -451,7 +451,7 @@ export const en = {
     statusDead: "Dead",
     statusLost: "Lost",
     areaLabel: "Area: {{location}}",
-    memberTitle: "{{name}}’s {{pokemon}}",
+    memberTitle: "{{name}}’s <pokemon>{{pokemon}}</pokemon>",
     nicknameLabel: "Nickname: {{nickname}}",
     noNickname: "-",
     unknownPokemon: "Pokémon",
