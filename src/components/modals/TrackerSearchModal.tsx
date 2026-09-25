@@ -295,10 +295,25 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
             })
           );
         });
-        return { key, title: t(titleKey), items };
+        const itemsByPlayer = playerNames.map((_, pIdx) =>
+          items.filter((item) => item.playerIndex === pIdx),
+        );
+        return { key, title: t(titleKey), items, itemsByPlayer };
       })
       .filter((section) => section.items.length > 0);
-  }, [allItems, gameVersionId, locale, multiLocaleSearch, normalizedQuery, t]);
+  }, [
+    allItems,
+    gameVersionId,
+    locale,
+    multiLocaleSearch,
+    normalizedQuery,
+    playerNames,
+    t,
+  ]);
+
+  const playerGridStyle: React.CSSProperties = {
+    gridTemplateColumns: `repeat(${playerNames.length}, minmax(0, 1fr))`,
+  };
 
   const hasPokemonResults = pokemonSections.length > 0;
   const hasItemResults = itemSections.length > 0;
@@ -479,64 +494,83 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
             )
           ) : hasItemResults ? (
             <div className="space-y-6 pb-2">
+              <div
+                className="sticky top-0 z-10 -mt-4 pt-4 pb-1 grid gap-3 bg-white dark:bg-gray-800"
+                style={playerGridStyle}
+              >
+                {playerNames.map((name, pIdx) => (
+                  <div
+                    key={`item-player-${pIdx}`}
+                    className="px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm"
+                  >
+                    <span
+                      className="block text-xs font-press-start truncate"
+                      style={{ color: playerColors[pIdx] ?? "#4b5563" }}
+                    >
+                      {name}
+                    </span>
+                  </div>
+                ))}
+              </div>
               {itemSections.map((section) => (
                 <div key={section.key} className="space-y-2">
                   <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200">
                     {section.title}
                   </h3>
-                  <div className="space-y-1">
-                    {section.items.map((item, idx) => (
+                  <div className="grid gap-3" style={playerGridStyle}>
+                    {section.itemsByPlayer.map((playerItems, pIdx) => (
                       <div
-                        key={`${section.key}-${item.id}-${item.playerIndex}-${idx}`}
-                        className={`flex items-center gap-2 px-3 py-2 border rounded-md text-xs ${
-                          item.used
-                            ? USED_ROW_CLASS
-                            : "bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600"
-                        }`}
+                        key={`${section.key}-player-${pIdx}`}
+                        className="space-y-1 min-w-0"
                       >
-                        {item.spriteUrl ? (
-                          <SpriteImage
-                            src={item.spriteUrl}
-                            alt=""
-                            className="w-6 h-6 object-contain shrink-0"
-                            style={
-                              item.pixelated
-                                ? { imageRendering: "pixelated" }
-                                : undefined
-                            }
-                            loading="lazy"
-                          />
-                        ) : (
-                          <div className="w-6 h-6 shrink-0" />
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <span
-                            className={`font-bold ${
+                        {playerItems.map((item, idx) => (
+                          <div
+                            key={`${section.key}-${item.id}-${pIdx}-${idx}`}
+                            className={`flex items-center gap-2 px-2 py-1.5 border rounded-md text-xs ${
                               item.used
-                                ? "text-red-700 dark:text-red-400"
-                                : "text-gray-800 dark:text-gray-100"
+                                ? USED_ROW_CLASS
+                                : "bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600"
                             }`}
                           >
-                            {item.name}
-                          </span>
-                          <span
-                            className={`ml-2 ${
-                              item.used
-                                ? "text-red-700 dark:text-red-400"
-                                : "text-gray-500 dark:text-gray-400"
-                            }`}
-                          >
-                            {item.status}
-                          </span>
-                        </div>
-                        <span
-                          className="text-xs font-semibold shrink-0"
-                          style={{
-                            color: playerColors[item.playerIndex] ?? "#4b5563",
-                          }}
-                        >
-                          {playerNames[item.playerIndex] ?? ""}
-                        </span>
+                            {item.spriteUrl ? (
+                              <SpriteImage
+                                src={item.spriteUrl}
+                                alt=""
+                                className="w-6 h-6 object-contain shrink-0"
+                                style={
+                                  item.pixelated
+                                    ? { imageRendering: "pixelated" }
+                                    : undefined
+                                }
+                                loading="lazy"
+                              />
+                            ) : (
+                              <div className="w-6 h-6 shrink-0" />
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <div
+                                className={`font-bold truncate ${
+                                  item.used
+                                    ? "text-red-700 dark:text-red-400"
+                                    : "text-gray-800 dark:text-gray-100"
+                                }`}
+                                title={item.name}
+                              >
+                                {item.name}
+                              </div>
+                              <div
+                                className={`truncate ${
+                                  item.used
+                                    ? "text-red-700 dark:text-red-400"
+                                    : "text-gray-500 dark:text-gray-400"
+                                }`}
+                                title={item.status}
+                              >
+                                {item.status}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     ))}
                   </div>
