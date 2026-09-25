@@ -1,16 +1,8 @@
-import SpriteImage from "@/src/components/other/SpriteImage.tsx";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FossilEntry, ItemEntry } from "@/types";
 import { PLAYER_COLORS } from "@/src/services/init";
-import { MEGA_STONES, FOSSILS, STONES } from "@/src/data/special-items.ts";
-import {
-  getItemName,
-  getItemSpriteUrl,
-} from "@/src/services/search/itemSearch.ts";
-import { resolveLocationDisplay } from "@/src/services/search/locationSearch.ts";
 import { normalizeLanguage } from "@/src/utils/language";
-import { getPokemonNameById } from "@/src/services/search/pokemonSearch.ts";
 import {
   FiPlus,
   FiCheck,
@@ -22,9 +14,22 @@ import {
 } from "react-icons/fi";
 import AddFossilModal from "@/src/components/modals/AddFossilModal.tsx";
 import AddItemModal from "@/src/components/modals/AddItemModal.tsx";
-import ItemSprite from "@/src/components/other/ItemSprite.tsx";
+import ItemGroupCard from "@/src/components/other/ItemGroupCard.tsx";
+import PlayerColumnHeader from "@/src/components/other/PlayerColumnHeader.tsx";
 import {
-  focusRingCardClasses,
+  groupFossilEntries,
+  groupItemEntries,
+  type FossilGroup,
+  type ItemGroup,
+} from "@/src/services/items/itemGroups.ts";
+import {
+  getFossilSpriteUrl,
+  getFossilStatus,
+  getItemStatus,
+  resolveItemDisplay,
+  summarizeEntryGroup,
+} from "@/src/services/items/itemDisplay.ts";
+import {
   focusRingClasses,
   focusRingRedClasses,
   focusRingTightClasses,
@@ -243,318 +248,283 @@ const ItemTracker: React.FC<ItemTrackerProps> = ({
     );
   };
 
-  // --- Render stone content ---
-  const renderStoneContent = () => (
-    <div className="flex flex-col max-h-87.5">
-      <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
-        <div
-          className="grid gap-4 grid-cols-1 px-4 pb-4"
-          style={{
-            gridTemplateColumns:
-              playerNames.length > 1
-                ? `repeat(${playerNames.length}, minmax(0, 1fr))`
-                : undefined,
-          }}
-        >
-          {playerNames.map((name, pIdx) => (
-            <div key={`stone-player-${pIdx}`} className="space-y-2">
-              <div className="sticky top-0 z-10 pt-4 pb-1 bg-white dark:bg-gray-800">
-                <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
-                  <span
-                    className="text-xs font-press-start truncate mr-2"
-                    style={{ color: PLAYER_COLORS[pIdx] }}
-                  >
-                    {name}
-                  </span>
-                  {!readOnly && (
+  // --- Card rendering helpers ---
+  const locale = normalizeLanguage(i18n.language);
+
+  const renderCollectButton = (onCollect: () => void, title: string) => (
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        onCollect();
+      }}
+      className="p-1 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 hover:bg-blue-200 shrink-0"
+      title={title}
+    >
+      <FiCheck size={12} />
+    </button>
+  );
+
+  const renderRedButton = (
+    onClick: () => void,
+    icon: React.ReactNode,
+    title?: string,
+  ) => (
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
+      className={`p-1 rounded bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 hover:bg-red-200 shrink-0 ${focusRingRedClasses}`}
+      title={title}
+    >
+      {icon}
+    </button>
+  );
+
+  // --- Item cards ---
+  const itemStatus = (entry: ItemEntry) => getItemStatus(entry, locale, t);
+
+  const renderCollectItemButton = (pIdx: number, sIdx: number) =>
+    readOnly
+      ? null
+      : renderCollectButton(
+          () => onToggleItemBag(pIdx, sIdx),
+          t("tracker.infoPanel.stoneBag"),
+        );
+
+  const renderEditableItem = (entry: ItemEntry, pIdx: number, sIdx: number) => {
+    const { name, spriteUrl } = resolveItemDisplay(entry, locale, t);
+    return (
+      <ItemGroupCard
+        key={`${pIdx}-${entry.id || entry.name}-${sIdx}`}
+        name={name}
+        spriteUrl={spriteUrl}
+        status={itemStatus(entry)}
+        used={entry.used}
+        actions={renderRedButton(
+          () => deleteStone(pIdx, sIdx),
+          <FiX size={12} />,
+        )}
+      />
+    );
+  };
+
+  const renderItemGroup = (group: ItemGroup, pIdx: number) => {
+    const { name, spriteUrl } = resolveItemDisplay(group.entry, locale, t);
+    const summary = summarizeEntryGroup(
+      group,
+      displayStones[pIdx],
+      itemStatus,
+      "tracker.infoPanel.itemCountUsed",
+      t,
+    );
+
+    return (
+      <ItemGroupCard
+        key={`${pIdx}-${group.key}`}
+        name={name}
+        spriteUrl={spriteUrl}
+        status={summary.status}
+        badgeCount={summary.isGrouped ? summary.bagCount : 0}
+        used={summary.usedUp}
+        dimmed={summary.bagCount === 0}
+        actions={
+          <>
+            {/* Move to bag button for the uncollected item in the header */}
+            {summary.headerPendingIdx !== undefined &&
+              renderCollectItemButton(pIdx, summary.headerPendingIdx)}
+            {/* Use one item from the bag */}
+            {summary.bagCount > 0 &&
+              !readOnly &&
+              renderRedButton(
+                () => onUseItem(pIdx, group.bagIndices[0]),
+                <FiZap size={12} />,
+                t("tracker.infoPanel.stoneUse"),
+              )}
+          </>
+        }
+        extraRows={summary.extraPending.map(({ index, status }) => ({
+          key: index,
+          status,
+          action: renderCollectItemButton(pIdx, index),
+        }))}
+      />
+    );
+  };
+
+  // --- Fossil cards ---
+  const fossilStatus = (entry: FossilEntry) =>
+    getFossilStatus(entry, locale, t);
+
+  const renderCollectFossilButton = (pIdx: number, fIdx: number) =>
+    readOnly
+      ? null
+      : renderCollectButton(
+          () => onToggleBag(pIdx, fIdx),
+          t("tracker.infoPanel.fossilBag"),
+        );
+
+  const renderEditableFossil = (
+    entry: FossilEntry,
+    pIdx: number,
+    fIdx: number,
+  ) => (
+    <ItemGroupCard
+      key={`${pIdx}-${entry.fossilId}-${fIdx}`}
+      name={t(`fossils.${entry.fossilId}`)}
+      spriteUrl={getFossilSpriteUrl(entry.fossilId)}
+      status={fossilStatus(entry)}
+      used={entry.revived}
+      actions={renderRedButton(
+        () => deleteFossil(pIdx, fIdx),
+        <FiX size={12} />,
+      )}
+    />
+  );
+
+  const renderFossilGroup = (group: FossilGroup, pIdx: number) => {
+    const playerFossils = displayFossils[pIdx];
+    const summary = summarizeEntryGroup(
+      group,
+      playerFossils,
+      fossilStatus,
+      "tracker.infoPanel.fossilCountRevived",
+      t,
+    );
+
+    // Any fossil of the group in the bag can be revived, so the group selects
+    // its first one.
+    const isSelected = group.bagIndices.includes(fossilSelections[pIdx]);
+    const toggleSelection = () =>
+      setFossilSelections((prev) => {
+        const next = [...prev];
+        next[pIdx] = isSelected ? -1 : group.bagIndices[0];
+        return next;
+      });
+
+    // Revived Pokémon are only listed in the tooltip of grouped fossils
+    const statusTitle =
+      summary.isGrouped && group.usedIndices.length > 0
+        ? group.usedIndices
+            .map((fIdx) => fossilStatus(playerFossils[fIdx]))
+            .join("\n")
+        : summary.status;
+
+    return (
+      <ItemGroupCard
+        key={`${pIdx}-${group.key}`}
+        name={t(`fossils.${group.entry.fossilId}`)}
+        spriteUrl={getFossilSpriteUrl(group.entry.fossilId)}
+        status={summary.status}
+        statusTitle={statusTitle}
+        badgeCount={summary.isGrouped ? summary.bagCount : 0}
+        used={summary.usedUp}
+        dimmed={summary.bagCount === 0}
+        onSelect={
+          !readOnly && summary.bagCount > 0 ? toggleSelection : undefined
+        }
+        selected={isSelected}
+        actions={
+          summary.headerPendingIdx !== undefined &&
+          renderCollectFossilButton(pIdx, summary.headerPendingIdx)
+        }
+        extraRows={summary.extraPending.map(({ index, status }) => ({
+          key: index,
+          status,
+          action: renderCollectFossilButton(pIdx, index),
+        }))}
+      />
+    );
+  };
+
+  // --- Per-player columns, shared by the item and fossil side ---
+  const renderPlayerColumns = (
+    keyPrefix: string,
+    isEditing: boolean,
+    onAdd: (pIdx: number) => void,
+    renderCards: (pIdx: number) => React.ReactNode,
+  ) => (
+    <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+      <div
+        className="grid gap-4 grid-cols-1 px-4 pb-4"
+        style={{
+          gridTemplateColumns:
+            playerNames.length > 1
+              ? `repeat(${playerNames.length}, minmax(0, 1fr))`
+              : undefined,
+        }}
+      >
+        {playerNames.map((name, pIdx) => (
+          <div key={`${keyPrefix}-player-${pIdx}`} className="space-y-2">
+            <div className="sticky top-0 z-10 pt-4 pb-1 bg-white dark:bg-gray-800">
+              <PlayerColumnHeader
+                name={name}
+                color={PLAYER_COLORS[pIdx]}
+                action={
+                  !readOnly && (
                     <button
-                      onClick={() =>
-                        setItemModalOpen({ open: true, playerIndex: pIdx })
-                      }
-                      disabled={isItemEditing}
+                      onClick={() => onAdd(pIdx)}
+                      disabled={isEditing}
                       className={`p-1 rounded-md text-white transition-all shrink-0 shadow-sm ${
-                        isItemEditing
+                        isEditing
                           ? "bg-gray-400 cursor-not-allowed opacity-50"
                           : "hover:scale-110 hover:shadow-md"
                       } ${focusRingClasses}`}
                       style={
-                        !isItemEditing
+                        !isEditing
                           ? { backgroundColor: PLAYER_COLORS[pIdx] }
                           : undefined
                       }
                     >
                       <FiPlus size={14} />
                     </button>
-                  )}
-                </div>
-              </div>
-
-              <div className="space-y-1 px-1">
-                {displayStones[pIdx]?.map((entry, sIdx) => {
-                  const itemId = entry.id ?? "";
-                  const customName = entry.name?.trim() ?? "";
-                  const isCustomItem = itemId.startsWith("item:");
-                  const itemSlug = isCustomItem
-                    ? itemId.replace("item:", "")
-                    : null;
-                  const megaDef = itemSlug
-                    ? MEGA_STONES.find((m) => m.id === itemSlug)
-                    : null;
-                  const def = isCustomItem
-                    ? null
-                    : STONES.find((s) => s.id === itemId);
-                  const locale = normalizeLanguage(i18n.language);
-                  const displayName = customName
-                    ? customName
-                    : isCustomItem
-                      ? getItemName(itemId.replace("item:", ""), locale)
-                      : t(`stones.${itemId}`);
-                  const locationLabel = resolveLocationDisplay(entry, locale);
-
-                  return (
-                    <div
-                      key={`${pIdx}-${itemId || customName}-${sIdx}`}
-                      className={`flex items-center gap-2 p-1.5 rounded border text-[10px] transition-all ${
-                        entry.used
-                          ? "border-red-300 bg-red-50 dark:border-red-900/50 dark:bg-red-900/20 text-red-700 dark:text-red-400"
-                          : !entry.inBag && !isItemEditing
-                            ? "border-gray-200 dark:border-gray-700 opacity-60"
-                            : "border-gray-200 dark:border-gray-700 dark:text-gray-300"
-                      }`}
-                    >
-                      {def || megaDef || itemSlug ? (
-                        <ItemSprite
-                          src={
-                            def
-                              ? `/stone-sprites/${def.sprite}`
-                              : getItemSpriteUrl(megaDef?.id ?? itemSlug ?? "")
-                          }
-                          className="w-6 h-6 object-contain shrink-0"
-                          used={entry.used}
-                        />
-                      ) : (
-                        <ItemSprite />
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <div className="font-bold truncate">{displayName}</div>
-                        <div className="opacity-70 truncate">
-                          {entry.used
-                            ? t("tracker.infoPanel.stoneUsed")
-                            : entry.inBag
-                              ? t("tracker.infoPanel.stoneBag")
-                              : t("tracker.infoPanel.stoneLocation", {
-                                  location: locationLabel,
-                                })}
-                        </div>
-                      </div>
-
-                      {isItemEditing && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            deleteStone(pIdx, sIdx);
-                          }}
-                          className={`p-1 rounded bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 hover:bg-red-200 shrink-0 ${focusRingRedClasses}`}
-                        >
-                          <FiX size={12} />
-                        </button>
-                      )}
-
-                      {/* Move to bag button */}
-                      {!isItemEditing &&
-                        !entry.inBag &&
-                        !entry.used &&
-                        !readOnly && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onToggleItemBag(pIdx, sIdx);
-                            }}
-                            className="p-1 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 hover:bg-blue-200 shrink-0"
-                            title={t("tracker.infoPanel.stoneBag")}
-                          >
-                            <FiCheck size={12} />
-                          </button>
-                        )}
-
-                      {/* Use stone button — per-player, directly on the card */}
-                      {!isItemEditing &&
-                        entry.inBag &&
-                        !entry.used &&
-                        !readOnly && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onUseItem(pIdx, sIdx);
-                            }}
-                            className={`p-1 rounded bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 hover:bg-red-200 shrink-0 ${focusRingRedClasses}`}
-                            title={t("tracker.infoPanel.stoneUse")}
-                          >
-                            <FiZap size={12} />
-                          </button>
-                        )}
-                    </div>
-                  );
-                })}
-              </div>
+                  )
+                }
+              />
             </div>
-          ))}
-        </div>
+
+            <div className="space-y-1 px-1">{renderCards(pIdx)}</div>
+          </div>
+        ))}
       </div>
+    </div>
+  );
+
+  // --- Render stone content ---
+  const renderStoneContent = () => (
+    <div className="flex flex-col max-h-87.5">
+      {renderPlayerColumns(
+        "stone",
+        isItemEditing,
+        (pIdx) => setItemModalOpen({ open: true, playerIndex: pIdx }),
+        (pIdx) =>
+          isItemEditing
+            ? displayStones[pIdx]?.map((entry, sIdx) =>
+                renderEditableItem(entry, pIdx, sIdx),
+              )
+            : groupItemEntries(displayStones[pIdx] ?? []).map((group) =>
+                renderItemGroup(group, pIdx),
+              ),
+      )}
     </div>
   );
 
   // --- Render fossil content ---
   const renderFossilContent = () => (
     <div className="flex flex-col max-h-87.5">
-      <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
-        <div
-          className="grid gap-4 grid-cols-1 px-4 pb-4"
-          style={{
-            gridTemplateColumns:
-              playerNames.length > 1
-                ? `repeat(${playerNames.length}, minmax(0, 1fr))`
-                : undefined,
-          }}
-        >
-          {playerNames.map((name, pIdx) => (
-            <div key={`fossil-player-${pIdx}`} className="space-y-2">
-              <div className="sticky top-0 z-10 pt-4 pb-1 bg-white dark:bg-gray-800">
-                <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
-                  <span
-                    className="text-xs font-press-start truncate mr-2"
-                    style={{ color: PLAYER_COLORS[pIdx] }}
-                  >
-                    {name}
-                  </span>
-                  {!readOnly && (
-                    <button
-                      onClick={() =>
-                        setFossilModalOpen({ open: true, playerIndex: pIdx })
-                      }
-                      disabled={isFossilEditing}
-                      className={`p-1 rounded-md text-white transition-all shrink-0 shadow-sm ${
-                        isFossilEditing
-                          ? "bg-gray-400 cursor-not-allowed opacity-50"
-                          : "hover:scale-110 hover:shadow-md"
-                      } ${focusRingClasses}`}
-                      style={
-                        !isFossilEditing
-                          ? { backgroundColor: PLAYER_COLORS[pIdx] }
-                          : undefined
-                      }
-                    >
-                      <FiPlus size={14} />
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              <div className="space-y-1 px-1">
-                {displayFossils[pIdx]?.map((entry, fIdx) => {
-                  const def = FOSSILS.find((f) => f.id === entry.fossilId);
-                  const locale = normalizeLanguage(i18n.language);
-                  const locationLabel = resolveLocationDisplay(entry, locale);
-                  const isSelected = fossilSelections[pIdx] === fIdx;
-                  const canBeSelected =
-                    entry.inBag && !entry.revived && !isFossilEditing;
-                  const isInteractive = !readOnly && canBeSelected;
-                  const revivedPokemonName =
-                    getPokemonNameById(entry.pokemonId, locale) ||
-                    entry.pokemonName ||
-                    "";
-
-                  return (
-                    <div
-                      key={`${pIdx}-${entry.fossilId}-${fIdx}`}
-                      onClick={() => {
-                        if (!isInteractive) return;
-                        setFossilSelections((prev) => {
-                          const next = [...prev];
-                          next[pIdx] = next[pIdx] === fIdx ? -1 : fIdx;
-                          return next;
-                        });
-                      }}
-                      onKeyDown={(e) => {
-                        if (!isInteractive) return;
-                        if (e.key !== "Enter" && e.key !== " ") return;
-                        e.preventDefault();
-                        setFossilSelections((prev) => {
-                          const next = [...prev];
-                          next[pIdx] = next[pIdx] === fIdx ? -1 : fIdx;
-                          return next;
-                        });
-                      }}
-                      role={isInteractive ? "button" : undefined}
-                      aria-pressed={isInteractive ? isSelected : undefined}
-                      tabIndex={isInteractive ? 0 : -1}
-                      className={`flex items-center gap-2 p-1.5 rounded border text-[10px] transition-all ${
-                        entry.revived
-                          ? "border-red-300 bg-red-50 dark:border-red-900/50 dark:bg-red-900/20 text-red-700 dark:text-red-400 cursor-default"
-                          : isSelected
-                            ? "border-green-500 bg-green-50 dark:bg-green-900/20 ring-1 ring-green-500 cursor-pointer"
-                            : !entry.inBag && !isFossilEditing
-                              ? "border-gray-200 dark:border-gray-700 opacity-60 cursor-default"
-                              : "border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-gray-300 cursor-pointer"
-                      } ${isInteractive ? focusRingCardClasses : ""}`}
-                    >
-                      <SpriteImage
-                        src={`/fossil-sprites/${def?.sprite}`}
-                        alt=""
-                        className={`w-6 h-6 object-contain ${entry.revived ? "grayscale-[0.5]" : ""}`}
-                      />
-                      <div className="flex-1 min-w-0">
-                        <div className="font-bold truncate">
-                          {t(`fossils.${entry.fossilId}`)}
-                        </div>
-                        <div className="opacity-70 truncate">
-                          {entry.revived
-                            ? revivedPokemonName
-                              ? `${t("tracker.infoPanel.fossilRevived")}: ${revivedPokemonName}`
-                              : t("tracker.infoPanel.fossilRevived")
-                            : entry.inBag
-                              ? t("tracker.infoPanel.fossilBag")
-                              : t("tracker.infoPanel.fossilLocation", {
-                                  location: locationLabel,
-                                })}
-                        </div>
-                      </div>
-
-                      {isFossilEditing && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            deleteFossil(pIdx, fIdx);
-                          }}
-                          className={`p-1 rounded bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 hover:bg-red-200 shrink-0 ${focusRingRedClasses}`}
-                        >
-                          <FiX size={12} />
-                        </button>
-                      )}
-
-                      {!isFossilEditing &&
-                        !entry.inBag &&
-                        !entry.revived &&
-                        !readOnly && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onToggleBag(pIdx, fIdx);
-                            }}
-                            className="p-1 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 hover:bg-blue-200 shrink-0"
-                            title={t("tracker.infoPanel.fossilBag")}
-                          >
-                            <FiCheck size={12} />
-                          </button>
-                        )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+      {renderPlayerColumns(
+        "fossil",
+        isFossilEditing,
+        (pIdx) => setFossilModalOpen({ open: true, playerIndex: pIdx }),
+        (pIdx) =>
+          isFossilEditing
+            ? displayFossils[pIdx]?.map((entry, fIdx) =>
+                renderEditableFossil(entry, pIdx, fIdx),
+              )
+            : groupFossilEntries(displayFossils[pIdx] ?? []).map((group) =>
+                renderFossilGroup(group, pIdx),
+              ),
+      )}
 
       {!readOnly && (
         <div className="px-4 py-2 border-t border-gray-200 dark:border-gray-700 shrink-0">

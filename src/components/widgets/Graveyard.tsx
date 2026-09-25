@@ -1,4 +1,4 @@
-import SpriteImage from "@/src/components/other/SpriteImage.tsx";
+import PokemonPairCard from "@/src/components/other/PokemonPairCard.tsx";
 import React, { useEffect, useMemo, useState } from "react";
 import type { LinkEditPayload, LinkId, PokemonLink } from "@/types.ts";
 import { PLAYER_COLORS } from "@/src/services/init.ts";
@@ -7,8 +7,7 @@ import { focusRingClasses } from "@/src/styles/focusRing.ts";
 import { FiEdit, FiTrash } from "react-icons/fi";
 import AddLostPokemonModal from "@/src/components/modals/AddLostPokemonModal.tsx";
 import EditPairModal from "@/src/components/modals/EditPairModal.tsx";
-import { getWikiUrlById, type WikiId } from "@/src/utils/wiki.ts";
-import { resolvePokemonDisplay } from "@/src/services/pokemons/pokemonDisplay.ts";
+import type { WikiId } from "@/src/utils/wiki.ts";
 import { resolvePokemonLocationDisplay } from "@/src/services/search/locationSearch.ts";
 import { normalizeLanguage } from "@/src/utils/language.ts";
 
@@ -132,9 +131,15 @@ const Graveyard: React.FC<GraveyardProps> = ({
                 ? t("graveyard.statusLost")
                 : t("graveyard.statusDead");
               return (
-                <div
+                <PokemonPairCard
                   key={pair.id}
-                  className="relative p-2 border border-gray-200 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-700 text-xs"
+                  pair={pair}
+                  playerNames={names}
+                  playerColors={names.map((_, index) => colorForIndex(index))}
+                  className="border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700"
+                  generationSpritePath={generationSpritePath}
+                  wikiId={wikiId}
+                  nicknamesEnabled={nicknamesEnabled}
                 >
                   <div
                     className={`absolute left-2 top-2 rounded-full px-2 py-0.5 text-[10px] font-semibold ${isLost ? "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200" : "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-200"}`}
@@ -187,86 +192,7 @@ const Graveyard: React.FC<GraveyardProps> = ({
                       )}
                     </div>
                   )}
-                  <p className="text-center font-bold text-gray-600 dark:text-gray-300 mb-1">
-                    {t("graveyard.areaLabel", {
-                      location: locationLabel || t("common.unknownLocation"),
-                    })}
-                  </p>
-                  <div
-                    className="grid gap-2 justify-items-center"
-                    style={{
-                      gridTemplateColumns: `repeat(${names.length}, minmax(0, 1fr))`,
-                    }}
-                  >
-                    {names.map((name, index) => {
-                      const member = pair.members?.[index] ?? {
-                        id: null,
-                        nickname: "",
-                      };
-                      const pokemonId = member.id;
-                      const { displayName, spriteUrl } = resolvePokemonDisplay(
-                        member,
-                        locale,
-                        generationSpritePath,
-                      );
-                      const wikiUrl =
-                        pokemonId && wikiId
-                          ? getWikiUrlById(pokemonId, wikiId as WikiId)
-                          : null;
-                      return (
-                        <div
-                          key={`${pair.id}-player-${index}`}
-                          className="flex justify-center w-full"
-                        >
-                          <div className="inline-flex items-center gap-2 text-left mb-2">
-                            {spriteUrl && (
-                              <SpriteImage
-                                src={spriteUrl}
-                                alt=""
-                                className="w-16 h-16 -my-3"
-                                loading="lazy"
-                              />
-                            )}
-                            <div className="flex flex-col items-start">
-                              <p
-                                className="font-bold"
-                                style={{ color: colorForIndex(index) }}
-                              >
-                                {name}
-                                {"'s "}
-                                {displayName ? (
-                                  wikiUrl ? (
-                                    <a
-                                      href={wikiUrl}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="hover:underline"
-                                    >
-                                      {displayName}
-                                    </a>
-                                  ) : (
-                                    displayName
-                                  )
-                                ) : (
-                                  t("graveyard.unknownPokemon")
-                                )}
-                              </p>
-                              {nicknamesEnabled && (
-                                <p className="text-gray-700 dark:text-gray-400">
-                                  {t("graveyard.nicknameLabel", {
-                                    nickname:
-                                      member.nickname ||
-                                      t("graveyard.noNickname"),
-                                  })}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
+                </PokemonPairCard>
               );
             })}
           </div>

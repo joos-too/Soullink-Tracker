@@ -323,6 +323,9 @@ export const de = {
       stoneBag: "Im Beutel",
       stoneLocation: "Ort: {{location}}",
       stoneUse: "Benutzen",
+      itemCountBag: "{{amount}} im Beutel",
+      itemCountUsed: "{{amount}} benutzt",
+      fossilCountRevived: "{{amount}} wiederbelebt",
     },
     evolveModal: {
       title: "Entwickeln",
@@ -453,7 +456,7 @@ export const de = {
     statusDead: "Tot",
     statusLost: "Verloren",
     areaLabel: "Gebiet: {{location}}",
-    memberTitle: "{{name}}'s {{pokemon}}",
+    memberTitle: "{{name}}'s <pokemon>{{pokemon}}</pokemon>",
     nicknameLabel: "Spitzname: {{nickname}}",
     noNickname: "-",
     unknownPokemon: "Pokémon",
