@@ -323,6 +323,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
                 isOpen={isOpen}
                 gameVersionId={gameVersionId}
                 allPokemonAndItems={allPokemonAndItems}
+                autoFocus
               />
             </div>
           )}
