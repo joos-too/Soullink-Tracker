@@ -33,6 +33,7 @@ import {
   type ItemCategory,
 } from "@/src/services/items/itemDisplay.ts";
 import { useMultiLocaleSearch } from "@/src/hooks/useMultiLocaleSearch.ts";
+import type { WikiId } from "@/src/utils/wiki.ts";
 
 type SearchMode = "pokemon" | "items";
 type PokemonSectionKey = "team" | "box" | "graveyard";
@@ -49,6 +50,8 @@ interface TrackerSearchModalProps {
   items: ItemEntry[][];
   generationSpritePath?: string | null;
   gameVersionId?: string;
+  wikiId?: WikiId | string | null;
+  nicknamesEnabled?: boolean;
 }
 
 interface PokemonSection {
@@ -70,9 +73,6 @@ interface ItemRow {
   locations: string[];
 }
 
-const USED_ROW_CLASS =
-  "border-red-300 bg-red-50 dark:border-red-900/50 dark:bg-red-900/20";
-
 // Header colors match the item/fossil tracker headers
 const ITEM_CATEGORY_COLORS: Record<ItemCategory, string> = {
   fossils: "#895338",
@@ -93,6 +93,8 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
   items,
   generationSpritePath,
   gameVersionId,
+  wikiId,
+  nicknamesEnabled = true,
 }) => {
   const { t, i18n } = useTranslation();
   const { containerRef } = useFocusTrap(isOpen);
@@ -389,12 +391,16 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
                           pair={pair}
                           playerNames={playerNames}
                           playerColors={playerColors}
-                          className={
-                            section.key === "graveyard"
-                              ? USED_ROW_CLASS
-                              : "border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700"
+                          status={
+                            section.key !== "graveyard"
+                              ? undefined
+                              : pair.isLost
+                                ? "lost"
+                                : "dead"
                           }
                           generationSpritePath={generationSpritePath}
+                          wikiId={wikiId}
+                          nicknamesEnabled={nicknamesEnabled}
                         />
                       ))}
                     </div>

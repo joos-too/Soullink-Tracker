@@ -1806,6 +1806,8 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
             items: data.items ?? [],
             generationSpritePath,
             gameVersionId: activeGameVersionId || undefined,
+            wikiId: effectiveWikiId,
+            nicknamesEnabled: data.nicknamesEnabled ?? true,
           }}
           teamTableProps={{
             title: t("team.teamTitle"),

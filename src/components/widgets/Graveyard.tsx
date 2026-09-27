@@ -126,26 +126,17 @@ const Graveyard: React.FC<GraveyardProps> = ({
                       typeof member?.id === "number" || Boolean(member?.name),
                   ));
               const canDelete = !readOnly && onDeleteLink;
-              const isLost = Boolean(pair.isLost);
-              const statusLabel = isLost
-                ? t("graveyard.statusLost")
-                : t("graveyard.statusDead");
               return (
                 <PokemonPairCard
                   key={pair.id}
                   pair={pair}
                   playerNames={names}
                   playerColors={names.map((_, index) => colorForIndex(index))}
-                  className="border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700"
+                  status={pair.isLost ? "lost" : "dead"}
                   generationSpritePath={generationSpritePath}
                   wikiId={wikiId}
                   nicknamesEnabled={nicknamesEnabled}
                 >
-                  <div
-                    className={`absolute left-2 top-2 rounded-full px-2 py-0.5 text-[10px] font-semibold ${isLost ? "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200" : "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-200"}`}
-                  >
-                    {statusLabel}
-                  </div>
                   {(canEdit || canDelete) && (
                     <div className="absolute right-2 top-2 flex items-center gap-1">
                       {canEdit && (

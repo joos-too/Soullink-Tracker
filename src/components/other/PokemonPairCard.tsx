@@ -11,12 +11,12 @@ interface PokemonPairCardProps {
   pair: PokemonLink;
   playerNames: string[];
   playerColors: string[];
-  /** Border and background of the card */
-  className: string;
+  /** Shows a dead/lost badge, e.g. for graveyard entries */
+  status?: "dead" | "lost";
   generationSpritePath?: string | null;
   wikiId?: WikiId | string | null;
   nicknamesEnabled?: boolean;
-  /** Absolutely positioned overlays, e.g. status badge and buttons */
+  /** Absolutely positioned overlays, e.g. edit buttons */
   children?: React.ReactNode;
 }
 
@@ -25,7 +25,7 @@ const PokemonPairCard: React.FC<PokemonPairCardProps> = ({
   pair,
   playerNames,
   playerColors,
-  className,
+  status,
   generationSpritePath,
   wikiId,
   nicknamesEnabled = true,
@@ -35,7 +35,16 @@ const PokemonPairCard: React.FC<PokemonPairCardProps> = ({
   const locale = normalizeLanguage(i18n.language);
 
   return (
-    <div className={`relative p-2 border rounded-md text-xs ${className}`}>
+    <div className="relative p-2 border rounded-md text-xs border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700">
+      {status && (
+        <div
+          className={`absolute left-2 top-2 rounded-full px-2 py-0.5 text-[10px] font-semibold ${status === "lost" ? "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200" : "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-200"}`}
+        >
+          {status === "lost"
+            ? t("graveyard.statusLost")
+            : t("graveyard.statusDead")}
+        </div>
+      )}
       {children}
       <p className="text-center font-bold text-gray-600 dark:text-gray-300 mb-1">
         {t("graveyard.areaLabel", {

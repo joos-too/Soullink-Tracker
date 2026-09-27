@@ -23,7 +23,6 @@ const renderCard = (
       pair={pair}
       playerNames={["Ash", "Misty & Brock"]}
       playerColors={["#ff0000", "#0000ff"]}
-      className=""
       {...props}
     />,
   );
@@ -43,6 +42,17 @@ describe("PokemonPairCard", () => {
     );
     expect(screen.getByText("Nickname: Sparky")).toBeInTheDocument();
     expect(screen.queryByRole("link")).not.toBeInTheDocument();
+    expect(screen.queryByText(/^(Dead|Lost)$/)).not.toBeInTheDocument();
+  });
+
+  it("marks dead Pokémon", () => {
+    renderCard({ status: "dead" });
+    expect(screen.getByText("Dead")).toBeInTheDocument();
+  });
+
+  it("marks lost Pokémon", () => {
+    renderCard({ status: "lost" });
+    expect(screen.getByText("Lost")).toBeInTheDocument();
   });
 
   it("links known Pokémon to the wiki and can hide nicknames", () => {
