@@ -36,26 +36,51 @@ cd supabase-project
 sh run.sh recreate
 ```
 
-### Password length
+### Auth service settings
 
-Require at least eight characters for new passwords and password changes. In
-`supabase-project/.env`, configure Supabase Auth with:
+The self-hosted Auth service is configured only through `GOTRUE_*` environment
+variables; Studio has no Auth settings pages and `supabase/config.toml` is only
+read by the local CLI. A variable in `supabase-project/.env` reaches the Auth
+container only if a Compose file references it, and the stock
+`docker-compose.yml` does not pass through the settings below. They are
+therefore set directly in
+[`docker-compose.auth-settings.yml`](docker-compose.auth-settings.yml):
 
-```dotenv
-GOTRUE_PASSWORD_MIN_LENGTH=8
-```
+| Variable                     | Value  | Local `config.toml` equivalent       |
+| ---------------------------- | ------ | ------------------------------------ |
+| `GOTRUE_MAILER_OTP_EXP`      | `3600` | `[auth.email] otp_expiry = 3600`     |
+| `GOTRUE_PASSWORD_MIN_LENGTH` | `8`    | `[auth] minimum_password_length = 8` |
 
-Recreate the Auth service after changing this value:
+- `GOTRUE_MAILER_OTP_EXP` limits password-reset and signup-confirmation links
+  to 60 minutes, as stated in the account settings UI. Without it, GoTrue
+  defaults to 24 hours.
+- `GOTRUE_PASSWORD_MIN_LENGTH` requires at least eight characters for new
+  passwords and password changes. Without it, GoTrue defaults to six. Existing
+  migrated Firebase passwords remain valid even if they are shorter.
+
+Session length comes from `JWT_EXPIRY` in `.env` (default `3600`), which the
+stock Compose file already maps to `GOTRUE_JWT_EXP`. Signing out revokes all
+refresh tokens, so other devices lose their session within that interval.
+
+Copy the override beside the self-hosted Supabase `docker-compose.yml`, then
+enable it and recreate Auth. Repeat the recreate step whenever the file
+changes:
 
 ```bash
 cd supabase-project
+sh run.sh config add auth-settings
 docker compose up -d --force-recreate auth
 ```
 
-The equivalent local CLI setting is maintained in `supabase/config.toml` as
-`minimum_password_length = 8`. Existing migrated Firebase passwords remain
-valid even if they are shorter; the limit applies when creating or changing a
-password.
+Verify that all values arrived in the container:
+
+```bash
+docker compose exec auth env | grep -E 'OTP_EXP|JWT_EXP|PASSWORD_MIN'
+```
+
+The output must list `GOTRUE_MAILER_OTP_EXP=3600`, `GOTRUE_JWT_EXP=3600`, and
+`GOTRUE_PASSWORD_MIN_LENGTH=8`. Do not set these values in `.env`; without a
+Compose reference they have no effect.
 
 ### Authentication email templates
 
