@@ -1,5 +1,5 @@
 services:
   auth:
     environment:
-      GOTRUE_MAILER_OTP_EXP: "3600"
+      #GOTRUE_MAILER_OTP_EXP: "3600"  # old 60min limit
       GOTRUE_PASSWORD_MIN_LENGTH: "8"
