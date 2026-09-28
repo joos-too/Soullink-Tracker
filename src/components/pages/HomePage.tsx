@@ -25,6 +25,7 @@ import {
   focusRingClasses,
   focusRingInsetClasses,
 } from "@/src/styles/focusRing.ts";
+import { sectionHeadingClasses } from "@/src/styles/sectionHeading.ts";
 import { GAME_VERSIONS } from "@/src/data/game-versions.ts";
 import { formatBestLabel } from "@/src/utils/bestRun.ts";
 import { useTranslation } from "react-i18next";
@@ -330,9 +331,7 @@ const HomePage: React.FC<HomePageProps> = ({
         <section className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-6 sm:px-6 shadow-[6px_6px_0_0_rgba(31,41,55,0.25)] dark:shadow-[6px_6px_0_0_rgba(0,0,0,0.35)]">
           <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-green-600">
-                {t("home.trackersBadge")}
-              </p>
+              <p className={sectionHeadingClasses}>{t("home.trackersBadge")}</p>
               <h2 className="text-xl font-semibold mt-1">
                 {t("home.trackersTitle")}
               </h2>
