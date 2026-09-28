@@ -73,14 +73,6 @@ interface ItemRow {
   locations: string[];
 }
 
-// Header colors match the item/fossil tracker headers
-const ITEM_CATEGORY_COLORS: Record<ItemCategory, string> = {
-  fossils: "#895338",
-  stones: "#3b8a5a",
-  megaStones: "#6d4c9f",
-  items: "#2c7b90",
-};
-
 const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
   isOpen,
   onClose,
@@ -415,21 +407,16 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
               </p>
             )
           ) : hasItemResults ? (
-            <div className="space-y-4 pb-2">
+            <div className="space-y-6 pb-2">
               {itemSections.map((section) => (
-                <div
-                  key={section.key}
-                  className="rounded-lg shadow-md border border-gray-300 dark:border-gray-700 overflow-hidden"
-                >
-                  <h3
-                    className="text-center p-2 text-white font-press-start text-xs"
-                    style={{
-                      backgroundColor: ITEM_CATEGORY_COLORS[section.key],
-                    }}
-                  >
+                <div key={section.key} className="space-y-3">
+                  <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200">
                     {section.title}
                   </h3>
-                  <div className="grid gap-3 p-3" style={playerGridStyle}>
+                  <div
+                    className="grid gap-3 p-3 rounded-lg shadow-md border border-gray-300 dark:border-gray-700"
+                    style={playerGridStyle}
+                  >
                     {section.itemsByPlayer.map((playerItems, pIdx) => (
                       <div
                         key={`${section.key}-player-${pIdx}`}
@@ -438,6 +425,7 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
                         <PlayerColumnHeader
                           name={playerNames[pIdx]}
                           color={playerColors[pIdx] ?? "#4b5563"}
+                          pixelFont={false}
                         />
                         <div className="space-y-1 px-1">
                           {playerItems.map(
