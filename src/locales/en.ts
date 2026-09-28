@@ -458,10 +458,12 @@ export const en = {
       back: "Back",
     },
     header: {
-      badge: "Tracker",
       title: "Settings",
       deleteTrackerTitle: "Delete tracker",
       leaveTrackerTitle: "Leave tracker",
+    },
+    general: {
+      title: "Tracker",
     },
     inputs: {
       trackerTitle: "Tracker Title",
@@ -643,9 +645,11 @@ export const en = {
       back: "Back",
     },
     header: {
-      badge: "Account",
       title: "Settings",
-      subtitle:
+    },
+    account: {
+      title: "Account",
+      description:
         "Here you find your login data and can reset your password via email.",
     },
     emailLabel: "Email",
@@ -683,7 +687,7 @@ export const en = {
       },
     },
     sprites: {
-      title: "Sprite Display",
+      title: "Sprites",
     },
     wiki: {
       title: "Wiki-Provider",

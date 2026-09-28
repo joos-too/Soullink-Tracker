@@ -33,6 +33,7 @@ import {
   focusRingInputClasses,
   focusRingRedClasses,
 } from "@/src/styles/focusRing.ts";
+import { sectionHeadingClasses } from "@/src/styles/sectionHeading.ts";
 import ToggleSwitch from "@/src/components/toggles/ToggleSwitch.tsx";
 import TriStateToggle from "@/src/components/toggles/TriStateToggle.tsx";
 import Tooltip from "@/src/components/other/Tooltip.tsx";
@@ -304,14 +305,9 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
         <div className="w-full bg-white dark:bg-gray-800 shadow-lg p-6 rounded-lg">
           <header className="pb-4 border-b border-gray-200 dark:border-gray-700">
             <div className="flex justify-between items-center">
-              <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-green-600">
-                  {t("settings.header.badge")}
-                </p>
-                <h1 className="text-2xl font-bold font-press-start dark:text-gray-100 mt-2">
-                  {t("settings.header.title")}
-                </h1>
-              </div>
+              <h1 className="text-2xl font-bold font-press-start dark:text-gray-100">
+                {t("settings.header.title")}
+              </h1>
               {canManageMembers ? (
                 <button
                   type="button"
@@ -337,6 +333,9 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
 
           <main className="mt-6 space-y-8">
             <section>
+              <h2 className={`${sectionHeadingClasses} mb-4`}>
+                {t("settings.general.title")}
+              </h2>
               <div className="space-y-4">
                 <div>
                   <label
@@ -391,7 +390,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
             </section>
 
             <section>
-              <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-gray-500 mb-4">
+              <h2 className={`${sectionHeadingClasses} mb-4`}>
                 {t("settings.sections.gameplay")}
               </h2>
               <div className="flex items-center justify-between mb-4">
@@ -509,7 +508,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
             </section>
 
             <section>
-              <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-gray-500 mb-4">
+              <h2 className={`${sectionHeadingClasses} mb-4`}>
                 {t("settings.sections.general")}
               </h2>
               <div className="flex items-center justify-between mb-4">
@@ -579,7 +578,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
             </section>
 
             <section>
-              <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-gray-500 mb-4">
+              <h2 className={`${sectionHeadingClasses} mb-4`}>
                 {t("settings.sections.configuration")}
               </h2>
               <div className="flex items-center justify-between mb-4">
@@ -652,7 +651,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
 
             {variableRivals.length > 0 && (
               <section>
-                <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-gray-500 mb-4">
+                <h2 className={`${sectionHeadingClasses} mb-4`}>
                   {t("settings.sections.variableRivals")}
                 </h2>
                 {variableRivals.map((rival) => (
@@ -730,7 +729,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
             <section>
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-gray-500">
+                  <h2 className={sectionHeadingClasses}>
                     {t("settings.members.title")}
                   </h2>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -879,7 +878,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
 
             <section className="space-y-3">
               <div className="items-center justify-between mb-4">
-                <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-gray-500">
+                <h2 className={sectionHeadingClasses}>
                   {t("settings.rulesets.label")}
                 </h2>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">

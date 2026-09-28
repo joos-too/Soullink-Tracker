@@ -463,10 +463,12 @@ export const de = {
       back: "Zurück",
     },
     header: {
-      badge: "Tracker",
       title: "Einstellungen",
       deleteTrackerTitle: "Tracker löschen",
       leaveTrackerTitle: "Tracker verlassen",
+    },
+    general: {
+      title: "Tracker",
     },
     inputs: {
       trackerTitle: "Tracker Titel",
@@ -651,9 +653,11 @@ export const de = {
       back: "Zurück",
     },
     header: {
-      badge: "Account",
       title: "Einstellungen",
-      subtitle:
+    },
+    account: {
+      title: "Account",
+      description:
         "Hier findest du deine Anmeldedaten und kannst dein Passwort per Email zurücksetzen.",
     },
     emailLabel: "Email",
@@ -693,7 +697,7 @@ export const de = {
       },
     },
     sprites: {
-      title: "Sprite-Anzeige",
+      title: "Sprites",
     },
     wiki: {
       title: "Wiki-Anbieter",

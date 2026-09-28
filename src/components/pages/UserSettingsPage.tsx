@@ -13,6 +13,7 @@ import {
   focusRingClasses,
   focusRingRedClasses,
 } from "@/src/styles/focusRing.ts";
+import { sectionHeadingClasses } from "@/src/styles/sectionHeading.ts";
 import { requestPasswordReset } from "@/src/services/backend/auth.ts";
 import ToggleSwitch from "@/src/components/toggles/ToggleSwitch.tsx";
 import { useTranslation } from "react-i18next";
@@ -127,19 +128,21 @@ const UserSettingsPage: React.FC<UserSettingsPageProps> = ({
         </button>
 
         <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-6 py-8 shadow-[6px_6px_0_0_rgba(31,41,55,0.25)] dark:shadow-[6px_6px_0_0_rgba(0,0,0,0.35)]">
-          <header className="mb-6">
-            <p className="text-xs uppercase tracking-[0.3em] text-green-600">
-              {t("userSettings.header.badge")}
-            </p>
-            <h1 className="text-2xl font-bold font-press-start text-gray-900 dark:text-gray-100 mt-3">
+          <header className="pb-4 border-b border-gray-200 dark:border-gray-700">
+            <h1 className="text-2xl font-bold font-press-start text-gray-900 dark:text-gray-100">
               {t("userSettings.header.title")}
             </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-3">
-              {t("userSettings.header.subtitle")}
-            </p>
           </header>
 
-          <section className="space-y-4">
+          <section className="mt-6 space-y-4">
+            <div className="space-y-3">
+              <h2 className={sectionHeadingClasses}>
+                {t("userSettings.account.title")}
+              </h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {t("userSettings.account.description")}
+              </p>
+            </div>
             <form
               onSubmit={handleDisplayNameSave}
               className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40 p-4"
@@ -235,9 +238,9 @@ const UserSettingsPage: React.FC<UserSettingsPageProps> = ({
           </section>
 
           <section className="pt-6 border-t border-gray-200 dark:border-gray-700 mt-6 space-y-3">
-            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-gray-500">
+            <h2 className={sectionHeadingClasses}>
               {t("userSettings.language.title")}
-            </p>
+            </h2>
             <p className="text-sm text-gray-500 dark:text-gray-400">
               {t("userSettings.language.description")}
             </p>
@@ -281,9 +284,9 @@ const UserSettingsPage: React.FC<UserSettingsPageProps> = ({
           </section>
 
           <section className="pt-6 border-t border-gray-200 dark:border-gray-700 mt-6 space-y-4">
-            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-gray-500">
+            <h2 className={sectionHeadingClasses}>
               {t("userSettings.sprites.title")}
-            </p>
+            </h2>
 
             <div className="flex items-center justify-between">
               <div className="flex-1">
@@ -351,9 +354,9 @@ const UserSettingsPage: React.FC<UserSettingsPageProps> = ({
           </section>
 
           <section className="pt-6 border-t border-gray-200 dark:border-gray-700 mt-6 space-y-4">
-            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-gray-500">
+            <h2 className={sectionHeadingClasses}>
               {t("userSettings.wiki.title")}
-            </p>
+            </h2>
             <p className="text-sm text-gray-500 dark:text-gray-400">
               {t("userSettings.wiki.description")}
             </p>
