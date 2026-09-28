@@ -708,7 +708,7 @@ export const en = {
       registerPrompt: "Register here",
       forgotPassword: "Forgot your password?",
       passwordResetInstructions:
-        "Enter your email address and we’ll send you a password reset link.",
+        "Enter your email address and request a password reset link.",
       sendReset: "Send reset email",
       passwordResetSent: "Email sent",
       passwordResetError:
@@ -754,14 +754,13 @@ export const en = {
       instructions: "Provide your reset code and a new password.",
       checkingLink: "Checking reset link…",
       invalidLinkTitle: "Link invalid",
-      invalidLinkDescription: "Request a new reset email from the settings.",
+      invalidLinkDescription: "Request a new Reset-Email from the settings.",
       backToLogin: "Back to login",
       missingCode: "A valid reset code is required.",
       resetFailed:
         "Changing the password failed. Try again or request a new link.",
       invalidLink: "The reset link is invalid or expired.",
-      successHeadline:
-        "Choose a new password for your Soullink Tracker account.",
+      successHeadline: "Choose a new password.",
       submit: "Reset password",
       newPasswordLabel: "New password",
       confirmPasswordLabel: "Confirm password",

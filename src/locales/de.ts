@@ -717,7 +717,7 @@ export const de = {
       registerPrompt: "Hier registrieren",
       forgotPassword: "Passwort vergessen?",
       passwordResetInstructions:
-        "Gib deine Email-Adresse ein. Wir senden dir einen Link zum Zurücksetzen deines Passworts.",
+        "Gib deine Email-Adresse ein um einen Link zum Zurücksetzen deines Passworts anzufordern.",
       sendReset: "Reset-Email senden",
       passwordResetSent: "Email gesendet",
       passwordResetError:
@@ -766,14 +766,13 @@ export const de = {
       checkingLink: "Reset-Link wird geprüft…",
       invalidLinkTitle: "Link ungültig",
       invalidLinkDescription:
-        "Bitte fordere über die Einstellungen eine neue Reset-Mail an.",
+        "Fordere über die Einstellungen eine neue Reset-EMail an.",
       backToLogin: "Zurück zur Anmeldung",
-      missingCode: "Es fehlt ein gültiger Reset-Code.",
+      missingCode: "Es wird ein gültiger Reset-Code benötigt.",
       resetFailed:
         "Das Ändern des Passworts ist fehlgeschlagen. Versuche es erneut oder fordere einen neuen Link an.",
       invalidLink: "Der Reset-Link ist ungültig oder abgelaufen.",
-      successHeadline:
-        "Wähle ein neues Passwort für deinen Soullink Tracker Account.",
+      successHeadline: "Wähle ein neues Passwort.",
       submit: "Passwort zurücksetzen",
       newPasswordLabel: "Neues Passwort",
       confirmPasswordLabel: "Passwort bestätigen",
