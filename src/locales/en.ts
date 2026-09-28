@@ -651,7 +651,7 @@ export const en = {
     },
     emailLabel: "Email",
     emailInfo:
-      "We will send a password reset link to this address. It is valid for 60 minutes.",
+      "We will send a password reset link to this address. It is valid for 24 hours.",
     emailReadOnly: "Your email address cannot be changed.",
     displayName: {
       label: "Display name",
