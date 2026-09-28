@@ -653,7 +653,9 @@ export const en = {
         "Here you find your login data and can reset your password via email.",
     },
     emailLabel: "Email",
-    emailInfo: "We will send the reset link to this address.",
+    emailInfo:
+      "We will send a password reset link to this address. It is valid for 60 minutes.",
+    emailReadOnly: "Your email address cannot be changed.",
     displayName: {
       label: "Display name",
       info: "This name is shown to other members of your trackers. It does not have to be unique.",
@@ -665,8 +667,6 @@ export const en = {
     actions: {
       resetPassword: "Reset password",
     },
-    resetDetails:
-      "You will receive an email with a confirmation link. Click it within 60 minutes to set a new password.",
     logoutPrompt: "Want to log out from this device?",
     errors: {
       noEmail: "There is no email associated with your account.",

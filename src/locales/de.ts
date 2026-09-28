@@ -661,7 +661,9 @@ export const de = {
         "Hier findest du deine Anmeldedaten und kannst dein Passwort per Email zurücksetzen.",
     },
     emailLabel: "Email",
-    emailInfo: "Wir senden den Reset-Link an diese Adresse.",
+    emailInfo:
+      "Wir senden einen Link zum Zurücksetzen deines Passworts an diese Adresse. Er ist 60 Minuten gültig.",
+    emailReadOnly: "Deine Email-Adresse kann nicht geändert werden.",
     displayName: {
       label: "Anzeigename",
       info: "Dieser Name wird anderen Mitgliedern deiner Tracker angezeigt. Er muss nicht eindeutig sein.",
@@ -673,8 +675,6 @@ export const de = {
     actions: {
       resetPassword: "Passwort zurücksetzen",
     },
-    resetDetails:
-      "Du erhältst eine Email mit einem Bestätigungslink. Klicke ihn innerhalb von 60 Minuten, um ein neues Passwort zu vergeben.",
     logoutPrompt: "Du willst dich von diesem Gerät abmelden?",
     errors: {
       noEmail: "Für deinen Account ist keine Email hinterlegt.",

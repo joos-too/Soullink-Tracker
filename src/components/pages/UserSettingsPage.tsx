@@ -5,9 +5,12 @@ import {
   FiCheckCircle,
   FiExternalLink,
   FiInfo,
+  FiLock,
   FiLogOut,
   FiMail,
   FiRefreshCw,
+  FiSave,
+  FiUser,
 } from "react-icons/fi";
 import {
   focusRingClasses,
@@ -145,96 +148,115 @@ const UserSettingsPage: React.FC<UserSettingsPageProps> = ({
             </div>
             <form
               onSubmit={handleDisplayNameSave}
-              className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40 p-4"
+              className="flex items-start gap-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40 p-4"
             >
-              <label
-                htmlFor="display-name"
-                className="block text-xs font-semibold uppercase tracking-[0.2em] text-gray-500"
-              >
-                {t("userSettings.displayName.label")}
-              </label>
-              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                {t("userSettings.displayName.info")}
-              </p>
-              <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-                <input
-                  id="display-name"
-                  value={displayNameDraft}
-                  onChange={(event) => {
-                    setDisplayNameDraft(event.target.value);
-                    setDisplayNameError(null);
-                  }}
-                  maxLength={50}
-                  required
-                  className="min-w-0 flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
-                />
-                <button
-                  type="submit"
-                  disabled={displayNameSaving}
-                  className={`shrink-0 rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60 ${focusRingClasses}`}
+              <FiUser className="mt-0.5 shrink-0" size={20} />
+              <div className="min-w-0 flex-1">
+                <label
+                  htmlFor="display-name"
+                  className="block text-xs font-semibold uppercase tracking-[0.2em] text-gray-500"
                 >
-                  {t("userSettings.displayName.save")}
-                </button>
-              </div>
-              {displayNameError && (
-                <p className="mt-2 text-sm text-red-600 dark:text-red-400">
-                  {displayNameError}
+                  {t("userSettings.displayName.label")}
+                </label>
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  {t("userSettings.displayName.info")}
                 </p>
-              )}
+                <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                  <input
+                    id="display-name"
+                    value={displayNameDraft}
+                    onChange={(event) => {
+                      setDisplayNameDraft(event.target.value);
+                      setDisplayNameError(null);
+                    }}
+                    maxLength={50}
+                    required
+                    className="min-w-0 flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                  />
+                  <button
+                    type="submit"
+                    disabled={displayNameSaving}
+                    className={`inline-flex shrink-0 items-center justify-center gap-2 rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60 ${focusRingClasses}`}
+                  >
+                    <FiSave />
+                    {t("userSettings.displayName.save")}
+                  </button>
+                </div>
+                {displayNameError && (
+                  <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+                    {displayNameError}
+                  </p>
+                )}
+              </div>
             </form>
 
-            <div className="flex items-start gap-3 p-4 rounded-lg bg-gray-50 dark:bg-gray-900/40 border border-gray-200 dark:border-gray-700">
-              <FiMail className="mt-1" size={20} />
-              <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-gray-500">
+            <div className="flex items-start gap-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40 p-4">
+              <FiMail className="mt-0.5 shrink-0" size={20} />
+              <div className="min-w-0 flex-1">
+                <label
+                  htmlFor="account-email"
+                  className="block text-xs font-semibold uppercase tracking-[0.2em] text-gray-500"
+                >
                   {t("userSettings.emailLabel")}
-                </p>
-                <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                  {email || "-"}
-                </p>
-                <p className="text-sm text-gray-500 mt-1">
+                </label>
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                   {t("userSettings.emailInfo")}
                 </p>
+                <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                  <div className="relative min-w-0 flex-1">
+                    <input
+                      id="account-email"
+                      value={email || "-"}
+                      readOnly
+                      aria-readonly="true"
+                      aria-describedby="account-email-locked"
+                      className="w-full cursor-not-allowed rounded-md border border-dashed border-gray-300 bg-gray-100 py-2 pl-3 pr-10 text-gray-500 outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                    />
+                    <div className="absolute inset-y-0 right-3 flex items-center">
+                      <Tooltip
+                        side="top"
+                        content={t("userSettings.emailReadOnly")}
+                        className="h-4"
+                      >
+                        <span className="text-gray-400 dark:text-gray-500 cursor-help">
+                          <FiLock size={16} aria-hidden="true" />
+                        </span>
+                      </Tooltip>
+                    </div>
+                    <span id="account-email-locked" className="sr-only">
+                      {t("userSettings.emailReadOnly")}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handlePasswordReset}
+                    disabled={disabled}
+                    className={`inline-flex shrink-0 items-center justify-center gap-2 rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60 ${focusRingClasses}`}
+                  >
+                    <FiRefreshCw className={loading ? "animate-spin" : ""} />
+                    {t("userSettings.actions.resetPassword")}
+                  </button>
+                </div>
+                {message && (
+                  <div
+                    className={`mt-3 flex items-start gap-2 rounded-md border px-3 py-2 text-sm ${
+                      status === "success"
+                        ? "border-green-300 bg-green-50 text-green-800 dark:border-green-700 dark:bg-green-900/30 dark:text-green-200"
+                        : "border-red-300 bg-red-50 text-red-800 dark:border-red-700 dark:bg-red-900/30 dark:text-red-200"
+                    }`}
+                    role="status"
+                    aria-live="polite"
+                  >
+                    {status === "success" ? (
+                      <FiCheckCircle className="mt-0.5 shrink-0" />
+                    ) : (
+                      <FiAlertTriangle className="mt-0.5 shrink-0" />
+                    )}
+                    <span>{message}</span>
+                  </div>
+                )}
               </div>
             </div>
-
-            <div>
-              <button
-                type="button"
-                onClick={handlePasswordReset}
-                disabled={disabled}
-                className={`inline-flex items-center gap-2 rounded-md bg-green-600 px-4 py-2 text-sm font-semibold uppercase tracking-[0.2em] text-white shadow-sm transition hover:bg-green-700 disabled:opacity-60 disabled:cursor-not-allowed ${focusRingClasses}`}
-              >
-                {loading ? (
-                  <FiRefreshCw className="animate-spin" />
-                ) : (
-                  <FiRefreshCw />
-                )}
-                {t("userSettings.actions.resetPassword")}
-              </button>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                {t("userSettings.resetDetails")}
-              </p>
-            </div>
-
-            {message && (
-              <div
-                className={`flex items-start gap-2 rounded-md border px-3 py-2 text-sm ${
-                  status === "success"
-                    ? "border-green-300 bg-green-50 text-green-800 dark:border-green-700 dark:bg-green-900/30 dark:text-green-200"
-                    : "border-red-300 bg-red-50 text-red-800 dark:border-red-700 dark:bg-red-900/30 dark:text-red-200"
-                }`}
-                role="status"
-                aria-live="polite"
-              >
-                {status === "success" ? (
-                  <FiCheckCircle className="mt-0.5" />
-                ) : (
-                  <FiAlertTriangle className="mt-0.5" />
-                )}
-                <span>{message}</span>
-              </div>
-            )}
           </section>
 
           <section className="pt-6 border-t border-gray-200 dark:border-gray-700 mt-6 space-y-3">
