@@ -12,6 +12,7 @@ interface SuggestionInputProps<TSuggestion = string> {
   placeholder?: string;
   disabled?: boolean;
   required?: boolean;
+  autoFocus?: boolean;
   minSearchLength?: number;
   debounceMs?: number;
   inputClassName?: string;
@@ -32,6 +33,7 @@ const SuggestionInput = <TSuggestion,>({
   placeholder,
   disabled = false,
   required = true,
+  autoFocus = false,
   minSearchLength = 2,
   debounceMs = 250,
   inputClassName = "",
@@ -150,6 +152,7 @@ const SuggestionInput = <TSuggestion,>({
           }
           onKeyDown={handleKeyDown}
           disabled={disabled}
+          autoFocus={autoFocus}
           className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed ${focusRingInputClasses} ${inputClassName}`}
           placeholder={placeholder}
           required={required}
