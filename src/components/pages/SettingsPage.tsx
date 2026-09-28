@@ -16,6 +16,7 @@ import type {
 import {
   FiArrowLeft,
   FiAlertTriangle,
+  FiChevronDown,
   FiEdit,
   FiEye,
   FiInfo,
@@ -831,18 +832,25 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
                         placeholder="trainer@example.com"
                         className={`min-w-0 flex-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-gray-100 ${focusRingInputClasses}`}
                       />
-                      <select
-                        value={inviteRole}
-                        onChange={(e) =>
-                          setInviteRole(e.target.value as InviteRoleOption)
-                        }
-                        className={`w-24 sm:w-28 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-2 py-2 text-sm text-gray-900 dark:text-gray-100 ${focusRingInputClasses}`}
-                      >
-                        <option value="editor">
-                          {t("common.roles.member")}
-                        </option>
-                        <option value="guest">{t("common.roles.guest")}</option>
-                      </select>
+                      <div className="relative w-24 shrink-0 sm:w-28">
+                        <select
+                          value={inviteRole}
+                          onChange={(e) =>
+                            setInviteRole(e.target.value as InviteRoleOption)
+                          }
+                          className={`h-full w-full appearance-none rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 py-2 pl-2.5 pr-7 text-sm text-gray-900 dark:text-gray-100 ${focusRingInputClasses}`}
+                        >
+                          <option value="editor">
+                            {t("common.roles.member")}
+                          </option>
+                          <option value="guest">
+                            {t("common.roles.guest")}
+                          </option>
+                        </select>
+                        <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-gray-500 dark:text-gray-400">
+                          <FiChevronDown aria-hidden="true" size={16} />
+                        </span>
+                      </div>
                     </div>
                     <button
                       type="submit"
