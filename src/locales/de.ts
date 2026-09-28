@@ -336,8 +336,7 @@ export const de = {
     },
   },
   rulesetEditor: {
-    badge: "Regeln",
-    title: "Regel-Editor",
+    title: "Regelset-Editor",
     subtitle: "Erstelle, kopiere und bearbeite deine Regeln.",
     listTitle: "Verfügbare Regeln",
     new: "Neue Regeln",
@@ -346,7 +345,6 @@ export const de = {
     presetLocked: "Vordefinierte Regeln können nicht bearbeitet werden.",
     customHint: "Eigene Regeln sind nur für dich sichtbar.",
     formTitle: "Regel-Details",
-    readonlyInfo: "Vordefinierte Regeln sind schreibgeschützt.",
     name: "Name",
     namePlaceholder: "Name für das Regelset",
     description: "Beschreibung",
@@ -369,7 +367,6 @@ export const de = {
     deleteConfirmBody:
       "Willst du „{{name}}“ wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
     tagsTitle: "Tags",
-    tagsHint: "Tags helfen beim Filtern deiner Regeln.",
     tagsEmpty: "Noch keine Tags.",
     tagPlaceholder: "Tag hinzufügen (z. B. Duo, DE)",
     addTag: "Tag hinzufügen",

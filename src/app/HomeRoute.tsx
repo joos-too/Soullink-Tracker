@@ -27,8 +27,7 @@ export default function HomeRoute() {
     handleDisplayNameChange,
   } = useAppSession();
   const handleOpenUserSettings = () => navigate("/account");
-  const handleOpenRulesetEditor = () =>
-    navigate("/rulesets", { state: { from: "/" } });
+  const handleOpenRulesetEditor = () => navigate("/rulesets");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createTrackerError, setCreateTrackerError] = useState<string | null>(
     null,

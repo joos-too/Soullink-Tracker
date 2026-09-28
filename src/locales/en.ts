@@ -336,8 +336,7 @@ export const en = {
     },
   },
   rulesetEditor: {
-    badge: "Rules",
-    title: "Rule editor",
+    title: "Ruleset Editor",
     subtitle: "Create, copy, and edit your own rulesets.",
     listTitle: "Available rulesets",
     new: "New ruleset",
@@ -346,7 +345,6 @@ export const en = {
     presetLocked: "Preset rulesets can’t be edited.",
     customHint: "Custom rulesets are only visible to you.",
     formTitle: "Ruleset details",
-    readonlyInfo: "Preset rulesets are read-only.",
     name: "Name",
     namePlaceholder: "Name your ruleset",
     description: "Description",
@@ -369,7 +367,6 @@ export const en = {
     deleteConfirmBody:
       "Do you really want to delete “{{name}}”? This action cannot be undone.",
     tagsTitle: "Tags",
-    tagsHint: "Use tags to find rule sets faster.",
     tagsEmpty: "No tags yet.",
     tagPlaceholder: "Add a tag (e.g. Duo, EN)",
     addTag: "Add tag",

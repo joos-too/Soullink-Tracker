@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useId, useMemo, useState } from "react";
 import {
-  FiArrowLeft,
   FiCopy,
+  FiHome,
   FiPlus,
   FiSave,
   FiTag,
@@ -19,11 +19,12 @@ import {
 import { DEFAULT_RULES, PREDEFINED_RULESET_TAGS } from "@/src/data/rulesets.ts";
 import { sanitizeTags } from "@/src/services/init.ts";
 import RulesetPicker from "@/src/components/pickers/RulesetPicker.tsx";
+import DarkModeToggle from "@/src/components/toggles/DarkModeToggle.tsx";
 import { useFocusTrap } from "@/src/hooks/useFocusTrap.ts";
 
 interface RulesetEditorPageProps {
   rulesets: Ruleset[];
-  onBack: () => void;
+  onNavigateHome: () => void;
   onSave: (payload: SaveRulesetPayload) => Promise<Ruleset>;
   onDelete: (rulesetId: string) => Promise<void>;
   defaultRulesetId?: string;
@@ -31,7 +32,7 @@ interface RulesetEditorPageProps {
 
 const RulesetEditorPage: React.FC<RulesetEditorPageProps> = ({
   rulesets,
-  onBack,
+  onNavigateHome,
   onSave,
   onDelete,
   defaultRulesetId,
@@ -201,32 +202,31 @@ const RulesetEditorPage: React.FC<RulesetEditorPageProps> = ({
   return (
     <div className="min-h-screen bg-[#f0f0f0] dark:bg-gray-900 text-gray-800 dark:text-gray-100 px-3 py-6 sm:py-10">
       <div className="max-w-6xl mx-auto space-y-6">
-        <header className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
+        <header className="flex items-center justify-between gap-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-5 sm:px-6 shadow-[6px_6px_0_0_rgba(31,41,55,0.25)] dark:shadow-[6px_6px_0_0_rgba(0,0,0,0.35)]">
+          <div className="flex min-w-0 flex-1 flex-col justify-center min-h-16 sm:min-h-20">
+            <h1 className="text-xl sm:text-3xl font-press-start text-gray-900 dark:text-gray-100 mt-2">
+              {t("rulesetEditor.title")}
+            </h1>
+            <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">
+              {t("rulesetEditor.subtitle")}
+            </p>
+          </div>
+          <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+            <DarkModeToggle />
             <button
               type="button"
-              onClick={onBack}
-              className={`inline-flex items-center gap-2 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 ${focusRingClasses}`}
-              title={t("common.back")}
+              onClick={onNavigateHome}
+              className={`p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white ${focusRingClasses}`}
+              aria-label={t("common.overview")}
+              title={t("common.overview")}
             >
-              <FiArrowLeft /> {t("common.back")}
+              <FiHome size={28} />
             </button>
-            <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-green-600">
-                {t("rulesetEditor.badge")}
-              </p>
-              <h1 className="text-xl sm:text-3xl font-press-start text-gray-900 dark:text-gray-100 mt-2">
-                {t("rulesetEditor.title")}
-              </h1>
-              <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                {t("rulesetEditor.subtitle")}
-              </p>
-            </div>
           </div>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-stretch lg:h-[calc(100vh-180px)] lg:min-h-0">
-          <section className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 shadow-sm h-full flex flex-col min-h-0 overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-stretch lg:h-[calc(100vh-218px)] lg:min-h-0">
+          <section className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 shadow-[6px_6px_0_0_rgba(31,41,55,0.25)] dark:shadow-[6px_6px_0_0_rgba(0,0,0,0.35)] h-full flex flex-col min-h-0 overflow-hidden">
             <div className="flex h-full flex-col min-h-0">
               <div className="flex items-center justify-between gap-2 mb-3">
                 <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-gray-500">
@@ -235,7 +235,7 @@ const RulesetEditorPage: React.FC<RulesetEditorPageProps> = ({
                 <button
                   type="button"
                   onClick={() => handleStartNew()}
-                  className={`inline-flex items-center gap-2 rounded-md border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 ${focusRingClasses}`}
+                  className={`inline-flex items-center gap-2 rounded-md bg-green-600 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-white shadow-sm transition hover:bg-green-700 ${focusRingClasses}`}
                 >
                   <FiPlus /> {t("rulesetEditor.new")}
                 </button>
@@ -268,17 +268,10 @@ const RulesetEditorPage: React.FC<RulesetEditorPageProps> = ({
             </div>
           </section>
 
-          <section className="lg:col-span-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 shadow-sm space-y-4 h-full flex flex-col min-h-0 overflow-y-auto custom-scrollbar">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-              <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-gray-500">
-                {t("rulesetEditor.formTitle")}
-              </h2>
-              {isPreset && (
-                <span className="text-xs text-gray-500 dark:text-gray-400">
-                  {t("rulesetEditor.readonlyInfo")}
-                </span>
-              )}
-            </div>
+          <section className="lg:col-span-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 shadow-[6px_6px_0_0_rgba(31,41,55,0.25)] dark:shadow-[6px_6px_0_0_rgba(0,0,0,0.35)] space-y-4 h-full flex flex-col min-h-0 overflow-y-auto custom-scrollbar">
+            <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-gray-500">
+              {t("rulesetEditor.formTitle")}
+            </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm font-semibold mb-1">
@@ -308,7 +301,7 @@ const RulesetEditorPage: React.FC<RulesetEditorPageProps> = ({
               </div>
             </div>
 
-            <div className="space-y-3">
+            <div className="flex flex-col gap-3 lg:flex-1 lg:min-h-0">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200">
                   {t("rulesetEditor.rulesTitle")}
@@ -325,7 +318,7 @@ const RulesetEditorPage: React.FC<RulesetEditorPageProps> = ({
               </div>
               <div
                 tabIndex={-1}
-                className="space-y-2 max-h-[40vh] overflow-y-auto pr-2 sm:pr-1 py-1 custom-scrollbar focus-visible:outline-none"
+                className="space-y-2 max-h-[40vh] lg:max-h-none lg:flex-1 lg:min-h-40 overflow-y-auto pr-2 sm:pr-1 py-1 custom-scrollbar focus-visible:outline-none"
               >
                 {draftRules.map((rule, index) => (
                   <div
@@ -375,14 +368,9 @@ const RulesetEditorPage: React.FC<RulesetEditorPageProps> = ({
             </div>
 
             <div className="space-y-2 pt-1">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200">
-                  {t("rulesetEditor.tagsTitle")}
-                </h3>
-                <span className="text-xs text-gray-500 dark:text-gray-400">
-                  {t("rulesetEditor.tagsHint")}
-                </span>
-              </div>
+              <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                {t("rulesetEditor.tagsTitle")}
+              </h3>
               <div className="flex flex-wrap gap-2">
                 {draftTags.length === 0 ? (
                   <span className="text-xs text-gray-500 dark:text-gray-400">

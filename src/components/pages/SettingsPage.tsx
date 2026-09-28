@@ -302,7 +302,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
           <FiArrowLeft /> {t("settings.buttons.back")}
         </button>
 
-        <div className="w-full bg-white dark:bg-gray-800 shadow-lg p-6 rounded-lg">
+        <div className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-[6px_6px_0_0_rgba(31,41,55,0.25)] dark:shadow-[6px_6px_0_0_rgba(0,0,0,0.35)] p-6 rounded-lg">
           <header className="pb-4 border-b border-gray-200 dark:border-gray-700">
             <div className="flex justify-between items-center">
               <h1 className="text-2xl font-bold font-press-start dark:text-gray-100">

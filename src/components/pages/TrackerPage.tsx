@@ -34,7 +34,7 @@ import { MultiLocaleSearchContext } from "@/src/hooks/useMultiLocaleSearch.ts";
 import DeleteTrackerModal from "@/src/components/modals/DeleteTrackerModal.tsx";
 import RealtimeConnectionBanner from "@/src/components/banners/RealtimeConnectionBanner.tsx";
 import TrackerConflictBanner from "@/src/components/banners/TrackerConflictBanner.tsx";
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   setTrackerVisibility,
   updateTrackerMetadata,
@@ -91,7 +91,6 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
   trackerMeta: activeTrackerMeta,
 }) => {
   const navigate = useNavigate();
-  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const {
     user,
@@ -686,12 +685,8 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
   }, [getRulesetCopyName, getRulesetOverwriteName]);
 
   const handleOpenRulesetEditor = useCallback(() => {
-    const from =
-      typeof window !== "undefined"
-        ? `${location.pathname}${location.search}`
-        : undefined;
-    navigate("/rulesets", { state: { from } });
-  }, [navigate, location.pathname, location.search]);
+    navigate("/rulesets");
+  }, [navigate]);
 
   const handleNavigateHome = () => {
     navigate("/");
