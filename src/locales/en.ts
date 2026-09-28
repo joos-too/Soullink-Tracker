@@ -667,7 +667,7 @@ export const en = {
     },
     resetDetails:
       "You will receive an email with a confirmation link. Click it within 60 minutes to set a new password.",
-    logoutPrompt: "Want to log out? This ends the session on all your devices.",
+    logoutPrompt: "Want to log out from this device?",
     errors: {
       noEmail: "There is no email associated with your account.",
       resetFailed: "Resetting the password failed.",

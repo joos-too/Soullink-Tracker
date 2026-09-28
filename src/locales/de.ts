@@ -675,8 +675,7 @@ export const de = {
     },
     resetDetails:
       "Du erhältst eine Email mit einem Bestätigungslink. Klicke ihn innerhalb von 60 Minuten, um ein neues Passwort zu vergeben.",
-    logoutPrompt:
-      "Du willst dich abmelden? Das beendet die Sitzung auf all deinen Geräten.",
+    logoutPrompt: "Du willst dich von diesem Gerät abmelden?",
     errors: {
       noEmail: "Für deinen Account ist keine Email hinterlegt.",
       resetFailed: "Das Zurücksetzen ist fehlgeschlagen.",

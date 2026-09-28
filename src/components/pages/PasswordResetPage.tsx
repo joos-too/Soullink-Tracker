@@ -98,7 +98,8 @@ const PasswordResetPage: React.FC<PasswordResetPageProps> = ({ oobCode }) => {
 
   const handleBackToLogin = useCallback(async () => {
     try {
-      await signOutCurrentUser();
+      // A password reset may be locking out someone else, so end every session.
+      await signOutCurrentUser("global");
     } catch {
       // ignore sign out errors (e.g., already signed out)
     } finally {
