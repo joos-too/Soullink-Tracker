@@ -239,7 +239,7 @@ const UserSettingsPage: React.FC<UserSettingsPageProps> = ({
                 </div>
                 {message && (
                   <div
-                    className={`mt-3 flex items-start gap-2 rounded-md border px-3 py-2 text-sm ${
+                    className={`mt-3 flex items-start gap-2 rounded-md border px-3 py-2 text-sm leading-6 ${
                       status === "success"
                         ? "border-green-300 bg-green-50 text-green-800 dark:border-green-700 dark:bg-green-900/30 dark:text-green-200"
                         : "border-red-300 bg-red-50 text-red-800 dark:border-red-700 dark:bg-red-900/30 dark:text-red-200"
@@ -248,9 +248,9 @@ const UserSettingsPage: React.FC<UserSettingsPageProps> = ({
                     aria-live="polite"
                   >
                     {status === "success" ? (
-                      <FiCheckCircle className="mt-0.5 shrink-0" />
+                      <FiCheckCircle className="mt-[5px] shrink-0" />
                     ) : (
-                      <FiAlertTriangle className="mt-0.5 shrink-0" />
+                      <FiAlertTriangle className="mt-[5px] shrink-0" />
                     )}
                     <span>{message}</span>
                   </div>
