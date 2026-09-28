@@ -22,6 +22,7 @@ interface ItemSuggestionInputProps {
   allPokemonAndItems?: boolean;
   placeholder?: string;
   multiLocaleSearch?: boolean;
+  autoFocus?: boolean;
 }
 
 const ItemSuggestionInput: React.FC<ItemSuggestionInputProps> = ({
@@ -35,6 +36,7 @@ const ItemSuggestionInput: React.FC<ItemSuggestionInputProps> = ({
   allPokemonAndItems = false,
   placeholder,
   multiLocaleSearch: multiLocaleSearchProp,
+  autoFocus,
 }) => {
   const { t, i18n } = useTranslation();
   const language = useMemo(
@@ -85,6 +87,7 @@ const ItemSuggestionInput: React.FC<ItemSuggestionInputProps> = ({
       }}
       fetchSuggestions={fetchSuggestions}
       isOpen={isOpen}
+      autoFocus={autoFocus}
       placeholder={placeholder || t("modals.addStone.itemSearchPlaceholder")}
       minSearchLength={1}
       debounceMs={150}
