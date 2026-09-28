@@ -800,10 +800,14 @@ export const de = {
     "claw-fossil": "Klauenfossil",
     "skull-fossil": "Kopffossil",
     "armor-fossil": "Panzerfossil",
-    "cover-fossil": "Federfossil",
-    "plume-fossil": "Schildfossil",
+    "cover-fossil": "Schildfossil",
+    "plume-fossil": "Federfossil",
     "jaw-fossil": "Kieferfossil",
     "sail-fossil": "Flossenfossil",
+    "fossilized-bird": "Vogelfossil",
+    "fossilized-fish": "Fischfossil",
+    "fossilized-drake": "Drachenfossil",
+    "fossilized-dino": "Paddelfossil",
   },
   stones: {
     "fire-stone": "Feuerstein",
@@ -815,6 +819,7 @@ export const de = {
     "shiny-stone": "Leuchtstein",
     "dusk-stone": "Finsterstein",
     "dawn-stone": "Funkelstein",
+    "ice-stone": "Eisstein",
   },
   gameData: {
     games: {

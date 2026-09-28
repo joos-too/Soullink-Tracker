@@ -791,6 +791,10 @@ export const en = {
     "plume-fossil": "Plume Fossil",
     "jaw-fossil": "Jaw Fossil",
     "sail-fossil": "Sail Fossil",
+    "fossilized-bird": "Fossilized Bird",
+    "fossilized-fish": "Fossilized Fish",
+    "fossilized-drake": "Fossilized Drake",
+    "fossilized-dino": "Fossilized Dino",
   },
   stones: {
     "fire-stone": "Fire Stone",
@@ -802,6 +806,7 @@ export const en = {
     "shiny-stone": "Shiny Stone",
     "dusk-stone": "Dusk Stone",
     "dawn-stone": "Dawn Stone",
+    "ice-stone": "Ice Stone",
   },
   gameData: {
     games: {
