@@ -11,17 +11,21 @@ import { isTrackerUuid } from "./trackerStorage";
 function TrackerNotFound() {
   const { t } = useTranslation();
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[#f0f0f0] dark:bg-gray-900 text-gray-700 dark:text-gray-200 px-6 text-center">
-      <p className="text-lg font-semibold">{t("app.trackerNotFound.title")}</p>
-      <p className="text-sm text-gray-500 mt-2">
-        {t("app.trackerNotFound.description")}
-      </p>
-      <Link
-        to="/"
-        className="mt-6 inline-flex items-center gap-2 rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700"
-      >
-        {t("common.overview")}
-      </Link>
+    <div className="min-h-screen flex items-center justify-center bg-[#f0f0f0] dark:bg-gray-900 text-gray-700 dark:text-gray-200 px-6 text-center">
+      <div className="w-full max-w-md flex flex-col items-center bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 sm:p-8 shadow-[6px_6px_0_0_rgba(31,41,55,0.25)] dark:shadow-[6px_6px_0_0_rgba(0,0,0,0.35)]">
+        <p className="text-lg font-semibold">
+          {t("app.trackerNotFound.title")}
+        </p>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+          {t("app.trackerNotFound.description")}
+        </p>
+        <Link
+          to="/"
+          className="mt-6 inline-flex items-center gap-2 rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700"
+        >
+          {t("common.overview")}
+        </Link>
+      </div>
     </div>
   );
 }

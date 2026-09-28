@@ -141,8 +141,10 @@ export const verifyEmailOtp = async (
   if (error) throw error;
 };
 
-export const signOutCurrentUser = async (): Promise<void> => {
-  const { error } = await getSupabaseClient().auth.signOut();
+export const signOutCurrentUser = async (
+  scope: "local" | "global" = "local",
+): Promise<void> => {
+  const { error } = await getSupabaseClient().auth.signOut({ scope });
   if (error) throw error;
 };
 
