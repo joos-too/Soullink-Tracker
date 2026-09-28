@@ -30,9 +30,10 @@ export const en = {
   home: {
     logoAlt: "Soullink Tracker logo",
     heroTitle: "Soullink Tracker",
-    heroSubtitle: "Hi Trainer – keep track of your adventures here",
-    trackersBadge: "Your trackers",
-    trackersTitle: "All trackers at a glance",
+    heroSubtitle:
+      "Keep track of encounters, deaths, items and level caps in your Soullink runs",
+    trackersBadge: "Overview",
+    trackersTitle: "Your trackers",
     createTracker: "New tracker",
     loading: "Loading trackers…",
     emptyTitle: "No trackers yet",
@@ -215,9 +216,6 @@ export const en = {
   },
   tracker: {
     defaultTitle: "Tracker",
-    header: {
-      subtitle: "Pokémon Soullink – Challenge Tracker",
-    },
     progress: {
       eliteFour: "Elite 4 | {{count}}/4",
     },
@@ -338,8 +336,7 @@ export const en = {
     },
   },
   rulesetEditor: {
-    badge: "Rules",
-    title: "Rule editor",
+    title: "Ruleset Editor",
     subtitle: "Create, copy, and edit your own rulesets.",
     listTitle: "Available rulesets",
     new: "New ruleset",
@@ -348,7 +345,6 @@ export const en = {
     presetLocked: "Preset rulesets can’t be edited.",
     customHint: "Custom rulesets are only visible to you.",
     formTitle: "Ruleset details",
-    readonlyInfo: "Preset rulesets are read-only.",
     name: "Name",
     namePlaceholder: "Name your ruleset",
     description: "Description",
@@ -371,7 +367,6 @@ export const en = {
     deleteConfirmBody:
       "Do you really want to delete “{{name}}”? This action cannot be undone.",
     tagsTitle: "Tags",
-    tagsHint: "Use tags to find rule sets faster.",
     tagsEmpty: "No tags yet.",
     tagPlaceholder: "Add a tag (e.g. Duo, EN)",
     addTag: "Add tag",
@@ -460,10 +455,12 @@ export const en = {
       back: "Back",
     },
     header: {
-      badge: "Tracker",
       title: "Settings",
       deleteTrackerTitle: "Delete tracker",
       leaveTrackerTitle: "Leave tracker",
+    },
+    general: {
+      title: "Tracker",
     },
     inputs: {
       trackerTitle: "Tracker Title",
@@ -541,7 +538,7 @@ export const en = {
       rivalCensor: {
         title: "Censor rival battles",
         tooltipLabel: "Rival info",
-        tooltip: `To avoid spoilers and keep the story fresh, rival battles are hidden and must be revealed manually.\n\nOnce uncovered they stay visible, even on future runs. You can also decide to only show the level of upcoming rival battles.`,
+        tooltip: `To avoid story spoilers, rival battles are hidden until you reveal them manually.\n\nOnce revealed, they stay visible, including in later runs. You can also show only the levels of upcoming rival battles.`,
         description: "Hides rival battles until you reveal them manually.",
         modes: {
           off: "Off",
@@ -645,13 +642,17 @@ export const en = {
       back: "Back",
     },
     header: {
-      badge: "Account",
       title: "Settings",
-      subtitle:
+    },
+    account: {
+      title: "Account",
+      description:
         "Here you find your login data and can reset your password via email.",
     },
     emailLabel: "Email",
-    emailInfo: "We will send the reset link to this address.",
+    emailInfo:
+      "We will send a password reset link to this address. It is valid for 24 hours.",
+    emailReadOnly: "Your email address cannot be changed.",
     displayName: {
       label: "Display name",
       info: "This name is shown to other members of your trackers. It does not have to be unique.",
@@ -663,9 +664,7 @@ export const en = {
     actions: {
       resetPassword: "Reset password",
     },
-    resetDetails:
-      "You will receive an email with a confirmation link. Click it within 60 minutes to set a new password.",
-    logoutPrompt: "Want to log out? This ends the session on all your devices.",
+    logoutPrompt: "Want to log out from this device?",
     errors: {
       noEmail: "There is no email associated with your account.",
       resetFailed: "Resetting the password failed.",
@@ -685,7 +684,7 @@ export const en = {
       },
     },
     sprites: {
-      title: "Sprite Display",
+      title: "Sprites",
     },
     wiki: {
       title: "Wiki-Provider",
@@ -709,7 +708,7 @@ export const en = {
       registerPrompt: "Register here",
       forgotPassword: "Forgot your password?",
       passwordResetInstructions:
-        "Enter your email address and we’ll send you a password reset link.",
+        "Enter your email address and request a password reset link.",
       sendReset: "Send reset email",
       passwordResetSent: "Email sent",
       passwordResetError:
@@ -755,14 +754,13 @@ export const en = {
       instructions: "Provide your reset code and a new password.",
       checkingLink: "Checking reset link…",
       invalidLinkTitle: "Link invalid",
-      invalidLinkDescription: "Request a new reset email from the settings.",
+      invalidLinkDescription: "Request a new Reset-Email from the settings.",
       backToLogin: "Back to login",
       missingCode: "A valid reset code is required.",
       resetFailed:
         "Changing the password failed. Try again or request a new link.",
       invalidLink: "The reset link is invalid or expired.",
-      successHeadline:
-        "Choose a new password for your Soullink Tracker account.",
+      successHeadline: "Choose a new password.",
       submit: "Reset password",
       newPasswordLabel: "New password",
       confirmPasswordLabel: "Confirm password",
@@ -791,6 +789,10 @@ export const en = {
     "plume-fossil": "Plume Fossil",
     "jaw-fossil": "Jaw Fossil",
     "sail-fossil": "Sail Fossil",
+    "fossilized-bird": "Fossilized Bird",
+    "fossilized-fish": "Fossilized Fish",
+    "fossilized-drake": "Fossilized Drake",
+    "fossilized-dino": "Fossilized Dino",
   },
   stones: {
     "fire-stone": "Fire Stone",
@@ -802,6 +804,7 @@ export const en = {
     "shiny-stone": "Shiny Stone",
     "dusk-stone": "Dusk Stone",
     "dawn-stone": "Dawn Stone",
+    "ice-stone": "Ice Stone",
   },
   gameData: {
     games: {

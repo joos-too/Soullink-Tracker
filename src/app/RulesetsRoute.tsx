@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import type { Ruleset } from "@/types";
 import {
   saveRuleset,
@@ -12,21 +12,10 @@ import { useAppSession } from "./AppSession";
 export default function RulesetsRoute() {
   const { user, rulesets } = useAppSession();
   const navigate = useNavigate();
-  const location = useLocation();
-  const rulesetBackTarget =
-    (location.state as { from?: string } | null)?.from || null;
 
-  const handleRulesetBack = useCallback(() => {
-    if (rulesetBackTarget) {
-      navigate(rulesetBackTarget);
-      return;
-    }
-    if (typeof window !== "undefined" && window.history.length > 1) {
-      navigate(-1);
-      return;
-    }
+  const handleNavigateHome = useCallback(() => {
     navigate("/");
-  }, [navigate, rulesetBackTarget]);
+  }, [navigate]);
 
   const handleSaveRuleset = useCallback(
     async (payload: SaveRulesetPayload): Promise<Ruleset> => {
@@ -47,7 +36,7 @@ export default function RulesetsRoute() {
   return (
     <RulesetEditorPage
       rulesets={rulesets}
-      onBack={handleRulesetBack}
+      onNavigateHome={handleNavigateHome}
       onSave={handleSaveRuleset}
       onDelete={handleDeleteRuleset}
       defaultRulesetId={DEFAULT_RULESET_ID}

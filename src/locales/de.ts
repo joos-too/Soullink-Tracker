@@ -30,9 +30,10 @@ export const de = {
   home: {
     logoAlt: "Soullink Tracker Logo",
     heroTitle: "Soullink Tracker",
-    heroSubtitle: "Willkommen Trainer – verwalte hier deine Abenteuer",
-    trackersBadge: "Deine Tracker",
-    trackersTitle: "Alle Tracker auf einen Blick",
+    heroSubtitle:
+      "Tracke Begegnungen, Tode, Items und Level Caps deiner Soullink Runs",
+    trackersBadge: "Übersicht",
+    trackersTitle: "Deine Tracker",
     createTracker: "Neuer Tracker",
     loading: "Tracker werden geladen…",
     emptyTitle: "Noch keine Tracker vorhanden",
@@ -217,9 +218,6 @@ export const de = {
   },
   tracker: {
     defaultTitle: "Tracker",
-    header: {
-      subtitle: "Pokémon Soullink – Challenge Tracker",
-    },
     progress: {
       eliteFour: "Top 4 | {{count}}/4",
     },
@@ -338,8 +336,7 @@ export const de = {
     },
   },
   rulesetEditor: {
-    badge: "Regeln",
-    title: "Regel-Editor",
+    title: "Regelset-Editor",
     subtitle: "Erstelle, kopiere und bearbeite deine Regeln.",
     listTitle: "Verfügbare Regeln",
     new: "Neue Regeln",
@@ -348,7 +345,6 @@ export const de = {
     presetLocked: "Vordefinierte Regeln können nicht bearbeitet werden.",
     customHint: "Eigene Regeln sind nur für dich sichtbar.",
     formTitle: "Regel-Details",
-    readonlyInfo: "Vordefinierte Regeln sind schreibgeschützt.",
     name: "Name",
     namePlaceholder: "Name für das Regelset",
     description: "Beschreibung",
@@ -371,7 +367,6 @@ export const de = {
     deleteConfirmBody:
       "Willst du „{{name}}“ wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
     tagsTitle: "Tags",
-    tagsHint: "Tags helfen beim Filtern deiner Regeln.",
     tagsEmpty: "Noch keine Tags.",
     tagPlaceholder: "Tag hinzufügen (z. B. Duo, DE)",
     addTag: "Tag hinzufügen",
@@ -465,10 +460,12 @@ export const de = {
       back: "Zurück",
     },
     header: {
-      badge: "Tracker",
       title: "Einstellungen",
       deleteTrackerTitle: "Tracker löschen",
       leaveTrackerTitle: "Tracker verlassen",
+    },
+    general: {
+      title: "Tracker",
     },
     inputs: {
       trackerTitle: "Tracker Titel",
@@ -528,7 +525,7 @@ export const de = {
       configuration: "Tracker-Konfiguration",
       variableRivals: "Rivalen-Auswahl",
       variableRivalsDescription:
-        "Wähle deinen Antagonisten für die korrekte Darstellung in den Rivalenkämpfen aus.",
+        "Wähle deinen Antagonisten, damit in den Rivalenkämpfen der richtige Trainer angezeigt wird.",
     },
     features: {
       hardcore: {
@@ -653,13 +650,17 @@ export const de = {
       back: "Zurück",
     },
     header: {
-      badge: "Account",
       title: "Einstellungen",
-      subtitle:
+    },
+    account: {
+      title: "Account",
+      description:
         "Hier findest du deine Anmeldedaten und kannst dein Passwort per Email zurücksetzen.",
     },
     emailLabel: "Email",
-    emailInfo: "Wir senden den Reset-Link an diese Adresse.",
+    emailInfo:
+      "Wir senden einen Link zum Zurücksetzen deines Passworts an diese Adresse. Er ist 60 Minuten gültig.",
+    emailReadOnly: "Deine Email-Adresse kann nicht geändert werden.",
     displayName: {
       label: "Anzeigename",
       info: "Dieser Name wird anderen Mitgliedern deiner Tracker angezeigt. Er muss nicht eindeutig sein.",
@@ -671,10 +672,7 @@ export const de = {
     actions: {
       resetPassword: "Passwort zurücksetzen",
     },
-    resetDetails:
-      "Du erhältst eine Email mit einem Bestätigungslink. Klicke ihn innerhalb von 60 Minuten, um ein neues Passwort zu vergeben.",
-    logoutPrompt:
-      "Du willst dich abmelden? Das beendet die Sitzung auf all deinen Geräten.",
+    logoutPrompt: "Du willst dich von diesem Gerät abmelden?",
     errors: {
       noEmail: "Für deinen Account ist keine Email hinterlegt.",
       resetFailed: "Das Zurücksetzen ist fehlgeschlagen.",
@@ -695,7 +693,7 @@ export const de = {
       },
     },
     sprites: {
-      title: "Sprite-Anzeige",
+      title: "Sprites",
     },
     wiki: {
       title: "Wiki-Anbieter",
@@ -719,7 +717,7 @@ export const de = {
       registerPrompt: "Hier registrieren",
       forgotPassword: "Passwort vergessen?",
       passwordResetInstructions:
-        "Gib deine Email-Adresse ein. Wir senden dir einen Link zum Zurücksetzen deines Passworts.",
+        "Gib deine Email-Adresse ein um einen Link zum Zurücksetzen deines Passworts anzufordern.",
       sendReset: "Reset-Email senden",
       passwordResetSent: "Email gesendet",
       passwordResetError:
@@ -768,14 +766,13 @@ export const de = {
       checkingLink: "Reset-Link wird geprüft…",
       invalidLinkTitle: "Link ungültig",
       invalidLinkDescription:
-        "Bitte fordere über die Einstellungen eine neue Reset-Mail an.",
+        "Fordere über die Einstellungen eine neue Reset-EMail an.",
       backToLogin: "Zurück zur Anmeldung",
-      missingCode: "Es fehlt ein gültiger Reset-Code.",
+      missingCode: "Es wird ein gültiger Reset-Code benötigt.",
       resetFailed:
         "Das Ändern des Passworts ist fehlgeschlagen. Versuche es erneut oder fordere einen neuen Link an.",
       invalidLink: "Der Reset-Link ist ungültig oder abgelaufen.",
-      successHeadline:
-        "Wähle ein neues Passwort für deinen Soullink Tracker Account.",
+      successHeadline: "Wähle ein neues Passwort.",
       submit: "Passwort zurücksetzen",
       newPasswordLabel: "Neues Passwort",
       confirmPasswordLabel: "Passwort bestätigen",
@@ -800,10 +797,14 @@ export const de = {
     "claw-fossil": "Klauenfossil",
     "skull-fossil": "Kopffossil",
     "armor-fossil": "Panzerfossil",
-    "cover-fossil": "Federfossil",
-    "plume-fossil": "Schildfossil",
+    "cover-fossil": "Schildfossil",
+    "plume-fossil": "Federfossil",
     "jaw-fossil": "Kieferfossil",
     "sail-fossil": "Flossenfossil",
+    "fossilized-bird": "Vogelfossil",
+    "fossilized-fish": "Fischfossil",
+    "fossilized-drake": "Drachenfossil",
+    "fossilized-dino": "Paddelfossil",
   },
   stones: {
     "fire-stone": "Feuerstein",
@@ -815,6 +816,7 @@ export const de = {
     "shiny-stone": "Leuchtstein",
     "dusk-stone": "Finsterstein",
     "dawn-stone": "Funkelstein",
+    "ice-stone": "Eisstein",
   },
   gameData: {
     games: {

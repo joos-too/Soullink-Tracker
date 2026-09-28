@@ -16,6 +16,10 @@ export const FOSSILS: FossilDef[] = [
   { id: "plume-fossil", gen: 5, sprite: "gen5/plume-fossil.png" },
   { id: "jaw-fossil", gen: 6, sprite: "gen6/jaw-fossil.png" },
   { id: "sail-fossil", gen: 6, sprite: "gen6/sail-fossil.png" },
+  { id: "fossilized-bird", gen: 8, sprite: "gen8/fossilized-bird.png" },
+  { id: "fossilized-fish", gen: 8, sprite: "gen8/fossilized-fish.png" },
+  { id: "fossilized-drake", gen: 8, sprite: "gen8/fossilized-drake.png" },
+  { id: "fossilized-dino", gen: 8, sprite: "gen8/fossilized-dino.png" },
 ];
 
 export interface StoneDef {
@@ -34,6 +38,7 @@ export const STONES: StoneDef[] = [
   { id: "shiny-stone", gen: 4, sprite: "gen4/shiny-stone.png" },
   { id: "dusk-stone", gen: 4, sprite: "gen4/dusk-stone.png" },
   { id: "dawn-stone", gen: 4, sprite: "gen4/dawn-stone.png" },
+  { id: "ice-stone", gen: 7, sprite: "gen7/ice-stone.png" },
 ];
 
 export interface MegaStoneDef {
