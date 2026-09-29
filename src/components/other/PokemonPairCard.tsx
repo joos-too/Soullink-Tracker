@@ -56,7 +56,7 @@ const PokemonPairCard: React.FC<PokemonPairCardProps> = ({
       <div
         className="grid gap-2 justify-items-center"
         style={{
-          gridTemplateColumns: `repeat(${playerNames.length}, minmax(0, 1fr))`,
+          gridTemplateColumns: `repeat(${playerNames.length}, minmax(max-content, 1fr))`,
         }}
       >
         {playerNames.map((name, index) => {
