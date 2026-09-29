@@ -18,7 +18,7 @@ import {
   resolveLocationDisplay,
   resolvePokemonLocationDisplay,
 } from "@/src/services/search/locationSearch.ts";
-import { normalizeLanguage } from "@/src/utils/language";
+import { normalizeLanguage, SUPPORTED_LANGUAGES } from "@/src/utils/language";
 import {
   groupFossilEntries,
   groupItemEntries,
@@ -67,6 +67,8 @@ interface ItemRow {
   category: ItemCategory;
   id: string;
   name: string;
+  /** Lowercased names used for matching, in all locales for multi-locale search */
+  searchNames: string[];
   spriteUrl: string | null;
   playerIndex: number;
   summary: EntryGroupSummary;
@@ -188,6 +190,13 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
 
   const allItems = useMemo<ItemRow[]>(() => {
     const rows: ItemRow[] = [];
+    const searchLocales = multiLocaleSearch ? SUPPORTED_LANGUAGES : [locale];
+    const localeTs = searchLocales.map((lang) => ({
+      lang,
+      t: i18n.getFixedT(lang),
+    }));
+    const toSearchNames = (names: string[]) =>
+      Array.from(new Set(names.map((name) => name.toLowerCase())));
 
     // Fossils, identical fossils grouped per player
     (fossils ?? []).forEach((playerFossils, pIdx) => {
@@ -197,6 +206,9 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
           category: "fossils",
           id: fossilId,
           name: t(`fossils.${fossilId}`),
+          searchNames: toSearchNames(
+            localeTs.map(({ t: localeT }) => localeT(`fossils.${fossilId}`)),
+          ),
           spriteUrl: getFossilSpriteUrl(fossilId),
           playerIndex: pIdx,
           summary: summarizeEntryGroup(
@@ -226,6 +238,12 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
           category,
           id: entry.id || entry.name?.trim() || "",
           name,
+          searchNames: toSearchNames(
+            localeTs.map(
+              ({ lang, t: localeT }) =>
+                resolveItemDisplay(entry, lang, localeT).name,
+            ),
+          ),
           spriteUrl,
           playerIndex: pIdx,
           summary: summarizeEntryGroup(
@@ -243,7 +261,7 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
     });
 
     return rows;
-  }, [fossils, items, t, locale]);
+  }, [fossils, items, t, i18n, locale, multiLocaleSearch]);
 
   const itemSections = useMemo(() => {
     const categories: { key: ItemCategory; titleKey: string }[] = [
@@ -259,7 +277,7 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
           if (item.category !== key) return false;
           if (!normalizedQuery) return true;
           return (
-            item.name.toLowerCase().includes(normalizedQuery) ||
+            item.searchNames.some((name) => name.includes(normalizedQuery)) ||
             item.locations.some((location) =>
               locationMatchesQuery(location, normalizedQuery, {
                 locale,
