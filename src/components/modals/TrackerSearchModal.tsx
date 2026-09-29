@@ -376,7 +376,7 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
                     <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200">
                       {section.title}
                     </h3>
-                    <div className="space-y-3">
+                    <div className="space-y-3 min-w-min">
                       {section.pairs.map((pair) => (
                         <PokemonPairCard
                           key={`${section.key}-${pair.id}`}

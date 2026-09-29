@@ -113,9 +113,9 @@ const Graveyard: React.FC<GraveyardProps> = ({
           </button>
         )}
       </div>
-      <div className="p-4 max-h-96 overflow-y-auto">
+      <div className="w-full p-4 max-h-96 overflow-x-auto overflow-y-auto">
         {graveyard && graveyard.length > 0 ? (
-          <div className="space-y-3">
+          <div className="space-y-3 min-w-min">
             {[...graveyard].reverse().map((pair) => {
               const locationLabel = resolvePokemonLocationDisplay(pair, locale);
               const canEdit =
