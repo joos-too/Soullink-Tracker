@@ -51,7 +51,7 @@ const RealtimeConnectionBanner: React.FC<RealtimeConnectionBannerProps> = ({
     >
       <Icon className="shrink-0" size={20} aria-hidden />
       <span className="min-w-0 flex-1">{t(`app.realtime.${status}`)}</span>
-      {status === "resync-error" && (
+      {(status === "disconnected" || status === "resync-error") && (
         <button
           type="button"
           onClick={onRetry}

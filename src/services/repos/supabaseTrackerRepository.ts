@@ -56,6 +56,28 @@ export class TrackerStateConflictError extends Error {
   }
 }
 
+const TRACKER_REQUEST_TIMEOUT_MS = 15_000;
+
+const withTrackerRequestTimeout = async <T>(
+  request: (signal: AbortSignal) => Promise<T>,
+): Promise<T> => {
+  const controller = new AbortController();
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      request(controller.signal),
+      new Promise<never>((_, reject) => {
+        timeout = setTimeout(() => {
+          reject(new Error("Tracker request timed out."));
+          controller.abort();
+        }, TRACKER_REQUEST_TIMEOUT_MS);
+      }),
+    ]);
+  } finally {
+    if (timeout) clearTimeout(timeout);
+  }
+};
+
 const toError = (error: { message: string; code?: string }): Error => {
   if (error.code === "PT409" || error.message === "state_revision_conflict") {
     return new TrackerStateConflictError();
@@ -174,25 +196,37 @@ export const getSupabaseTrackerMeta = async (
 /** Loads one state document together with the relational metadata it omits. */
 export const getSupabaseTrackerState = async (
   trackerId: string,
+  signal?: AbortSignal,
 ): Promise<TrackerStateSnapshot | null> => {
   const supabase = getSupabaseClient();
+  const stateQuery = supabase
+    .from("tracker_states")
+    .select()
+    .eq("tracker_id", trackerId);
+  const trackerQuery = supabase
+    .from("trackers")
+    .select("player_names, ruleset_id")
+    .eq("id", trackerId);
+  if (signal) {
+    stateQuery.abortSignal(signal);
+    trackerQuery.abortSignal(signal);
+  }
   const [stateResult, trackerResult] = await Promise.all([
-    supabase
-      .from("tracker_states")
-      .select()
-      .eq("tracker_id", trackerId)
-      .maybeSingle(),
-    supabase
-      .from("trackers")
-      .select("player_names, ruleset_id")
-      .eq("id", trackerId)
-      .maybeSingle(),
+    stateQuery.maybeSingle(),
+    trackerQuery.maybeSingle(),
   ]);
   if (stateResult.error) throw toError(stateResult.error);
   if (trackerResult.error) throw toError(trackerResult.error);
   if (!stateResult.data || !trackerResult.data) return null;
   return toTrackerStateSnapshot(stateResult.data, trackerResult.data);
 };
+
+export const getSupabaseTrackerStateWithTimeout = (
+  trackerId: string,
+): Promise<TrackerStateSnapshot | null> =>
+  withTrackerRequestTimeout((signal) =>
+    getSupabaseTrackerState(trackerId, signal),
+  );
 
 export const subscribeToSupabaseUserTrackerIds = (
   userId: string,
@@ -401,13 +435,16 @@ export const updateSupabaseTrackerState = async (
   expectedRevision: number,
   state: AppState,
 ): Promise<TrackerStateRow> => {
-  const { data, error } = await getSupabaseClient().rpc(
-    "update_tracker_state",
-    {
-      p_tracker_id: trackerId,
-      p_expected_revision: expectedRevision,
-      p_state: toPersistedTrackerState(state),
-    },
+  const { data, error } = await withTrackerRequestTimeout((signal) =>
+    Promise.resolve(
+      getSupabaseClient()
+        .rpc("update_tracker_state", {
+          p_tracker_id: trackerId,
+          p_expected_revision: expectedRevision,
+          p_state: toPersistedTrackerState(state),
+        })
+        .abortSignal(signal),
+    ),
   );
   if (error) throw toError(error);
   return data;

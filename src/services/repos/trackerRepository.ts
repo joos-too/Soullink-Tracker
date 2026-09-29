@@ -1,6 +1,7 @@
 import type { AppState, TrackerMeta, TrackerSummary } from "@/types.ts";
 import {
   getSupabaseTrackerState,
+  getSupabaseTrackerStateWithTimeout,
   setSupabaseTrackerVisibility,
   subscribeToSupabaseTrackerList,
   subscribeToSupabaseTrackerMeta,
@@ -72,7 +73,7 @@ export const subscribeToTrackerState = (
 export const fetchTrackerStateSnapshot = async (
   trackerId: string,
 ): Promise<VersionedTrackerState | null> => {
-  const snapshot = await getSupabaseTrackerState(trackerId);
+  const snapshot = await getSupabaseTrackerStateWithTimeout(trackerId);
   if (!snapshot) return null;
   return { state: snapshot.state, revision: snapshot.revision };
 };
@@ -99,7 +100,7 @@ export const saveTrackerState = async (
 ): Promise<void> => {
   let expectedRevision = stateRevisions.get(trackerId);
   if (expectedRevision === undefined) {
-    const snapshot = await getSupabaseTrackerState(trackerId);
+    const snapshot = await getSupabaseTrackerStateWithTimeout(trackerId);
     if (!snapshot) throw new Error("Tracker state was not found.");
     expectedRevision = snapshot.revision;
   }

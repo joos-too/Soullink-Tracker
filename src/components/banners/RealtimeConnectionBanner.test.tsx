@@ -27,14 +27,19 @@ describe("RealtimeConnectionBanner", () => {
   });
 
   it("explains that editing can continue while disconnected", () => {
+    vi.useFakeTimers();
+    const onRetry = vi.fn();
     render(
-      <RealtimeConnectionBanner status="disconnected" onRetry={vi.fn()} />,
+      <RealtimeConnectionBanner status="disconnected" onRetry={onRetry} />,
     );
 
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    act(() => vi.advanceTimersByTime(500));
     expect(screen.getByRole("status")).toHaveTextContent(
       "You can continue editing",
     );
-    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Retry" }));
+    expect(onRetry).toHaveBeenCalledOnce();
   });
 
   it("offers retry after synchronization fails", () => {

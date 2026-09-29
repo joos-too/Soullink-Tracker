@@ -74,6 +74,7 @@ export const useActiveTracker = ({
   const stateConflictRef = useRef(false);
   const saveFailedRef = useRef(false);
   const realtimeAttemptRef = useRef(0);
+  const restartRealtimeRef = useRef<(() => void) | null>(null);
   const latestDataRef = useRef(data);
   latestDataRef.current = data;
   const canWriteRef = useRef(canWrite);
@@ -253,9 +254,13 @@ export const useActiveTracker = ({
 
   const retryRealtimeSync = useCallback(() => {
     if (!activeTrackerId) return;
+    if (realtimeStatus === "disconnected") {
+      restartRealtimeRef.current?.();
+      return;
+    }
     const attempt = ++realtimeAttemptRef.current;
     void reconcileTracker(activeTrackerId, writeSessionRef.current, attempt);
-  }, [activeTrackerId, reconcileTracker]);
+  }, [activeTrackerId, reconcileTracker, realtimeStatus]);
 
   useEffect(() => {
     isHydratingRef.current = true;
@@ -280,7 +285,80 @@ export const useActiveTracker = ({
 
     let unsubscribe: (() => void) | undefined;
     let cancelled = false;
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+    let subscriptionGeneration = 0;
+    let retryCount = 0;
     let initialSnapshotApplied = false;
+    const clearReconnectTimer = () => {
+      if (reconnectTimer !== null) clearTimeout(reconnectTimer);
+      reconnectTimer = null;
+    };
+    const scheduleReconnect = () => {
+      if (reconnectTimer !== null) return;
+      const delay = Math.min(15_000 * 2 ** retryCount, 60_000);
+      reconnectTimer = setTimeout(() => {
+        if (cancelled) return;
+        reconnectTimer = null;
+        setRealtimeStatus("disconnected");
+        retryCount = Math.min(retryCount + 1, 2);
+        startSubscription();
+      }, delay);
+    };
+    const startSubscription = () => {
+      if (cancelled) return;
+      realtimeAttemptRef.current += 1;
+      clearReconnectTimer();
+      unsubscribe?.();
+      unsubscribe = undefined;
+      const generation = ++subscriptionGeneration;
+      scheduleReconnect();
+      try {
+        unsubscribe = subscribeToTrackerState(
+          activeTrackerId,
+          (liveState) => {
+            if (cancelled || generation !== subscriptionGeneration) return;
+            if (dirtyRef.current || stateConflictRef.current) return false;
+            if (liveState) {
+              skipNextWriteRef.current = true;
+              setData((previous) => coerceState(liveState, previous));
+            }
+            markInitialSnapshot();
+            return true;
+          },
+          (error) => {
+            if (cancelled || generation !== subscriptionGeneration) return;
+            console.error("Tracker state listener error", error);
+          },
+          (status, error) => {
+            if (cancelled || generation !== subscriptionGeneration) return;
+            if (status === "disconnected") {
+              realtimeAttemptRef.current += 1;
+              if (error)
+                console.error("Tracker realtime connection lost", error);
+              setRealtimeStatus("disconnected");
+              scheduleReconnect();
+              return;
+            }
+            clearReconnectTimer();
+            retryCount = 0;
+            const attempt = ++realtimeAttemptRef.current;
+            void reconcileTracker(
+              activeTrackerId,
+              writeSessionRef.current,
+              attempt,
+            );
+          },
+        );
+      } catch (error) {
+        console.error("Tracker realtime subscription failed", error);
+        setRealtimeStatus("disconnected");
+      }
+    };
+    const restartSubscription = () => {
+      retryCount = 0;
+      setRealtimeStatus("connecting");
+      startSubscription();
+    };
     const markInitialSnapshot = () => {
       if (initialSnapshotApplied || cancelled) return;
       initialSnapshotApplied = true;
@@ -307,38 +385,8 @@ export const useActiveTracker = ({
         markInitialSnapshot();
       } finally {
         if (!cancelled) {
-          unsubscribe = subscribeToTrackerState(
-            activeTrackerId,
-            (liveState) => {
-              if (cancelled) return;
-              if (dirtyRef.current || stateConflictRef.current) return false;
-              if (liveState) {
-                skipNextWriteRef.current = true;
-                setData((previous) => coerceState(liveState, previous));
-              }
-              markInitialSnapshot();
-              return true;
-            },
-            (error) => {
-              console.error("Tracker state listener error", error);
-            },
-            (status, error) => {
-              if (cancelled) return;
-              if (status === "disconnected") {
-                realtimeAttemptRef.current += 1;
-                if (error)
-                  console.error("Tracker realtime connection lost", error);
-                setRealtimeStatus("disconnected");
-                return;
-              }
-              const attempt = ++realtimeAttemptRef.current;
-              void reconcileTracker(
-                activeTrackerId,
-                writeSessionRef.current,
-                attempt,
-              );
-            },
-          );
+          restartRealtimeRef.current = restartSubscription;
+          startSubscription();
         }
       }
     })();
@@ -346,6 +394,9 @@ export const useActiveTracker = ({
     return () => {
       realtimeAttemptRef.current += 1;
       cancelled = true;
+      clearReconnectTimer();
+      if (restartRealtimeRef.current === restartSubscription)
+        restartRealtimeRef.current = null;
       unsubscribe?.();
       isHydratingRef.current = true;
       setDataLoaded(false);

@@ -51,9 +51,12 @@ describe("realtime-safe modal drafts", () => {
     expect(screen.getByRole("alert")).toHaveTextContent(
       "The source disappeared.",
     );
-    expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
+    const saveButton = screen.getByRole<HTMLButtonElement>("button", {
+      name: "Save",
+    });
+    expect(saveButton).toBeDisabled();
 
-    fireEvent.submit(screen.getByRole("button", { name: "Save" }).form!);
+    fireEvent.submit(saveButton.form!);
     expect(onSave).not.toHaveBeenCalled();
   });
 
