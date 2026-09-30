@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { act, renderHook, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { AppState } from "@/types";
 import { createInitialState } from "@/src/services/init";
 import { useActiveTracker } from "./useActiveTracker";
@@ -51,6 +51,10 @@ describe("tracker editor lifecycle", () => {
     repository.save.mockReset().mockResolvedValue(undefined);
     repository.subscribe.mockReset().mockReturnValue(repository.unsubscribe);
     repository.unsubscribe.mockClear();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("flushes the last debounced edit when navigation unmounts the editor", async () => {
@@ -114,6 +118,42 @@ describe("tracker editor lifecycle", () => {
     await waitFor(() =>
       expect(repository.save).toHaveBeenCalledWith("tracker-id", edited),
     );
+  });
+
+  it("restarts a channel that never confirms its subscription", async () => {
+    vi.useFakeTimers();
+    const { result, unmount } = renderHook(() => useEditor());
+    await act(async () => {});
+    expect(repository.subscribe).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(15_000);
+    });
+    expect(result.current.realtimeStatus).toBe("disconnected");
+    expect(repository.unsubscribe).toHaveBeenCalledTimes(1);
+    expect(repository.subscribe).toHaveBeenCalledTimes(2);
+
+    const oldStatus = repository.subscribe.mock.calls[0][3];
+    act(() => oldStatus("subscribed"));
+    expect(result.current.realtimeStatus).toBe("disconnected");
+
+    const newStatus = repository.subscribe.mock.calls[1][3];
+    await act(async () => newStatus("subscribed"));
+    expect(result.current.realtimeStatus).toBe("connected");
+    unmount();
+  });
+
+  it("lets the user restart a disconnected channel", async () => {
+    const { result } = renderHook(() => useEditor());
+    await waitFor(() => expect(repository.subscribe).toHaveBeenCalledTimes(1));
+    const onStatus = repository.subscribe.mock.calls[0][3];
+
+    act(() => onStatus("disconnected"));
+    act(() => result.current.retryRealtimeSync());
+
+    expect(repository.unsubscribe).toHaveBeenCalledTimes(1);
+    expect(repository.subscribe).toHaveBeenCalledTimes(2);
+    expect(result.current.realtimeStatus).toBe("connecting");
   });
 
   it("refreshes the server snapshot after subscribing", async () => {
