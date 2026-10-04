@@ -51,6 +51,8 @@ const SuggestionInput = <TSuggestion,>({
   const [focused, setFocused] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const searchSeq = useRef(0);
+  // Value of the last accepted suggestion; no new search runs while it is unchanged
+  const acceptedValue = useRef<string | null>(null);
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -65,7 +67,7 @@ const SuggestionInput = <TSuggestion,>({
     }
 
     const term = value.trim();
-    if (term.length < minSearchLength) {
+    if (term.length < minSearchLength || value === acceptedValue.current) {
       setSuggestions([]);
       setLoading(false);
       setOpen(false);
@@ -97,6 +99,14 @@ const SuggestionInput = <TSuggestion,>({
     value,
   ]);
 
+  const selectSuggestion = (suggestion: TSuggestion) => {
+    const nextValue = getSuggestionValue(suggestion);
+    acceptedValue.current = nextValue;
+    onChange(nextValue);
+    onSelectSuggestion?.(suggestion);
+    setOpen(false);
+  };
+
   const handleKeyDown: React.KeyboardEventHandler<HTMLInputElement> = (e) => {
     if (e.key === "Tab") {
       setOpen(false);
@@ -114,10 +124,7 @@ const SuggestionInput = <TSuggestion,>({
       );
     } else if (e.key === "Enter" && activeIndex >= 0) {
       e.preventDefault();
-      const suggestion = suggestions[activeIndex];
-      onChange(getSuggestionValue(suggestion));
-      onSelectSuggestion?.(suggestion);
-      setOpen(false);
+      selectSuggestion(suggestions[activeIndex]);
     } else if (e.key === "Escape") {
       setOpen(false);
     }
@@ -142,7 +149,10 @@ const SuggestionInput = <TSuggestion,>({
           autoCapitalize="off"
           spellCheck={false}
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => {
+            acceptedValue.current = null;
+            onChange(e.target.value);
+          }}
           onFocus={() => setFocused(true)}
           onBlur={() =>
             window.setTimeout(() => {
@@ -178,11 +188,7 @@ const SuggestionInput = <TSuggestion,>({
                     aria-selected={idx === activeIndex}
                     tabIndex={-1}
                     onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => {
-                      onChange(getSuggestionValue(suggestion));
-                      onSelectSuggestion?.(suggestion);
-                      setOpen(false);
-                    }}
+                    onClick={() => selectSuggestion(suggestion)}
                     className={`block w-full text-left px-3 py-2 text-sm text-gray-900 dark:text-gray-100 hover:bg-indigo-50 dark:hover:bg-gray-700 ${idx === activeIndex ? "bg-indigo-100 dark:bg-gray-700" : ""}`}
                   >
                     {renderSuggestion

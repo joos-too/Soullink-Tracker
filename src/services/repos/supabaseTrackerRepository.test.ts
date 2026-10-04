@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   subscribeToSupabaseTrackerState,
   TrackerStateConflictError,
@@ -28,12 +28,18 @@ describe("tracker state save errors", () => {
     realtime.client.rpc.mockReset();
   });
 
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it.each([
     { code: "PT409", message: "state_revision_conflict" },
     { code: "PT409", message: "Conflict" },
     { code: "40001", message: "state_revision_conflict" },
   ])("recognizes revision conflicts: $code / $message", async (error) => {
-    realtime.client.rpc.mockResolvedValue({ data: null, error });
+    realtime.client.rpc.mockReturnValue({
+      abortSignal: vi.fn().mockResolvedValue({ data: null, error }),
+    });
 
     await expect(
       updateSupabaseTrackerState("tracker-id", 8, createInitialState()),
@@ -46,7 +52,9 @@ describe("tracker state save errors", () => {
       code: "40001",
       message: "could not serialize access due to concurrent update",
     };
-    realtime.client.rpc.mockResolvedValue({ data: null, error });
+    realtime.client.rpc.mockReturnValue({
+      abortSignal: vi.fn().mockResolvedValue({ data: null, error }),
+    });
 
     const result = updateSupabaseTrackerState(
       "tracker-id",
@@ -55,6 +63,29 @@ describe("tracker state save errors", () => {
     );
     await expect(result).rejects.toMatchObject(error);
     await expect(result).rejects.not.toBeInstanceOf(TrackerStateConflictError);
+  });
+
+  it("aborts a save that never responds", async () => {
+    vi.useFakeTimers();
+    let signal: AbortSignal | undefined;
+    realtime.client.rpc.mockReturnValue({
+      abortSignal: (value: AbortSignal) => {
+        signal = value;
+        return new Promise(() => {});
+      },
+    });
+
+    const result = updateSupabaseTrackerState(
+      "tracker-id",
+      8,
+      createInitialState(),
+    );
+    const rejection = expect(result).rejects.toThrow(
+      "Tracker request timed out.",
+    );
+    await vi.advanceTimersByTimeAsync(15_000);
+    await rejection;
+    expect(signal?.aborted).toBe(true);
   });
 });
 
