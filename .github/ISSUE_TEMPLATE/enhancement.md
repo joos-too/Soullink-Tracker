@@ -6,17 +6,21 @@ labels: enhancement
 assignees: ""
 ---
 
+## Feature to enhace
+
+<!-- Describe which functionality you want to improve -->
+
 ## Current Behavior
 
-<!-- Describe the existing feature or behavior you'd like to improve -->
+<!-- Describe how the feature current behaves, and why it needs improvement-->
 
 ## Planned Improvement
 
-<!-- Describe what you'd like to change and why it would be better -->
+<!-- Describe what changes you'd like to make and how -->
 
 ## Benefits
 
-<!-- How does this improvement change the user experience or application behavior? -->
+<!-- How does this change improve the user experience or application behavior? -->
 
 ## Additional Context
 
