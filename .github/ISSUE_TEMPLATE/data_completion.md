@@ -33,7 +33,7 @@ assignees: ""
 ## Screenshots
 
 <!-- If applicable, add screenshots showing the missing / incorrect data
-you can either drag and drop the image here or just ctrl+v -->
+you can either drag and drop the image here or just ctrl + v -->
 
 ## References
 
