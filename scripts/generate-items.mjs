@@ -72,19 +72,11 @@ const MANUAL_LOCAL_SLUG_OVERRIDES = {
 
 // Current names that are wrong in PokeAPI. Remove once fixed upstream.
 // Format: { [slug]: { de?: string, en?: string } }
-const MANUAL_NAME_OVERRIDES = {
-  // PokeAPI lists the French name as German name
-  meowsticite: { de: "Psiaugonit" },
-  // PokeAPI misses the hyphen
-  "fresh-start-mochi": { en: "Fresh-Start Mochi" },
-};
+const MANUAL_NAME_OVERRIDES = {};
 
 // Additional search names that the version files do not contain.
 // Format: { [slug]: { de?: string[], en?: string[] } }
-const MANUAL_ALIASES = {
-  // Spelling used by PokeAPI
-  "fresh-start-mochi": { en: ["Fresh Start Mochi"] },
-};
+const MANUAL_ALIASES = {};
 
 const LANGUAGES = ["de", "en"];
 

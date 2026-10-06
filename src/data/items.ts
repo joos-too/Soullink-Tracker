@@ -911,13 +911,13 @@ export const ITEMS: ItemData[] = [
   },
   {
     slug: "cleanse-tag",
-    de: "Schutzband",
+    de: "Schutzsticker",
     en: "Cleanse Tag",
     version: "GS",
     pocket: "misc",
     categories: ["training"],
     aliases: {
-      de: ["Schutzsticker"],
+      de: ["Schutzband"],
     },
     versionNames: {
       de: {
@@ -936,13 +936,13 @@ export const ITEMS: ItemData[] = [
   },
   {
     slug: "dragon-scale",
-    de: "Drachenhaut",
+    de: "Drachenschuppe",
     en: "Dragon Scale",
     version: "GS",
     pocket: "misc",
     categories: ["evolution"],
     aliases: {
-      de: ["Drachenschuppe"],
+      de: ["Drachenhaut"],
     },
     versionNames: {
       de: {
@@ -1422,13 +1422,13 @@ export const ITEMS: ItemData[] = [
   },
   {
     slug: "up-grade",
-    de: "Up-Grade",
+    de: "Upgrade",
     en: "Upgrade",
     version: "GS",
     pocket: "misc",
     categories: ["evolution"],
     aliases: {
-      de: ["Upgrade"],
+      de: ["Up-Grade"],
       en: ["Up-Grade"],
     },
     versionNames: {
@@ -1565,13 +1565,13 @@ export const ITEMS: ItemData[] = [
   },
   {
     slug: "deep-sea-scale",
-    de: "Abyssplatte",
+    de: "Abyssschuppe",
     en: "Deep Sea Scale",
     version: "RUSA",
     pocket: "misc",
     categories: ["species-specific"],
     aliases: {
-      de: ["Abyssschuppe"],
+      de: ["Abyssplatte"],
       en: ["DeepSeaScale"],
     },
     versionNames: {
@@ -1780,13 +1780,13 @@ export const ITEMS: ItemData[] = [
   },
   {
     slug: "macho-brace",
-    de: "Machoband",
+    de: "Machoschiene",
     en: "Macho Brace",
     version: "RUSA",
     pocket: "misc",
     categories: ["effort-training"],
     aliases: {
-      de: ["Machoschiene"],
+      de: ["Machoband"],
     },
     versionNames: {
       de: {
@@ -3419,13 +3419,13 @@ export const ITEMS: ItemData[] = [
   },
   {
     slug: "ability-urge",
-    de: "Fähigk.-Appell",
+    de: "Fähigkeiten-Appell",
     en: "Ability Urge",
     version: "BW",
     pocket: "battle",
     categories: ["miracle-shooter"],
     aliases: {
-      de: ["Fäh.-Appell", "Fähigkeiten-Appell"],
+      de: ["Fäh.-Appell", "Fähigk.-Appell"],
     },
     versionNames: {
       de: {
@@ -3590,13 +3590,13 @@ export const ITEMS: ItemData[] = [
   },
   {
     slug: "pass-orb",
-    de: "Transferorb",
+    de: "Transfer-Orb",
     en: "Pass Orb",
     version: "BW",
     pocket: "misc",
     categories: ["held-items"],
     aliases: {
-      de: ["Transfer-Orb"],
+      de: ["Transferorb"],
     },
     versionNames: {
       de: {
@@ -3767,13 +3767,13 @@ export const ITEMS: ItemData[] = [
   },
   {
     slug: "ability-capsule",
-    de: "Fähigk.-Kapsel",
+    de: "Fähigkeiten-Kapsel",
     en: "Ability Capsule",
     version: "XY",
     pocket: "medicine",
     categories: ["vitamins"],
     aliases: {
-      de: ["Fähigkeiten-Kapsel"],
+      de: ["Fähigk.-Kapsel"],
     },
     versionNames: {
       de: {
@@ -4368,13 +4368,13 @@ export const ITEMS: ItemData[] = [
   },
   {
     slug: "adrenaline-orb",
-    de: "Zitterorb",
+    de: "Zitter-Orb",
     en: "Adrenaline Orb",
     version: "SM",
     pocket: "misc",
     categories: ["held-items"],
     aliases: {
-      de: ["Zitter-Orb"],
+      de: ["Zitterorb"],
     },
     versionNames: {
       de: {
@@ -5585,13 +5585,13 @@ export const ITEMS: ItemData[] = [
   },
   {
     slug: "ability-patch",
-    de: "Fähigk.-Pflaster",
+    de: "Fähigkeiten-Pflaster",
     en: "Ability Patch",
     version: "SWSH",
     pocket: "medicine",
     categories: ["vitamins"],
     aliases: {
-      de: ["Fähigkeiten-Pflaster"],
+      de: ["Fähigk.-Pflaster"],
     },
     versionNames: {
       de: {
@@ -8143,9 +8143,6 @@ export const ITEMS: ItemData[] = [
     version: "SCVI",
     pocket: "medicine",
     categories: ["vitamins"],
-    aliases: {
-      en: ["Fresh Start Mochi"],
-    },
   },
   {
     slug: "fried-fillet",
