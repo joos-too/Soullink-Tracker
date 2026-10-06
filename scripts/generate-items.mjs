@@ -6,8 +6,12 @@
  * earliest game version each item appeared in, then fetches the properly
  * cased English and German names from the API.
  *
+ * The version files also provide the name of each item per game. Items that
+ * were renamed get `versionNames` (the name from each version on which it
+ * changed) and `aliases` (every other known name, used for search).
+ *
  * Output format per item:
- *   { slug, de, en, version, pocket, categories }
+ *   { slug, de, en, version, pocket, categories, aliases?, versionNames? }
  *
  * Usage: node scripts/generate-items.mjs
  */
@@ -65,6 +69,24 @@ const MANUAL_MATCH_OVERRIDES = {
 const MANUAL_LOCAL_SLUG_OVERRIDES = {
   "<sup>p</sup>o<sup>k</sup>éblock case": "pokeblock-case",
 };
+
+// Current names that are wrong in PokeAPI. Remove once fixed upstream.
+// Format: { [slug]: { de?: string, en?: string } }
+const MANUAL_NAME_OVERRIDES = {
+  // PokeAPI lists the French name as German name
+  meowsticite: { de: "Psiaugonit" },
+  // PokeAPI misses the hyphen
+  "fresh-start-mochi": { en: "Fresh-Start Mochi" },
+};
+
+// Additional search names that the version files do not contain.
+// Format: { [slug]: { de?: string[], en?: string[] } }
+const MANUAL_ALIASES = {
+  // Spelling used by PokeAPI
+  "fresh-start-mochi": { en: ["Fresh Start Mochi"] },
+};
+
+const LANGUAGES = ["de", "en"];
 
 // Excluded pockets
 const EXCLUDED_POCKETS = new Set(["key", "mail"]);
@@ -162,6 +184,26 @@ function normalizeLocalNameCapitalization(name) {
     .join("");
 }
 
+/** Match key for version file rows that keeps Nidoran ♂/♀ items apart */
+function toNameMatchKey(name) {
+  return toCollapsed(name.replace(/♂/g, "m").replace(/♀/g, "f"));
+}
+
+/** Compare key that ignores case, apostrophe style and ß/ss */
+function toNameKey(name) {
+  return name
+    .toLowerCase()
+    .replace(/ß/g, "ss")
+    .replace(/[’‘]/g, "'")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/** Gen 1-3 names are listed in capitals */
+function isAllCaps(name) {
+  return /\p{Lu}/u.test(name) && name === name.toUpperCase();
+}
+
 function getManualLocalSlug(name) {
   return MANUAL_LOCAL_SLUG_OVERRIDES[name.trim().toLowerCase()] || null;
 }
@@ -202,7 +244,11 @@ function loadVersionFiles() {
       const bIndex = orderIndex.get(b.version) ?? Number.MAX_SAFE_INTEGER;
       if (aIndex !== bIndex) return aIndex - bIndex;
       return a.file.localeCompare(b.file);
-    });
+    })
+    .map((entry) => ({
+      ...entry,
+      items: parseVersionFileItems(entry.filePath),
+    }));
 }
 
 function parseVersionFileItems(filePath) {
@@ -213,13 +259,14 @@ function parseVersionFileItems(filePath) {
     const deMatch = line.match(/\|de=([^|}]+)/);
     const enMatch = line.match(/\|en=([^|}]+)/);
     if (!deMatch || !enMatch) continue;
+    const rawDe = deMatch[1].trim();
     const rawEn = enMatch[1].trim();
-    const de = normalizeLocalNameCapitalization(deMatch[1].trim());
+    const de = normalizeLocalNameCapitalization(rawDe);
     const en = normalizeLocalNameCapitalization(rawEn);
     const key = `${de.toLowerCase()}|||${en.toLowerCase()}`;
     if (seen.has(key)) continue;
     seen.add(key);
-    items.push({ slug: getManualLocalSlug(rawEn), de, en });
+    items.push({ slug: getManualLocalSlug(rawEn), de, en, rawDe, rawEn });
   }
   return items;
 }
@@ -260,13 +307,8 @@ async function withRetry(fn, attempts = 3, delayMs = 500, label = "request") {
  *  Also registers collapsed forms (no hyphens/spaces) as secondary keys. */
 function buildLocalData(versionFiles) {
   const lookup = new Map();
-  for (const { file, filePath, version } of versionFiles) {
-    if (!fs.existsSync(filePath)) {
-      console.warn(`  ⚠ Missing ${file}, skipping`);
-      continue;
-    }
-    const parsedItems = parseVersionFileItems(filePath);
-    for (const item of parsedItems) {
+  for (const { version, items } of versionFiles) {
+    for (const item of items) {
       const slug = item.slug || toSlug(item.en);
       const collapsed = toCollapsed(item.en);
       const entry = { slug, version, de: item.de, en: item.en };
@@ -297,7 +339,8 @@ function resolveLocalMatch(localMap, versionOrder, slug, collapsed) {
   return { entry: null, wasFuzzy: false };
 }
 
-async function resolveItemDetails(P, slug, fallback, attempts = 5) {
+/** English and German names from PokeAPI, `null` where PokeAPI has none */
+async function resolveItemNames(P, slug, attempts = 5) {
   try {
     const itemData = await withRetry(
       () => P.getItemByName(slug),
@@ -305,33 +348,216 @@ async function resolveItemDetails(P, slug, fallback, attempts = 5) {
       800,
       `item:${slug}`,
     );
-    const en =
-      itemData.names.find((n) => n.language.name === "en")?.name ??
-      fallback?.en ??
-      slug;
-    const de =
-      itemData.names.find((n) => n.language.name === "de")?.name ??
-      fallback?.de ??
-      en;
-    return {
-      found: true,
-      de,
-      en,
-      pocket: itemData.category?.pocket?.name || null,
-    };
+    const findName = (lang) =>
+      itemData.names.find((n) => n.language.name === lang)?.name ?? null;
+    return { de: findName("de"), en: findName("en") };
   } catch {
-    return {
-      found: false,
-      de: slug,
-      en: slug,
-      pocket: null,
-    };
+    console.warn(`  ⚠ Could not read names for ${slug}`);
+    return { de: null, en: null };
   }
 }
 
 // ---------------------------------------------------------------------------
-// 5. Main
+// 5. Names per game version
 // ---------------------------------------------------------------------------
+
+/** Map version file name keys to result slugs, dropping ambiguous keys */
+function buildNameMatchMap(results) {
+  const map = new Map();
+  const ambiguous = new Set();
+  const register = (key, slug) => {
+    if (!key || ambiguous.has(key)) return;
+    const existing = map.get(key);
+    if (existing && existing !== slug) {
+      map.delete(key);
+      ambiguous.add(key);
+      return;
+    }
+    map.set(key, slug);
+  };
+  for (const item of results) {
+    register(toNameMatchKey(item.slug), item.slug);
+    if (item.apiNames.en) {
+      register(toNameMatchKey(item.apiNames.en), item.slug);
+    }
+    if (MANUAL_MATCH_OVERRIDES[item.slug]) {
+      register(toNameMatchKey(MANUAL_MATCH_OVERRIDES[item.slug]), item.slug);
+    }
+  }
+  return { map, ambiguous: Array.from(ambiguous).sort() };
+}
+
+/** Raw version file names per slug: Map<slug, { de: [], en: [] }> */
+function collectLocalNames(results, versionFiles) {
+  const { map, ambiguous } = buildNameMatchMap(results);
+  const names = new Map();
+  versionFiles.forEach(({ version, items }, versionIdx) => {
+    for (const row of items) {
+      const slug = row.slug ?? map.get(toNameMatchKey(row.rawEn));
+      if (!slug) continue;
+      if (!names.has(slug)) names.set(slug, { de: [], en: [] });
+      const entry = names.get(slug);
+      entry.de.push({ version, versionIdx, name: row.rawDe });
+      entry.en.push({ version, versionIdx, name: row.rawEn });
+    }
+  });
+  return { names, ambiguous };
+}
+
+/**
+ * Restore the casing of capitalized names from the closest version that
+ * spells the same name in regular case.
+ */
+function resolveCapitalization(row, candidates) {
+  if (!isAllCaps(row.name)) return row.name;
+  const key = toNameKey(row.name).replace(/\s/g, "");
+  const matches = candidates.filter(
+    (c) => toNameKey(c.name).replace(/\s/g, "") === key,
+  );
+  const match =
+    matches.find((c) => c.versionIdx > row.versionIdx) ?? matches.at(-1);
+  return match ? match.name : normalizeLocalNameCapitalization(row.name);
+}
+
+/**
+ * One name per version, preferring the API spelling when they only differ in
+ * style. Version files are ordered by internal item ID, so the first row of a
+ * version is the item itself; later rows with the same English name are
+ * game-specific variants (e.g. the Legends: Arceus items kept in later games).
+ */
+function resolveLocalNamesByVersion(rows, apiName, conflicts, slug, lang) {
+  const candidates = rows
+    .filter((row) => !isAllCaps(row.name))
+    .sort((a, b) => a.versionIdx - b.versionIdx);
+  if (apiName) {
+    candidates.push({ versionIdx: Number.MAX_SAFE_INTEGER, name: apiName });
+  }
+
+  const byVersion = new Map();
+  for (const row of rows) {
+    let name = resolveCapitalization(row, candidates);
+    if (apiName && toNameKey(name) === toNameKey(apiName)) name = apiName;
+    const existing = byVersion.get(row.versionIdx);
+    if (!existing) {
+      byVersion.set(row.versionIdx, { version: row.version, name });
+    } else if (existing.name !== name) {
+      conflicts.push({
+        slug,
+        lang,
+        version: row.version,
+        names: [existing.name, name],
+      });
+    }
+  }
+  return Array.from(byVersion.entries())
+    .sort(([a], [b]) => a - b)
+    .map(([, entry]) => entry);
+}
+
+/**
+ * Fill missing API names from the version files and add `aliases` and
+ * `versionNames` to items that were renamed between versions.
+ */
+function applyLocalNames(results, versionFiles) {
+  const { names, ambiguous } = collectLocalNames(results, versionFiles);
+  const conflicts = [];
+  const apiMismatches = [];
+
+  for (const item of results) {
+    const local = names.get(item.slug) ?? { de: [], en: [] };
+    const aliases = {};
+    const versionNames = {};
+
+    for (const lang of LANGUAGES) {
+      const apiName = item.apiNames[lang];
+      const currentName = MANUAL_NAME_OVERRIDES[item.slug]?.[lang] ?? apiName;
+      const byVersion = resolveLocalNamesByVersion(
+        local[lang],
+        currentName,
+        conflicts,
+        item.slug,
+        lang,
+      );
+      const latest = byVersion.at(-1);
+
+      if (
+        latest &&
+        latest.name.replace(/'/g, "’") !== apiName?.replace(/'/g, "’")
+      ) {
+        apiMismatches.push({
+          slug: item.slug,
+          lang,
+          api: apiName,
+          local: latest.name,
+          localVersion: latest.version,
+        });
+      }
+
+      const name =
+        currentName ??
+        latest?.name ??
+        item.localItem?.[lang] ??
+        (lang === "de" ? item.apiNames.en : null) ??
+        item.slug;
+      item[lang] = name;
+
+      const otherNames = new Set(
+        byVersion.map((entry) => entry.name).filter((n) => n !== name),
+      );
+      for (const alias of MANUAL_ALIASES[item.slug]?.[lang] ?? []) {
+        if (alias !== name) otherNames.add(alias);
+      }
+      if (otherNames.size > 0) aliases[lang] = Array.from(otherNames);
+
+      if (byVersion.some((entry) => entry.name !== name)) {
+        versionNames[lang] = {};
+        let previous = null;
+        for (const entry of byVersion) {
+          if (entry.name === previous) continue;
+          versionNames[lang][entry.version] = entry.name;
+          previous = entry.name;
+        }
+      }
+    }
+
+    if (Object.keys(aliases).length > 0) item.aliases = aliases;
+    if (Object.keys(versionNames).length > 0) item.versionNames = versionNames;
+  }
+
+  return { ambiguous, conflicts, apiMismatches };
+}
+
+// ---------------------------------------------------------------------------
+// 6. Main
+// ---------------------------------------------------------------------------
+const ITEM_TYPE = `export interface ItemData {
+  slug: string;
+  /** Current name: PokeAPI, else the latest version file name */
+  de: string;
+  en: string;
+  /** Version the item first appeared in */
+  version: string;
+  pocket: string;
+  categories: string[];
+  /** Other known names of the item, searchable but not displayed */
+  aliases?: { de?: string[]; en?: string[] };
+  /** Name used from each listed version on, if it differs between versions */
+  versionNames?: {
+    de?: Record<string, string>;
+    en?: Record<string, string>;
+  };
+}`;
+
+function writeDebugFile(name, data, message) {
+  const filePath = path.join(debugDir, name);
+  if (data.length === 0) {
+    fs.rmSync(filePath, { force: true });
+    return;
+  }
+  fs.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf-8");
+  console.log(`  ℹ ${data.length} ${message} → ${filePath}`);
+}
+
 async function main() {
   const P = createPokedexClient();
 
@@ -465,58 +691,69 @@ async function main() {
       wasFuzzy = primaryMatch.wasFuzzy;
     }
 
-    // Fetch the item detail from PokeAPI for properly cased names
-    let enName, deName;
-    try {
-      const itemNames = await resolveItemDetails(P, slug, localItem);
-      enName = itemNames.en;
-      deName = itemNames.de;
+    // Fetch the properly cased names from PokeAPI
+    const apiNames = await resolveItemNames(P, slug);
 
-      // If not matched yet, try the API's official English name
-      if (!version) {
-        const altMatch = resolveLocalMatch(
-          localMap,
-          VERSION_ORDER,
-          toSlug(enName),
-          toCollapsed(enName),
-        );
-        if (altMatch.entry) {
-          localItem = altMatch.entry;
-          version = altMatch.entry.version;
-          wasFuzzy = altMatch.wasFuzzy;
-          const itemNamesWithFallback = await resolveItemDetails(
-            P,
-            slug,
-            localItem,
-          );
-          enName = itemNamesWithFallback.en;
-          deName = itemNamesWithFallback.de;
-        }
+    // If not matched yet, try the API's official English name
+    if (!version && apiNames.en) {
+      const altMatch = resolveLocalMatch(
+        localMap,
+        VERSION_ORDER,
+        toSlug(apiNames.en),
+        toCollapsed(apiNames.en),
+      );
+      if (altMatch.entry) {
+        localItem = altMatch.entry;
+        version = altMatch.entry.version;
+        wasFuzzy = altMatch.wasFuzzy;
       }
-    } catch {
-      console.warn(`  ⚠ Falling back to slug names for ${slug}`);
-      enName = slug;
-      deName = slug;
     }
 
     const pocket = meta.pocket;
     const categories = [...meta.categories].sort();
 
     if (version) {
+      // Names are finalized by applyLocalNames below
       results.push({
         slug,
-        de: deName,
-        en: enName,
+        de: null,
+        en: null,
         version,
         pocket,
         categories,
+        apiNames,
+        localItem,
+        wasFuzzy,
       });
-      if (wasFuzzy) {
-        fuzzyMatched.push({ slug, en: enName, de: deName, version });
-      }
     } else {
-      trulyUnmatched.push({ slug, de: deName, en: enName });
+      trulyUnmatched.push({
+        slug,
+        de: apiNames.de ?? slug,
+        en: apiNames.en ?? slug,
+      });
     }
+  }
+
+  console.log("Resolving names per version ...");
+  const { ambiguous, conflicts, apiMismatches } = applyLocalNames(
+    results,
+    versionFiles,
+  );
+  const renamedCount = results.filter((item) => item.versionNames).length;
+  console.log(`  ${renamedCount} items have different names across versions`);
+
+  for (const item of results) {
+    if (item.wasFuzzy) {
+      fuzzyMatched.push({
+        slug: item.slug,
+        en: item.en,
+        de: item.de,
+        version: item.version,
+      });
+    }
+    delete item.apiNames;
+    delete item.localItem;
+    delete item.wasFuzzy;
   }
 
   // Sort by version (release order), then alphabetically by English name
@@ -534,7 +771,8 @@ async function main() {
 
   const tsContent =
     `// Generated by scripts/generate-items.mjs\n` +
-    `export const ITEMS: { slug: string; de: string; en: string; version: string; pocket: string; categories: string[] }[] = ${JSON.stringify(results, null, 2)};\n`;
+    `${ITEM_TYPE}\n\n` +
+    `export const ITEMS: ItemData[] = ${JSON.stringify(results, null, 2)};\n`;
   fs.writeFileSync(outPath, tsContent, "utf-8");
   console.log(
     `\n✅ Wrote ${results.length} items to ${outPath} (from ${itemMeta.size} API items)`,
@@ -576,6 +814,22 @@ async function main() {
       `  ℹ ${fuzzyMatched.length} items needed collapsed/fuzzy matching → ${fuzzyPath}`,
     );
   }
+
+  writeDebugFile(
+    "items-api-name-mismatches.json",
+    apiMismatches,
+    "names differ between PokeAPI and the latest version file (api: null = missing in PokeAPI)",
+  );
+  writeDebugFile(
+    "items-name-conflicts.json",
+    conflicts,
+    "version file entries list several names for one item in the same version (first entry used)",
+  );
+  writeDebugFile(
+    "items-ambiguous-name-keys.json",
+    ambiguous,
+    "name keys match several items and were ignored for version names",
+  );
 }
 
 main().catch((err) => {

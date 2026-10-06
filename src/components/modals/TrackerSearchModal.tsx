@@ -233,16 +233,22 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
           entry,
           locale,
           t,
+          gameVersionId,
         );
         rows.push({
           category,
           id: entry.id || entry.name?.trim() || "",
           name,
           searchNames: toSearchNames(
-            localeTs.map(
-              ({ lang, t: localeT }) =>
-                resolveItemDisplay(entry, lang, localeT).name,
-            ),
+            localeTs.flatMap(({ lang, t: localeT }) => {
+              const display = resolveItemDisplay(
+                entry,
+                lang,
+                localeT,
+                gameVersionId,
+              );
+              return [display.name, ...display.aliases];
+            }),
           ),
           spriteUrl,
           playerIndex: pIdx,
@@ -261,7 +267,7 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
     });
 
     return rows;
-  }, [fossils, items, t, i18n, locale, multiLocaleSearch]);
+  }, [fossils, items, t, i18n, locale, multiLocaleSearch, gameVersionId]);
 
   const itemSections = useMemo(() => {
     const categories: { key: ItemCategory; titleKey: string }[] = [
