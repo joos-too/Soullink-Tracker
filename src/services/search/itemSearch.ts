@@ -1,36 +1,43 @@
-import { ITEMS } from "@/src/data/items.ts";
-import { getItemsForVersion } from "@/src/services/filter/itemFilter.ts";
+import { ITEMS, type ItemData } from "@/src/data/items.ts";
+import {
+  getItemsForVersion,
+  getItemVersionIndex,
+  ITEM_VERSIONS,
+} from "@/src/services/filter/itemFilter.ts";
 import { MEGA_STONES, FOSSILS, STONES } from "@/src/data/special-items.ts";
 import type { SupportedLanguage } from "@/src/utils/language.ts";
 
-/** Slugs already covered by the Stones tab */
-const STONE_SLUGS = new Set(STONES.map((s) => s.id));
-
-/** Slugs already covered by the Fossils tab */
-const FOSSIL_SLUGS = new Set(FOSSILS.map((f) => f.id));
-
-/** Slugs already covered by the Mega Stones tab */
-const MEGA_STONE_SLUGS = new Set(MEGA_STONES.map((m) => m.id));
+/** Slugs already covered by the Stones, Fossils and Mega Stones tabs */
+const SPECIAL_ITEM_SLUGS = new Set([
+  ...STONES.map((s) => s.id),
+  ...FOSSILS.map((f) => f.id),
+  ...MEGA_STONES.map((m) => m.id),
+]);
 
 /** Strip diacritics: é→e, ü→u, etc. */
 function stripDiacritics(s: string): string {
-  return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  return s.normalize("NFD").replace(/[̀-ͯ]/g, "");
+}
+
+function normalizeSearchTerm(s: string): string {
+  return stripDiacritics(s.trim().toLowerCase());
 }
 
 interface ItemDataEntry {
-  slug: string;
-  de: string;
-  en: string;
-  version: string;
-  normDe: string;
-  normEn: string;
+  item: ItemData;
+  /** Normalized current names and aliases per locale */
+  searchNames: Record<SupportedLanguage, string[]>;
 }
 
 const ITEM_ENTRIES: ItemDataEntry[] = ITEMS.map((item) => ({
-  ...item,
-  normDe: stripDiacritics(item.de.toLowerCase()),
-  normEn: stripDiacritics(item.en.toLowerCase()),
+  item,
+  searchNames: {
+    de: [item.de, ...(item.aliases?.de ?? [])].map(normalizeSearchTerm),
+    en: [item.en, ...(item.aliases?.en ?? [])].map(normalizeSearchTerm),
+  },
 }));
+
+const ITEMS_BY_SLUG = new Map(ITEMS.map((item) => [item.slug, item]));
 
 export interface ItemSearchResult {
   slug: string;
@@ -38,117 +45,153 @@ export interface ItemSearchResult {
   spriteUrl: string;
 }
 
+export interface ItemSearchOptions {
+  locale?: SupportedLanguage;
+  /** Tracker game: selects the item names and, unless `allVersions` is set, the available items */
+  gameVersionId?: string;
+  /** Include items of all game versions */
+  allVersions?: boolean;
+  multiLocaleSearch?: boolean;
+}
+
 /** PokeAPI item sprite URL */
 function getSpriteUrl(slug: string): string {
   return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${slug}.png`;
 }
 
+/**
+ * Name of an item in the given game. Items renamed between versions use the
+ * name of the latest version up to the game; without a known game the
+ * current name is used.
+ */
+function resolveItemName(
+  item: ItemData,
+  locale: SupportedLanguage,
+  gameVersionId?: string,
+): string {
+  const versionNames = item.versionNames?.[locale];
+  const gameIdx = getItemVersionIndex(gameVersionId);
+  if (!versionNames || gameIdx === -1) return item[locale];
+
+  let name: string | undefined;
+  let nameIdx = -1;
+  for (const [version, versionName] of Object.entries(versionNames)) {
+    const idx = ITEM_VERSIONS.indexOf(
+      version as (typeof ITEM_VERSIONS)[number],
+    );
+    if (idx !== -1 && idx <= gameIdx && idx > nameIdx) {
+      name = versionName;
+      nameIdx = idx;
+    }
+  }
+  // Games released before the item was listed use its earliest name
+  return name ?? Object.values(versionNames)[0] ?? item[locale];
+}
+
+function createAvailabilityFilter(gameVersionId?: string, allVersions = false) {
+  const allowedSlugs =
+    gameVersionId && !allVersions
+      ? new Set(getItemsForVersion(gameVersionId).map((i) => i.slug))
+      : null;
+  return (entry: ItemDataEntry) =>
+    !SPECIAL_ITEM_SLUGS.has(entry.item.slug) &&
+    (!allowedSlugs || allowedSlugs.has(entry.item.slug));
+}
+
+function toSearchResult(
+  entry: ItemDataEntry,
+  locale: SupportedLanguage,
+  gameVersionId?: string,
+): ItemSearchResult {
+  return {
+    slug: entry.item.slug,
+    name: resolveItemName(entry.item, locale, gameVersionId),
+    spriteUrl: getSpriteUrl(entry.item.slug),
+  };
+}
+
 export function searchItems(
   query: string,
-  locale: SupportedLanguage = "de",
-  gameVersionId?: string,
+  {
+    locale = "de",
+    gameVersionId,
+    allVersions = false,
+    multiLocaleSearch = false,
+  }: ItemSearchOptions = {},
   max = 10,
-  multiLocaleSearch = false,
 ): ItemSearchResult[] {
-  const q = stripDiacritics(query.trim().toLowerCase());
+  const q = normalizeSearchTerm(query);
   if (q.length < 1) return [];
 
-  const allowedSlugs = gameVersionId
-    ? new Set(getItemsForVersion(gameVersionId).map((i) => i.slug))
-    : null;
-
-  const field = locale === "de" ? "normDe" : "normEn";
-  const nameField = locale === "de" ? "de" : "en";
-
-  const isAvailable = (entry: ItemDataEntry) =>
-    !STONE_SLUGS.has(entry.slug) &&
-    !FOSSIL_SLUGS.has(entry.slug) &&
-    !MEGA_STONE_SLUGS.has(entry.slug) &&
-    (!allowedSlugs || allowedSlugs.has(entry.slug));
+  const isAvailable = createAvailabilityFilter(gameVersionId, allVersions);
+  const matches = (entry: ItemDataEntry, lang: SupportedLanguage) =>
+    entry.searchNames[lang].some((name) => name.includes(q));
 
   const localResults = ITEM_ENTRIES.filter(
-    (entry) => isAvailable(entry) && entry[field].includes(q),
+    (entry) => isAvailable(entry) && matches(entry, locale),
   );
+  const fallbackLocale = locale === "de" ? "en" : "de";
+  const results =
+    !multiLocaleSearch || localResults.length >= max
+      ? localResults
+      : [
+          ...localResults,
+          ...ITEM_ENTRIES.filter(
+            (entry) =>
+              isAvailable(entry) &&
+              !matches(entry, locale) &&
+              matches(entry, fallbackLocale),
+          ),
+        ];
 
-  if (!multiLocaleSearch || localResults.length >= max) {
-    return localResults
-      .sort((a, b) => a[nameField].localeCompare(b[nameField]))
-      .slice(0, max)
-      .map((entry) => ({
-        slug: entry.slug,
-        name: entry[nameField],
-        spriteUrl: getSpriteUrl(entry.slug),
-      }));
-  }
-
-  const localSlugs = new Set(localResults.map((entry) => entry.slug));
-  const fallbackField = locale === "de" ? "normEn" : "normDe";
-  const crossResults = ITEM_ENTRIES.filter(
-    (entry) =>
-      isAvailable(entry) &&
-      !localSlugs.has(entry.slug) &&
-      entry[fallbackField].includes(q),
-  );
-
-  return [...localResults, ...crossResults]
-    .sort((a, b) => a[nameField].localeCompare(b[nameField]))
-    .slice(0, max)
-    .map((entry) => ({
-      slug: entry.slug,
-      name: entry[nameField],
-      spriteUrl: getSpriteUrl(entry.slug),
-    }));
+  return results
+    .map((entry) => toSearchResult(entry, locale, gameVersionId))
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .slice(0, max);
 }
 
 export function findItemByName(
   name: string,
-  locale: SupportedLanguage = "de",
-  gameVersionId?: string,
-  multiLocaleSearch = true,
+  {
+    locale = "de",
+    gameVersionId,
+    allVersions = false,
+    multiLocaleSearch = true,
+  }: ItemSearchOptions = {},
 ): ItemSearchResult | null {
-  const normalizedName = stripDiacritics(name.trim().toLowerCase());
+  const normalizedName = normalizeSearchTerm(name);
   if (!normalizedName) return null;
 
-  const allowedSlugs = gameVersionId
-    ? new Set(getItemsForVersion(gameVersionId).map((i) => i.slug))
-    : null;
-
-  const nameField = locale === "de" ? "de" : "en";
-  const preferredField = locale === "de" ? "normDe" : "normEn";
-  const fallbackField = locale === "de" ? "normEn" : "normDe";
-  const isAvailableEntry = (entry: ItemDataEntry) =>
-    !STONE_SLUGS.has(entry.slug) &&
-    !FOSSIL_SLUGS.has(entry.slug) &&
-    !MEGA_STONE_SLUGS.has(entry.slug) &&
-    (!allowedSlugs || allowedSlugs.has(entry.slug));
-  const entry =
+  const isAvailable = createAvailabilityFilter(gameVersionId, allVersions);
+  const findIn = (lang: SupportedLanguage) =>
     ITEM_ENTRIES.find(
       (entry) =>
-        isAvailableEntry(entry) && entry[preferredField] === normalizedName,
-    ) ??
-    (multiLocaleSearch
-      ? ITEM_ENTRIES.find(
-          (entry) =>
-            isAvailableEntry(entry) && entry[fallbackField] === normalizedName,
-        )
-      : undefined);
+        isAvailable(entry) && entry.searchNames[lang].includes(normalizedName),
+    );
+  const fallbackLocale = locale === "de" ? "en" : "de";
+  const entry =
+    findIn(locale) ?? (multiLocaleSearch ? findIn(fallbackLocale) : undefined);
 
-  return entry
-    ? {
-        slug: entry.slug,
-        name: entry[nameField],
-        spriteUrl: getSpriteUrl(entry.slug),
-      }
-    : null;
+  return entry ? toSearchResult(entry, locale, gameVersionId) : null;
 }
 
+/** Name of an item as it is called in the given game */
 export function getItemName(
   slug: string,
   locale: SupportedLanguage = "de",
+  gameVersionId?: string,
 ): string {
-  const item = ITEMS.find((i) => i.slug === slug);
-  if (!item) return slug;
-  return locale === "de" ? item.de : item.en;
+  const item = ITEMS_BY_SLUG.get(slug);
+  return item ? resolveItemName(item, locale, gameVersionId) : slug;
+}
+
+/** Current name and all aliases of an item */
+export function getItemSearchNames(
+  slug: string,
+  locale: SupportedLanguage = "de",
+): string[] {
+  const item = ITEMS_BY_SLUG.get(slug);
+  return item ? [item[locale], ...(item.aliases?.[locale] ?? [])] : [];
 }
 
 export function getItemSpriteUrl(slug: string): string {

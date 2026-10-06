@@ -293,7 +293,12 @@ const ItemTracker: React.FC<ItemTrackerProps> = ({
         );
 
   const renderEditableItem = (entry: ItemEntry, pIdx: number, sIdx: number) => {
-    const { name, spriteUrl } = resolveItemDisplay(entry, locale, t);
+    const { name, spriteUrl } = resolveItemDisplay(
+      entry,
+      locale,
+      t,
+      gameVersionId,
+    );
     return (
       <ItemGroupCard
         key={`${pIdx}-${entry.id || entry.name}-${sIdx}`}
@@ -310,7 +315,12 @@ const ItemTracker: React.FC<ItemTrackerProps> = ({
   };
 
   const renderItemGroup = (group: ItemGroup, pIdx: number) => {
-    const { name, spriteUrl } = resolveItemDisplay(group.entry, locale, t);
+    const { name, spriteUrl } = resolveItemDisplay(
+      group.entry,
+      locale,
+      t,
+      gameVersionId,
+    );
     const summary = summarizeEntryGroup(
       group,
       displayStones[pIdx],

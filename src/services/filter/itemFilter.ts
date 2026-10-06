@@ -1,6 +1,6 @@
 import { ITEMS } from "@/src/data/items.ts";
 
-/** Item versions in chronological release order */
+/** Item versions in chronological release order, as in scripts/generate-items.mjs */
 export const ITEM_VERSIONS = [
   "RBY",
   "GS",
@@ -15,6 +15,14 @@ export const ITEM_VERSIONS = [
   "B2W2",
   "XY",
   "ORAS",
+  "SM",
+  "USUM",
+  "LGPLGE",
+  "SWSH",
+  "BDSP",
+  "PLA",
+  "SCVI",
+  "PLZA",
 ] as const;
 
 /** Maps each game version ID to the latest item version available */
@@ -35,13 +43,18 @@ export const GAME_TO_ITEM_VERSION: Record<string, string> = {
   gen6_oras: "ORAS",
 };
 
+/** Release index of the item version of a game, -1 if unknown */
+export function getItemVersionIndex(gameVersionId?: string): number {
+  const itemVersion = gameVersionId
+    ? GAME_TO_ITEM_VERSION[gameVersionId]
+    : undefined;
+  if (!itemVersion) return -1;
+  return ITEM_VERSIONS.indexOf(itemVersion as (typeof ITEM_VERSIONS)[number]);
+}
+
 /** Return all items available in (and before) the given game version */
 export function getItemsForVersion(gameVersionId: string) {
-  const maxItemVersion = GAME_TO_ITEM_VERSION[gameVersionId];
-  if (!maxItemVersion) return ITEMS;
-  const maxIdx = ITEM_VERSIONS.indexOf(
-    maxItemVersion as (typeof ITEM_VERSIONS)[number],
-  );
+  const maxIdx = getItemVersionIndex(gameVersionId);
   if (maxIdx === -1) return ITEMS;
   const allowed = new Set(ITEM_VERSIONS.slice(0, maxIdx + 1));
   return ITEMS.filter((item) =>
