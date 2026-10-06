@@ -167,6 +167,7 @@ const METHOD_VERSION_RULES: Record<string, string[]> = {
   "level-up-location-eterna-forest": ["gen4_dp", "gen4_pt"],
   "level-up-location-kalos-route-20": ["gen6_xy"],
   "level-up-location-petalburg-woods": ["gen6_oras"],
+  "level-up-location-new-mauville": ["gen6_oras"],
   "level-up-location-sinnoh-route-217": ["gen4_dp", "gen4_pt"],
   "level-up-location-twist-mountain": ["gen5_bw", "gen5_b2w2"],
   "level-up-location-frost-cavern": ["gen6_xy"],
