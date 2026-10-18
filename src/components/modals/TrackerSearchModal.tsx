@@ -2,7 +2,12 @@ import PokemonPairCard from "@/src/components/other/PokemonPairCard.tsx";
 import ItemGroupCard from "@/src/components/other/ItemGroupCard.tsx";
 import PlayerColumnHeader from "@/src/components/other/PlayerColumnHeader.tsx";
 import React, { useEffect, useId, useMemo, useState } from "react";
-import type { FossilEntry, PokemonLink, ItemEntry } from "@/types";
+import type {
+  FossilEntry,
+  GraveyardPokemonLink,
+  PokemonLink,
+  ItemEntry,
+} from "@/types";
 import { useTranslation } from "react-i18next";
 import { useFocusTrap } from "@/src/hooks/useFocusTrap.ts";
 import {
@@ -45,7 +50,7 @@ interface TrackerSearchModalProps {
   playerColors: string[];
   team: PokemonLink[];
   box: PokemonLink[];
-  graveyard: PokemonLink[];
+  graveyard: GraveyardPokemonLink[];
   fossils: FossilEntry[][];
   items: ItemEntry[][];
   generationSpritePath?: string | null;
@@ -404,7 +409,7 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
                           status={
                             section.key !== "graveyard"
                               ? undefined
-                              : pair.isLost
+                              : "isLost" in pair && pair.isLost
                                 ? "lost"
                                 : "dead"
                           }

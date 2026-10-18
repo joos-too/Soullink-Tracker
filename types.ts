@@ -12,7 +12,10 @@ export interface PokemonLink {
   location?: string;
   fossilSlugs?: string[];
   members: Pokemon[];
-  isLost?: boolean;
+}
+
+export interface GraveyardPokemonLink extends PokemonLink {
+  isLost: boolean;
 }
 
 export interface LinkEditPayload {
@@ -64,7 +67,7 @@ export interface FossilEntry {
   locationSlug: string | null;
   inBag: boolean;
   revived: boolean;
-  pokemonId?: number | null;
+  pokemonId: number | null;
   pokemonName?: string;
 }
 
@@ -82,8 +85,8 @@ export interface Stats {
   best: number;
   top4Items: number[];
   deaths: number[];
-  sumDeaths?: number[];
-  legendaryEncounters?: number;
+  sumDeaths: number[];
+  legendaryEncounters: number;
 }
 
 export type RivalCensorMode = "off" | "showLevels" | "on";
@@ -92,24 +95,24 @@ export interface AppState {
   playerNames: string[];
   team: PokemonLink[];
   box: PokemonLink[];
-  graveyard: PokemonLink[];
+  graveyard: GraveyardPokemonLink[];
   rules: string[];
   rulesetId?: string;
   levelCaps: LevelCap[];
   rivalCaps: RivalCap[];
   stats: Stats;
-  legendaryTrackerEnabled?: boolean;
-  rivalCensorMode?: RivalCensorMode;
-  /** @deprecated Use rivalCensorMode instead */
-  rivalCensorEnabled?: boolean;
-  hardcoreModeEnabled?: boolean;
-  nicknamesEnabled?: boolean;
-  infiniteFossilsEnabled?: boolean;
-  megaStoneSpriteStyle?: "item" | "pokemon";
-  fossils?: FossilEntry[][];
-  items?: ItemEntry[][];
-  runStartedAt?: number;
+  legendaryTrackerEnabled: boolean;
+  rivalCensorMode: RivalCensorMode;
+  hardcoreModeEnabled: boolean;
+  nicknamesEnabled: boolean;
+  infiniteFossilsEnabled: boolean;
+  megaStoneSpriteStyle: "item" | "pokemon";
+  fossils: FossilEntry[][];
+  items: ItemEntry[][];
+  runStartedAt: number;
 }
+
+export type PersistedTrackerState = Omit<AppState, "playerNames" | "rulesetId">;
 
 export type TrackerRole = "owner" | "editor" | "guest";
 

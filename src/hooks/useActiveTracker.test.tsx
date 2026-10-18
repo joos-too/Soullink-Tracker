@@ -23,7 +23,6 @@ vi.mock("@/src/services/repos/trackerRepository", () => ({
   TrackerStateConflictError: repository.ConflictError,
 }));
 
-const coerceState = (incoming: unknown) => incoming as AppState;
 const initialState = createInitialState();
 
 function useEditor(canWrite = true, debounceMs = 10000) {
@@ -35,7 +34,6 @@ function useEditor(canWrite = true, debounceMs = 10000) {
     canWrite,
     data,
     setData,
-    coerceState,
     debounceMs,
   });
   return { ...controller, data, setData };
@@ -51,6 +49,44 @@ describe("tracker editor lifecycle", () => {
     repository.save.mockReset().mockResolvedValue(undefined);
     repository.subscribe.mockReset().mockReturnValue(repository.unsubscribe);
     repository.unsubscribe.mockClear();
+  });
+
+  it.each([null, new Error("Unsupported tracker state schema: 2")])(
+    "keeps unsuccessful initial loads non-writable and recovers on retry: %s",
+    async (failure) => {
+      vi.spyOn(console, "error").mockImplementation(() => {});
+      if (failure) repository.get.mockRejectedValue(failure);
+      else repository.get.mockResolvedValue(null);
+      const { result, unmount } = renderHook(() => useEditor(true, 0));
+      await waitFor(() => expect(result.current.loadError).toBe(true));
+      expect(result.current.dataLoaded).toBe(false);
+      act(() =>
+        result.current.setData({ ...initialState, rules: ["Must not save"] }),
+      );
+      const recovered = { ...initialState, rules: [], runStartedAt: 123 };
+      repository.fetch.mockResolvedValue({ state: recovered, revision: 9 });
+      await act(async () => result.current.retryRealtimeSync());
+      await waitFor(() => expect(result.current.dataLoaded).toBe(true));
+      expect(result.current.loadError).toBe(false);
+      expect(result.current.data).toBe(recovered);
+      unmount();
+      expect(repository.save).not.toHaveBeenCalled();
+    },
+  );
+
+  it("applies trusted realtime state verbatim without a backfill write", async () => {
+    const { result, unmount } = renderHook(() => useEditor(true, 0));
+    await waitFor(() => expect(repository.subscribe).toHaveBeenCalled());
+    const remote = {
+      ...initialState,
+      runStartedAt: 123,
+      rules: [],
+      rivalCensorMode: "off" as const,
+    };
+    act(() => repository.subscribe.mock.calls[0][1](remote));
+    expect(result.current.data).toBe(remote);
+    unmount();
+    expect(repository.save).not.toHaveBeenCalled();
   });
 
   afterEach(() => {

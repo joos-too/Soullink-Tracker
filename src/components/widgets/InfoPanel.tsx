@@ -29,8 +29,7 @@ interface InfoPanelProps {
     value: string,
   ) => void;
   legendaryTrackerEnabled: boolean;
-  rivalCensorEnabled: boolean;
-  rivalCensorMode?: RivalCensorMode;
+  rivalCensorMode: RivalCensorMode;
   hardcoreModeEnabled: boolean;
   onlegendaryIncrement: () => void;
   onlegendaryDecrement: () => void;
@@ -54,7 +53,6 @@ const InfoPanel: React.FC<InfoPanelProps> = ({
   onRivalCapReveal,
   onPlayerStatChange,
   legendaryTrackerEnabled,
-  rivalCensorEnabled,
   rivalCensorMode,
   hardcoreModeEnabled,
   onlegendaryIncrement,
@@ -98,7 +96,6 @@ const InfoPanel: React.FC<InfoPanelProps> = ({
           onLevelCapToggle={onLevelCapToggle}
           onRivalCapToggleDone={onRivalCapToggleDone}
           onRivalCapReveal={onRivalCapReveal}
-          rivalCensorEnabled={rivalCensorEnabled}
           rivalCensorMode={rivalCensorMode}
           hardcoreModeEnabled={hardcoreModeEnabled}
           gameVersion={gameVersion}

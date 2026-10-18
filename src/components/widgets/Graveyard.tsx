@@ -1,6 +1,11 @@
 import PokemonPairCard from "@/src/components/other/PokemonPairCard.tsx";
 import React, { useEffect, useMemo, useState } from "react";
-import type { LinkEditPayload, LinkId, PokemonLink } from "@/types.ts";
+import type {
+  GraveyardPokemonLink,
+  LinkEditPayload,
+  LinkId,
+  PokemonLink,
+} from "@/types.ts";
 import { PLAYER_COLORS } from "@/src/services/init.ts";
 import { useTranslation } from "react-i18next";
 import { focusRingClasses } from "@/src/styles/focusRing.ts";
@@ -12,7 +17,7 @@ import { resolvePokemonLocationDisplay } from "@/src/services/search/locationSea
 import { normalizeLanguage } from "@/src/utils/language.ts";
 
 interface GraveyardProps {
-  graveyard?: PokemonLink[];
+  graveyard?: GraveyardPokemonLink[];
   playerNames: string[];
   playerColors?: string[];
   onManualAddClick?: () => void;
@@ -146,7 +151,7 @@ const Graveyard: React.FC<GraveyardProps> = ({
                             const playerLabels = [...names];
                             setEditSession({
                               pairId: pair.id,
-                              isLost: Boolean(pair.isLost),
+                              isLost: pair.isLost,
                               playerLabels,
                               initial: {
                                 location: pair.location ?? "",

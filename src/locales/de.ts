@@ -377,6 +377,9 @@ export const de = {
     presetTagsLabel: "Schnell-Tags",
   },
   app: {
+    trackerStateLoadError:
+      "Der Tracker konnte nicht geladen werden. Bitte vor dem Bearbeiten erneut versuchen.",
+    trackerStateRetry: "Erneut versuchen",
     trackerNotFound: {
       title: "Tracker nicht gefunden.",
       description:

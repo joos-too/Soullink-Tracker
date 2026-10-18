@@ -197,10 +197,10 @@ insert into public.tracker_states (
 values
   (
     '30000000-0000-0000-0000-000000000001',
-    private.migrate_tracker_link_ids('30000000-0000-0000-0000-000000000001', $state${
+    $state${
   "team": [
     {
-      "id": 1,
+      "id": "835afe65-d3ab-52f1-839f-7bda2d5908f9",
       "locationSlug": "kanto-route-1",
       "members": [
         {
@@ -214,7 +214,7 @@ values
       ]
     },
     {
-      "id": 2,
+      "id": "acf54c01-fbee-5e71-8c19-743d2d2cdb3e",
       "locationSlug": "kanto-route-2",
       "members": [
         {
@@ -228,7 +228,7 @@ values
       ]
     },
     {
-      "id": 3,
+      "id": "a8be2328-9786-5b0d-8dab-1877ecbdbf2c",
       "locationSlug": "viridian-forest",
       "members": [
         {
@@ -244,7 +244,7 @@ values
   ],
   "box": [
     {
-      "id": 4,
+      "id": "99f7e35e-cdd4-598a-8e15-9351b0ade1e6",
       "locationSlug": "kanto-route-3",
       "members": [
         {
@@ -258,7 +258,7 @@ values
       ]
     },
     {
-      "id": 5,
+      "id": "fbd732c3-ed1f-5462-826c-4116536e0694",
       "locationSlug": "kanto-route-4",
       "members": [
         {
@@ -274,7 +274,7 @@ values
   ],
   "graveyard": [
     {
-      "id": 6,
+      "id": "5ed3f105-13d6-5bd0-83a4-1634847db2ab",
       "locationSlug": "mt-moon",
       "members": [
         {
@@ -285,10 +285,11 @@ values
           "id": 35,
           "nickname": "Moony"
         }
-      ]
+      ],
+      "isLost": false
     },
     {
-      "id": 7,
+      "id": "dfe7eb61-89da-5a13-8c0e-79136436deae",
       "locationSlug": "rock-tunnel",
       "members": [
         {
@@ -299,10 +300,11 @@ values
           "id": 95,
           "nickname": "Slither"
         }
-      ]
+      ],
+      "isLost": false
     },
     {
-      "id": 8,
+      "id": "2e1773bb-8a2e-52d2-84f1-38a640aa917e",
       "locationSlug": "pokemon-tower",
       "members": [
         {
@@ -497,14 +499,16 @@ values
         "location": "",
         "locationSlug": "",
         "inBag": true,
-        "revived": false
+        "revived": false,
+        "pokemonId": null
       },
       {
         "fossilId": "helix-fossil",
         "location": "",
         "locationSlug": "",
         "inBag": true,
-        "revived": false
+        "revived": false,
+        "pokemonId": null
       }
     ],
     [
@@ -513,14 +517,16 @@ values
         "location": "",
         "locationSlug": "",
         "inBag": true,
-        "revived": false
+        "revived": false,
+        "pokemonId": null
       },
       {
         "fossilId": "old-amber",
         "location": "",
         "locationSlug": "pewter-city",
         "inBag": false,
-        "revived": false
+        "revived": false,
+        "pokemonId": null
       }
     ]
   ],
@@ -573,17 +579,17 @@ values
     ]
   ],
   "runStartedAt": 1772150400000
-}$state$::jsonb),
-    2,
+}$state$::jsonb,
+    3,
     8,
     '10000000-0000-0000-0000-000000000001'
   ),
   (
     '30000000-0000-0000-0000-000000000002',
-    private.migrate_tracker_link_ids('30000000-0000-0000-0000-000000000002', $state${
+    $state${
   "team": [
     {
-      "id": 1,
+      "id": "a114adf8-02d5-5cb0-8280-34abf1378268",
       "locationSlug": "sinnoh-route-201",
       "members": [
         {
@@ -597,7 +603,7 @@ values
       ]
     },
     {
-      "id": 2,
+      "id": "dcc076f5-4b9e-5962-86f2-d34f4d5c7f51",
       "locationSlug": "sinnoh-route-202",
       "members": [
         {
@@ -611,7 +617,7 @@ values
       ]
     },
     {
-      "id": 3,
+      "id": "aa4d7003-686c-5da3-86e1-cb32318fa912",
       "locationSlug": "sinnoh-route-204",
       "members": [
         {
@@ -627,7 +633,7 @@ values
   ],
   "box": [
     {
-      "id": 4,
+      "id": "4985675a-26d5-5043-863b-03b6f8b2255a",
       "locationSlug": "valley-windworks",
       "members": [
         {
@@ -641,7 +647,7 @@ values
       ]
     },
     {
-      "id": 5,
+      "id": "532b505f-cc79-5962-8a38-4a3e0cbc7bee",
       "locationSlug": "sinnoh-route-205",
       "members": [
         {
@@ -657,7 +663,7 @@ values
   ],
   "graveyard": [
     {
-      "id": 6,
+      "id": "0229e55d-9ca1-5536-8dfc-3b6fa15ffbf0",
       "locationSlug": "ravaged-path",
       "members": [
         {
@@ -668,10 +674,11 @@ values
           "id": 427,
           "nickname": "Hoppy"
         }
-      ]
+      ],
+      "isLost": false
     },
     {
-      "id": 7,
+      "id": "50b4e968-5168-50c5-829d-51017a5830f4",
       "locationSlug": "eterna-forest",
       "members": [
         {
@@ -682,10 +689,11 @@ values
           "id": 420,
           "nickname": "Cherry"
         }
-      ]
+      ],
+      "isLost": false
     },
     {
-      "id": 8,
+      "id": "37c7e1e8-d482-581d-86a9-06459b52c653",
       "locationSlug": "lost-tower",
       "members": [
         {
@@ -872,21 +880,24 @@ values
         "location": "",
         "locationSlug": "",
         "inBag": true,
-        "revived": false
+        "revived": false,
+        "pokemonId": null
       },
       {
         "fossilId": "old-amber",
         "location": "",
         "locationSlug": "",
         "inBag": true,
-        "revived": false
+        "revived": false,
+        "pokemonId": null
       },
       {
         "fossilId": "helix-fossil",
         "location": "",
         "locationSlug": "oreburgh-city",
         "inBag": false,
-        "revived": false
+        "revived": false,
+        "pokemonId": null
       }
     ],
     [
@@ -895,14 +906,16 @@ values
         "location": "",
         "locationSlug": "",
         "inBag": true,
-        "revived": false
+        "revived": false,
+        "pokemonId": null
       },
       {
         "fossilId": "dome-fossil",
         "location": "",
         "locationSlug": "",
         "inBag": true,
-        "revived": false
+        "revived": false,
+        "pokemonId": null
       }
     ]
   ],
@@ -969,17 +982,17 @@ values
     ]
   ],
   "runStartedAt": 1789257600000
-}$state$::jsonb),
-    2,
+}$state$::jsonb,
+    3,
     5,
     '10000000-0000-0000-0000-000000000001'
   ),
   (
     '30000000-0000-0000-0000-000000000003',
-    private.migrate_tracker_link_ids('30000000-0000-0000-0000-000000000003', $state${
+    $state${
   "team": [
     {
-      "id": 1,
+      "id": "7abc342e-f525-5a10-89e2-d8e9c8fb09b7",
       "locationSlug": "unova-route-1",
       "members": [
         {
@@ -993,7 +1006,7 @@ values
       ]
     },
     {
-      "id": 2,
+      "id": "5a7f06b5-1c3b-5a8a-8bb9-f65eefdfb51a",
       "locationSlug": "unova-route-2",
       "members": [
         {
@@ -1007,7 +1020,7 @@ values
       ]
     },
     {
-      "id": 3,
+      "id": "c4596ef8-631a-5986-8c26-da3d4f7c0975",
       "locationSlug": "unova-route-3",
       "members": [
         {
@@ -1023,7 +1036,7 @@ values
   ],
   "box": [
     {
-      "id": 4,
+      "id": "e3e2e445-c694-56f9-85b3-2f0daa47cb61",
       "locationSlug": "dreamyard",
       "members": [
         {
@@ -1037,7 +1050,7 @@ values
       ]
     },
     {
-      "id": 5,
+      "id": "a645c369-90ce-5546-8dfc-f10bbc0bedb6",
       "locationSlug": "pinwheel-forest",
       "members": [
         {
@@ -1051,7 +1064,7 @@ values
       ]
     },
     {
-      "id": 6,
+      "id": "c22cb33f-d3e1-5427-8215-90c06dcb5f0e",
       "locationSlug": null,
       "fossilSlugs": [
         "old-amber",
@@ -1071,7 +1084,7 @@ values
   ],
   "graveyard": [
     {
-      "id": 7,
+      "id": "f9f7249b-6518-5062-8012-0094fc05be8e",
       "locationSlug": "wellspring-cave",
       "members": [
         {
@@ -1082,10 +1095,11 @@ values
           "id": 527,
           "nickname": "Sonar"
         }
-      ]
+      ],
+      "isLost": false
     },
     {
-      "id": 8,
+      "id": "f90a271c-edd5-5664-889e-1be5b28c7624",
       "locationSlug": "cold-storage",
       "members": [
         {
@@ -1096,7 +1110,8 @@ values
           "id": 532,
           "nickname": "Lumber"
         }
-      ]
+      ],
+      "isLost": false
     }
   ],
   "rules": [
@@ -1343,14 +1358,16 @@ values
         "location": "",
         "locationSlug": "nacrene-city",
         "inBag": false,
-        "revived": false
+        "revived": false,
+        "pokemonId": null
       },
       {
         "fossilId": "helix-fossil",
         "location": "",
         "locationSlug": "",
         "inBag": true,
-        "revived": false
+        "revived": false,
+        "pokemonId": null
       },
       {
         "fossilId": "old-amber",
@@ -1367,14 +1384,16 @@ values
         "location": "",
         "locationSlug": "",
         "inBag": true,
-        "revived": false
+        "revived": false,
+        "pokemonId": null
       },
       {
         "fossilId": "dome-fossil",
         "location": "",
         "locationSlug": "nacrene-city",
         "inBag": false,
-        "revived": false
+        "revived": false,
+        "pokemonId": null
       },
       {
         "fossilId": "skull-fossil",
@@ -1442,17 +1461,17 @@ values
     ]
   ],
   "runStartedAt": 1789689600000
-}$state$::jsonb),
-    2,
+}$state$::jsonb,
+    3,
     11,
     '10000000-0000-0000-0000-000000000001'
   ),
   (
     '30000000-0000-0000-0000-000000000004',
-    private.migrate_tracker_link_ids('30000000-0000-0000-0000-000000000004', $state${
+    $state${
   "team": [
     {
-      "id": 1,
+      "id": "add39f46-4b18-5130-8acf-a12f1f4b9a58",
       "locationSlug": "hoenn-route-101",
       "members": [
         {
@@ -1466,7 +1485,7 @@ values
       ]
     },
     {
-      "id": 2,
+      "id": "50ca419d-0449-5fd2-87b2-25f69a41b7fd",
       "locationSlug": "hoenn-route-102",
       "members": [
         {
@@ -1480,7 +1499,7 @@ values
       ]
     },
     {
-      "id": 3,
+      "id": "e3371cb5-31f2-5887-8307-8238fc047cb5",
       "locationSlug": "hoenn-route-104",
       "members": [
         {
@@ -1496,7 +1515,7 @@ values
   ],
   "box": [
     {
-      "id": 4,
+      "id": "4564a527-ba2d-5faa-8814-9fc5ed5afe7d",
       "locationSlug": "petalburg-woods",
       "members": [
         {
@@ -1510,7 +1529,7 @@ values
       ]
     },
     {
-      "id": 5,
+      "id": "962f05b6-2cf2-59e1-80d2-3dcc43ba6e39",
       "locationSlug": "hoenn-route-116",
       "members": [
         {
@@ -1524,7 +1543,7 @@ values
       ]
     },
     {
-      "id": 6,
+      "id": "c330f445-f3de-59d0-8936-51c7da44b4a4",
       "locationSlug": null,
       "fossilSlugs": [
         "root-fossil",
@@ -1544,7 +1563,7 @@ values
   ],
   "graveyard": [
     {
-      "id": 7,
+      "id": "2b1bd1b7-57e3-5ef3-8a86-e20c2b5f171f",
       "locationSlug": "granite-cave",
       "members": [
         {
@@ -1555,10 +1574,11 @@ values
           "id": 304,
           "nickname": "Ironclad"
         }
-      ]
+      ],
+      "isLost": false
     },
     {
-      "id": 8,
+      "id": "11279edf-dc09-5454-86d4-5542b96a1ac4",
       "locationSlug": "hoenn-route-110",
       "members": [
         {
@@ -1569,7 +1589,8 @@ values
           "id": 316,
           "nickname": "Blob"
         }
-      ]
+      ],
+      "isLost": false
     }
   ],
   "rules": [
@@ -1776,7 +1797,8 @@ values
         "location": "",
         "locationSlug": "rustboro-city",
         "inBag": false,
-        "revived": false
+        "revived": false,
+        "pokemonId": null
       },
       {
         "fossilId": "root-fossil",
@@ -1793,7 +1815,8 @@ values
         "location": "",
         "locationSlug": "rustboro-city",
         "inBag": false,
-        "revived": false
+        "revived": false,
+        "pokemonId": null
       },
       {
         "fossilId": "claw-fossil",
@@ -1808,7 +1831,8 @@ values
         "location": "",
         "locationSlug": "mauville-city",
         "inBag": false,
-        "revived": false
+        "revived": false,
+        "pokemonId": null
       }
     ]
   ],
@@ -1882,8 +1906,8 @@ values
     ]
   ],
   "runStartedAt": 1763683200000
-}$state$::jsonb),
-    2,
+}$state$::jsonb,
+    3,
     3,
     '10000000-0000-0000-0000-000000000001'
   );
