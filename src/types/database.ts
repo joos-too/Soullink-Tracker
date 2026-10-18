@@ -36,6 +36,7 @@ export type Database = {
     Tables: {
       profiles: {
         Row: {
+          allow_image_loading: boolean | null;
           created_at: string;
           display_name: string;
           display_name_requires_update: boolean;
@@ -48,6 +49,7 @@ export type Database = {
           wiki_id: string | null;
         };
         Insert: {
+          allow_image_loading?: boolean | null;
           created_at?: string;
           display_name: string;
           display_name_requires_update?: boolean;
@@ -60,6 +62,7 @@ export type Database = {
           wiki_id?: string | null;
         };
         Update: {
+          allow_image_loading?: boolean | null;
           created_at?: string;
           display_name?: string;
           display_name_requires_update?: boolean;

@@ -26,6 +26,8 @@ import Tooltip from "@/src/components/other/Tooltip.tsx";
 import { WIKIS, type WikiId } from "@/src/utils/wikiPreferences";
 
 interface UserSettingsPageProps {
+  allowImageLoading?: boolean | null;
+  onImageLoadingChange?: (allowed: boolean) => Promise<void>;
   email?: string | null;
   displayName: string;
   onDisplayNameChange: (displayName: string) => Promise<void>;
@@ -55,6 +57,8 @@ const UserSettingsPage: React.FC<UserSettingsPageProps> = ({
   onWikiChange,
   multiLocaleSearch,
   onMultiLocaleSearchToggle,
+  allowImageLoading,
+  onImageLoadingChange,
 }) => {
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
   const [message, setMessage] = useState<string | null>(null);
@@ -62,6 +66,8 @@ const UserSettingsPage: React.FC<UserSettingsPageProps> = ({
   const [displayNameDraft, setDisplayNameDraft] = useState(displayName);
   const [displayNameSaving, setDisplayNameSaving] = useState(false);
   const [displayNameError, setDisplayNameError] = useState<string | null>(null);
+  const [imageConsentSaving, setImageConsentSaving] = useState(false);
+  const [imageConsentError, setImageConsentError] = useState(false);
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -249,9 +255,9 @@ const UserSettingsPage: React.FC<UserSettingsPageProps> = ({
                     aria-live="polite"
                   >
                     {status === "success" ? (
-                      <FiCheckCircle className="mt-[5px] shrink-0" />
+                      <FiCheckCircle className="mt-1.25 shrink-0" />
                     ) : (
-                      <FiAlertTriangle className="mt-[5px] shrink-0" />
+                      <FiAlertTriangle className="mt-1.25 shrink-0" />
                     )}
                     <span>{message}</span>
                   </div>
@@ -310,6 +316,55 @@ const UserSettingsPage: React.FC<UserSettingsPageProps> = ({
             <h2 className={sectionHeadingClasses}>
               {t("userSettings.sprites.title")}
             </h2>
+
+            {onImageLoadingChange && (
+              <div>
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-medium text-gray-800 dark:text-gray-200">
+                        {t("privacy.images.title")}
+                      </h3>
+                      <Tooltip
+                        side="top"
+                        content={t("privacy.images.description")}
+                      >
+                        <span
+                          className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 cursor-help"
+                          aria-label={t("privacy.images.title")}
+                        >
+                          <FiInfo size={16} />
+                        </span>
+                      </Tooltip>
+                    </div>
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      {t("privacy.images.withdrawal")}
+                    </p>
+                  </div>
+                  <ToggleSwitch
+                    id="allow-image-loading"
+                    checked={allowImageLoading === true}
+                    disabled={imageConsentSaving}
+                    ariaLabel={t("privacy.images.title")}
+                    onChange={(allowed) => {
+                      setImageConsentSaving(true);
+                      setImageConsentError(false);
+                      void onImageLoadingChange(allowed)
+                        .catch(() => setImageConsentError(true))
+                        .finally(() => setImageConsentSaving(false));
+                    }}
+                  />
+                </div>
+                {imageConsentError && (
+                  <p
+                    role="alert"
+                    className="mt-2 text-sm text-red-600 dark:text-red-400"
+                  >
+                    {t("privacy.images.saveError")}
+                  </p>
+                )}
+              </div>
+            )}
 
             <div className="flex items-center justify-between">
               <div className="flex-1">
@@ -391,7 +446,7 @@ const UserSettingsPage: React.FC<UserSettingsPageProps> = ({
                     key={wiki.id}
                     type="button"
                     onClick={() => onWikiChange(wiki.id)}
-                    className={`flex-1 min-w-[140px] flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all shadow-sm outline-none ${
+                    className={`flex-1 min-w-35 flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all shadow-sm outline-none ${
                       isActive
                         ? "border-green-500 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300"
                         : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-md"

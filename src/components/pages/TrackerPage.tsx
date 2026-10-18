@@ -55,7 +55,6 @@ import {
 import { saveRuleset } from "@/src/services/rulesets";
 import { useTranslation } from "react-i18next";
 import { resolvePokemonLocationDisplay } from "@/src/services/search/locationSearch.ts";
-import "@/src/pokeapi"; // initialize Pokedex once so sprite caching SW gets registered
 
 const AUTOSAVE_DEBOUNCE_MS = 200;
 const MAX_SUPPORTED_GENERATION = 9;

@@ -1,7 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   onCurrentAuthStateChange,
+  signIn,
+  signOutCurrentUser,
   signUp,
+  verifyEmailOtp,
   synchronizeCurrentUserLanguage,
 } from "./auth.ts";
 
@@ -9,10 +12,17 @@ const authMocks = vi.hoisted(() => ({
   onAuthStateChange: vi.fn(),
   signUp: vi.fn(),
   updateUser: vi.fn(),
+  signInWithPassword: vi.fn(),
+  verifyOtp: vi.fn(),
+  setAuthPersistence: vi.fn(),
+  clearAuthCookies: vi.fn(),
+  signOut: vi.fn(),
 }));
 
 vi.mock("@/src/services/backend/supabase.ts", () => ({
   getSupabaseClient: () => ({ auth: authMocks }),
+  setAuthPersistence: authMocks.setAuthPersistence,
+  clearAuthCookies: authMocks.clearAuthCookies,
 }));
 
 describe("auth language metadata", () => {
@@ -20,7 +30,31 @@ describe("auth language metadata", () => {
     authMocks.onAuthStateChange.mockReset();
     authMocks.signUp.mockReset();
     authMocks.updateUser.mockReset();
+    authMocks.setAuthPersistence.mockReset();
+    authMocks.clearAuthCookies.mockReset();
+    authMocks.signOut.mockReset();
   });
+
+  it.each(["local", "global"] as const)(
+    "clears cookies after %s logout",
+    async (scope) => {
+      authMocks.signOut.mockResolvedValue({ error: null });
+      await signOutCurrentUser(scope);
+      expect(authMocks.signOut).toHaveBeenCalledWith({ scope });
+      expect(authMocks.clearAuthCookies).toHaveBeenCalledOnce();
+    },
+  );
+
+  it.each([false, true])(
+    "clears cookies when logout fails (throws: %s)",
+    async (throws) => {
+      const error = new Error("Server unavailable");
+      if (throws) authMocks.signOut.mockRejectedValue(error);
+      else authMocks.signOut.mockResolvedValue({ error });
+      await expect(signOutCurrentUser()).rejects.toThrow(error);
+      expect(authMocks.clearAuthCookies).toHaveBeenCalledOnce();
+    },
+  );
 
   it("stores display name and language during signup", async () => {
     authMocks.signUp.mockResolvedValue({
@@ -37,7 +71,29 @@ describe("auth language metadata", () => {
         data: { display_name: "Trainer", language: "en" },
       },
     });
+    expect(authMocks.setAuthPersistence).toHaveBeenCalledWith(false);
   });
+
+  it.each([false, true])(
+    "uses the persistence choice %s for login and confirmation",
+    async (staySignedIn) => {
+      authMocks.signInWithPassword.mockResolvedValue({ error: null });
+      authMocks.verifyOtp.mockResolvedValue({ error: null });
+      await signIn("Trainer@Example.com", "password123", staySignedIn);
+      expect(authMocks.setAuthPersistence).toHaveBeenLastCalledWith(
+        staySignedIn,
+      );
+      await verifyEmailOtp("Trainer@Example.com", "123456", staySignedIn);
+      expect(authMocks.setAuthPersistence).toHaveBeenLastCalledWith(
+        staySignedIn,
+      );
+      expect(authMocks.verifyOtp).toHaveBeenCalledWith({
+        email: "trainer@example.com",
+        token: "123456",
+        type: "signup",
+      });
+    },
+  );
 
   it.each([
     ["de", "de"],

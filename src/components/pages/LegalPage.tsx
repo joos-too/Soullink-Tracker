@@ -3,6 +3,8 @@ import { FiArrowLeft } from "react-icons/fi";
 import { useTranslation } from "react-i18next";
 import PageLayout from "@/src/components/layout/PageLayout";
 import { focusRingClasses } from "@/src/styles/focusRing";
+import PrivacyPolicyContent from "./PrivacyPolicyContent";
+import { privacyPolicyDe } from "@/src/locales/privacyPolicy.de";
 
 export default function LegalPage({
   kind,
@@ -20,9 +22,15 @@ export default function LegalPage({
           <FiArrowLeft aria-hidden="true" /> {t("common.back")}
         </Link>
         <main className="rounded-lg border border-gray-200 bg-white px-6 py-8 shadow-[6px_6px_0_0_rgba(31,41,55,0.25)] dark:border-gray-700 dark:bg-gray-800 dark:shadow-[6px_6px_0_0_rgba(0,0,0,0.35)]">
-          <h1 className="wrap-break-word text-2xl font-bold">
-            {t(`footer.${kind}`)}
+          <h1
+            lang={kind === "privacyPolicy" ? "de" : undefined}
+            className="wrap-break-word text-2xl font-bold"
+          >
+            {kind === "privacyPolicy"
+              ? privacyPolicyDe.title
+              : t(`footer.${kind}`)}
           </h1>
+          {kind === "privacyPolicy" && <PrivacyPolicyContent />}
           {kind === "legalNotice" && (
             <div className="mt-6 space-y-6 text-sm leading-relaxed">
               <address className="not-italic">

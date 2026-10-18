@@ -1,4 +1,8 @@
-import { getSupabaseClient } from "@/src/services/backend/supabase.ts";
+import {
+  clearAuthCookies,
+  getSupabaseClient,
+  setAuthPersistence,
+} from "@/src/services/backend/supabase.ts";
 import type { SupportedLanguage } from "@/src/utils/language.ts";
 
 export interface AuthenticatedUser {
@@ -86,7 +90,9 @@ export const onCurrentAuthStateChange = (
 export const signIn = async (
   email: string,
   password: string,
+  staySignedIn = false,
 ): Promise<void> => {
+  setAuthPersistence(staySignedIn);
   const { error } = await getSupabaseClient().auth.signInWithPassword({
     email: normalizeEmail(email),
     password,
@@ -103,7 +109,9 @@ export const signUp = async (
   password: string,
   displayName: string,
   language: SupportedLanguage,
+  staySignedIn = false,
 ): Promise<SignUpResult> => {
+  setAuthPersistence(staySignedIn);
   const { data, error } = await getSupabaseClient().auth.signUp({
     email: normalizeEmail(email),
     password,
@@ -132,7 +140,9 @@ export const synchronizeCurrentUserLanguage = async (
 export const verifyEmailOtp = async (
   email: string,
   token: string,
+  staySignedIn = false,
 ): Promise<void> => {
+  setAuthPersistence(staySignedIn);
   const { error } = await getSupabaseClient().auth.verifyOtp({
     email: normalizeEmail(email),
     token,
@@ -144,8 +154,13 @@ export const verifyEmailOtp = async (
 export const signOutCurrentUser = async (
   scope: "local" | "global" = "local",
 ): Promise<void> => {
-  const { error } = await getSupabaseClient().auth.signOut({ scope });
-  if (error) throw error;
+  try {
+    const { error } = await getSupabaseClient().auth.signOut({ scope });
+    if (error) throw error;
+  } finally {
+    // Local credentials must be removed even if server-side revocation fails.
+    clearAuthCookies();
+  }
 };
 
 export const requestPasswordReset = async (

@@ -29,10 +29,7 @@ export default function PageLayout({
       <div className={className}>{children}</div>
       {showFooter && (
         <div className="mt-6">
-          <AppFooter
-            compact={compactFooter}
-            trackerLayout={width === "tracker"}
-          />
+          <AppFooter compact={compactFooter} />
         </div>
       )}
     </div>

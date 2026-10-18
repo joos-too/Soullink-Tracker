@@ -1,3 +1,4 @@
+import { useImageConsent } from "@/src/contexts/ImageConsentContext";
 import PageLayout from "@/src/components/layout/PageLayout";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -67,6 +68,7 @@ const HomePage: React.FC<HomePageProps> = ({
   onDisplayNameChange,
 }) => {
   const { t, i18n } = useTranslation();
+  const { decision } = useImageConsent();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isDark, setIsDark] = useState(getDarkMode());
   const [filterOpen, setFilterOpen] = useState(false);
@@ -186,7 +188,11 @@ const HomePage: React.FC<HomePageProps> = ({
   return (
     <div className="min-h-screen bg-[#f0f0f0] dark:bg-gray-900 text-gray-800 dark:text-gray-100 px-3 py-6 sm:py-10">
       <MigrationDisplayNameModal
-        isOpen={displayNameRequiresUpdate && !displayNamePromptDismissed}
+        isOpen={
+          displayNameRequiresUpdate &&
+          !displayNamePromptDismissed &&
+          decision !== null
+        }
         initialDisplayName={displayName}
         onClose={() => setDisplayNamePromptDismissed(true)}
         onSave={async (nextDisplayName) => {
