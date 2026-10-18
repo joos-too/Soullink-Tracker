@@ -1,4 +1,21 @@
 export const de = {
+  legalNotice: {
+    contact: "Kontakt",
+    phone: "Telefon",
+    email: "E-Mail",
+  },
+  footer: {
+    github: "Auf GitHub ansehen",
+    legalNavigation: "Rechtliche Informationen",
+    legalNotice: "Impressum",
+    privacyPolicy: "Datenschutzerklärung",
+    trademarks:
+      "Pokémon und alle zugehörigen Namen und Charaktere sind Marken ihrer jeweiligen Eigentümer.",
+    copyright:
+      "© 2026 Pokémon. © 1995–2026 Nintendo / Creatures Inc. / GAME FREAK inc.",
+    disclaimer:
+      "Dies ist ein nicht kommerzielles Fanprojekt, das mit keinem dieser Unternehmen verbunden ist.",
+  },
   common: {
     appName: "Soullink Tracker",
     search: "Suchen",
@@ -238,9 +255,6 @@ export const de = {
       rulesets: "Regeln verwalten",
       resetRun: "Run zurücksetzen",
       settings: "Einstellungen",
-    },
-    footer: {
-      github: "Auf GitHub ansehen",
     },
     locations: {
       title: "Abgegraste Gebiete",

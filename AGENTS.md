@@ -80,6 +80,9 @@ Production chunk groups use Vite's `build.rolldownOptions.output.codeSplitting` 
 
 ## Localization Rules
 
+- Shared page width containers and the footer live in `src/components/layout/`. Use `PageLayout` with the appropriate width variant. It renders one footer outside its content card by default; tracker settings, account, legal pages, loading, and tracker-not-found views use `showFooter={false}`. The footer scrolls with the page. Login, registration (including confirmation), and password reset use `compactFooter` to omit the disclaimer.
+- `/legalnotice` and `/privacypolicy` are public routes; they must remain accessible without authentication. The legal notice contains the operator address and contact details, with labels in the `legalNotice` translation namespace. The privacy policy remains a placeholder. Footer translations live in the shared `footer` namespace.
+
 - The UI supports German and English.
 - Prefer translation keys over inline user-facing strings.
 - When adding or changing UI copy, update both `src/locales/de.ts` and `src/locales/en.ts`.

@@ -1,4 +1,21 @@
 export const en = {
+  legalNotice: {
+    contact: "Contact",
+    phone: "Phone",
+    email: "Email",
+  },
+  footer: {
+    github: "View on GitHub",
+    legalNavigation: "Legal information",
+    legalNotice: "Legal notice",
+    privacyPolicy: "Privacy policy",
+    trademarks:
+      "Pokémon and all related names and characters are trademarks of their respective owners.",
+    copyright:
+      "© 2026 Pokémon. © 1995–2026 Nintendo / Creatures Inc. / GAME FREAK inc.",
+    disclaimer:
+      "This is a fan-made, non-commercial project not affiliated with any of these companies.",
+  },
   common: {
     appName: "Soullink Tracker",
     loading: "Loading…",
@@ -236,9 +253,6 @@ export const en = {
       rulesets: "Edit rulesets",
       resetRun: "Reset run",
       settings: "Settings",
-    },
-    footer: {
-      github: "View on GitHub",
     },
     locations: {
       title: "Cleared areas",
