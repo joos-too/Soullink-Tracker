@@ -17,14 +17,14 @@ export type RepositorySubscription = () => void;
 
 type ValueCallback<T> = (value: T | null) => void;
 type ErrorCallback = (error: Error) => void;
-type StateValueCallback = (value: Partial<AppState> | null) => boolean | void;
+type StateValueCallback = (value: AppState | null) => boolean | void;
 type ConnectionStatusCallback = (
   status: "subscribed" | "disconnected",
   error?: Error,
 ) => void;
 
 export interface VersionedTrackerState {
-  state: Partial<AppState>;
+  state: AppState;
   revision: number;
 }
 
@@ -87,7 +87,7 @@ export const acceptTrackerStateSnapshot = (
 
 export const getTrackerState = async (
   trackerId: string,
-): Promise<Partial<AppState> | null> => {
+): Promise<AppState | null> => {
   const snapshot = await getSupabaseTrackerState(trackerId);
   if (!snapshot) return null;
   stateRevisions.set(trackerId, snapshot.revision);

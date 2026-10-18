@@ -1,11 +1,13 @@
 import type {
   AppState,
+  PersistedTrackerState,
   TrackerMember,
   TrackerMeta,
   TrackerRole,
   UserSettings,
 } from "@/types.ts";
 import type { Database, Json } from "@/src/types/database.ts";
+import { GAME_VERSIONS } from "@/src/data/game-versions.ts";
 
 type TrackerRow = Database["public"]["Tables"]["trackers"]["Row"];
 type TrackerMemberRow = Database["public"]["Tables"]["tracker_members"]["Row"];
@@ -14,7 +16,7 @@ type TrackerMemberDirectoryEntry =
   Database["public"]["Functions"]["list_tracker_members"]["Returns"][number];
 
 export interface TrackerStateSnapshot {
-  state: Partial<AppState>;
+  state: AppState;
   revision: number;
   schemaVersion: number;
   updatedAt: number;
@@ -97,14 +99,35 @@ export const toTrackerMeta = (
 /** Restores UI-only relational metadata around the persisted JSON state. */
 export const toTrackerStateSnapshot = (
   row: TrackerStateRow,
-  tracker: Pick<TrackerRow, "player_names" | "ruleset_id">,
+  tracker: Pick<TrackerRow, "player_names" | "ruleset_id" | "game_version_id">,
 ): TrackerStateSnapshot => {
-  const state = isJsonObject(row.state) ? row.state : {};
+  if (row.schema_version !== 3 || !isJsonObject(row.state)) {
+    throw new Error(`Unsupported tracker state schema: ${row.schema_version}`);
+  }
+  // The database validates the persisted shape. Only relational composition and
+  // reconciliation with evolving game templates belong on the read path.
+  const state = row.state as unknown as PersistedTrackerState;
+  const game = GAME_VERSIONS[tracker.game_version_id] ?? GAME_VERSIONS.gen5_bw;
   return {
     state: {
-      ...(state as Partial<AppState>),
+      ...state,
       playerNames: tracker.player_names,
       ...(tracker.ruleset_id ? { rulesetId: tracker.ruleset_id } : {}),
+      levelCaps: game.levelCaps.map((template) => ({
+        ...state.levelCaps.find((cap) => cap.id === template.id),
+        ...template,
+        done:
+          state.levelCaps.find((cap) => cap.id === template.id)?.done ?? false,
+      })),
+      rivalCaps: game.rivalCaps.map((template) => {
+        const saved = state.rivalCaps.find((cap) => cap.id === template.id);
+        return {
+          ...saved,
+          ...template,
+          done: saved?.done ?? false,
+          revealed: saved?.revealed ?? false,
+        };
+      }),
     },
     revision: Number(row.revision),
     schemaVersion: row.schema_version,

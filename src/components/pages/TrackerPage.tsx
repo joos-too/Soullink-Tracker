@@ -11,7 +11,6 @@ import type {
   ItemEntry,
   LinkEditPayload,
   LinkId,
-  Pokemon,
   PokemonLink,
   RivalCensorMode,
   RivalGender,
@@ -20,9 +19,8 @@ import type {
 import { createLinkId } from "@/src/services/linkIds.ts";
 import {
   createInitialState,
-  ensureStatsForPlayers,
+  resetTrackerState,
   PLAYER_COLORS,
-  sanitizePlayerNames,
   sanitizeRules,
 } from "@/src/services/init.ts";
 import type { TypeFilterEntry } from "@/src/components/widgets/BoxFilters.tsx";
@@ -367,200 +365,6 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
     [activeTrackerId, user],
   );
 
-  const coerceAppState = useCallback(
-    (incoming: any, base: AppState): AppState => {
-      const gameVersionForDefaults =
-        activeGameVersion ?? GAME_VERSIONS["gen5_bw"];
-      const savedLevelCaps = Array.isArray(incoming?.levelCaps)
-        ? incoming.levelCaps
-        : [];
-      const finalLevelCaps = gameVersionForDefaults.levelCaps.map(
-        (levelCapTemplate) => {
-          const savedState = savedLevelCaps.find(
-            (lc) => lc.id === levelCapTemplate.id,
-          );
-          return {
-            ...levelCapTemplate,
-            done: savedState?.done ?? false,
-          };
-        },
-      );
-      const savedRivalCaps = Array.isArray(incoming?.rivalCaps)
-        ? incoming.rivalCaps
-        : [];
-      const finalRivalCaps = gameVersionForDefaults.rivalCaps.map(
-        (rivalCapTemplate) => {
-          const savedState = savedRivalCaps.find(
-            (rc) => rc.id === rivalCapTemplate.id,
-          );
-          return {
-            ...rivalCapTemplate,
-            done: savedState?.done ?? false,
-            revealed: savedState?.revealed ?? false,
-          };
-        },
-      );
-
-      const safe = incoming && typeof incoming === "object" ? incoming : {};
-      const normalizedNames = sanitizePlayerNames(
-        Array.isArray(safe.playerNames) ? safe.playerNames : base.playerNames,
-      );
-      const playerCount = normalizedNames.length;
-
-      const sanitizePokemon = (pokemon: any): Pokemon => ({
-        id: normalizePokemonId(pokemon?.id),
-        nickname: typeof pokemon?.nickname === "string" ? pokemon.nickname : "",
-        ...(typeof pokemon?.name === "string" && pokemon.name.trim().length > 0
-          ? { name: pokemon.name.trim() }
-          : {}),
-      });
-
-      const sanitizeMembers = (link: any): Pokemon[] => {
-        return Array.isArray(link?.members)
-          ? link.members.map(sanitizePokemon)
-          : [];
-      };
-
-      const sanitizeLink = (p: any): PokemonLink => {
-        const members = sanitizeMembers(p);
-        const hasNickname = members.some(
-          (member) => member.nickname.trim().length > 0,
-        );
-        const inferredLost = members.length > 0 && !hasNickname;
-        const isLost = typeof p?.isLost === "boolean" ? p.isLost : inferredLost;
-        const locationText =
-          typeof p?.location === "string" && p.location.trim().length > 0
-            ? p.location.trim()
-            : "";
-        return {
-          id: p.id,
-          locationSlug: p?.locationSlug ?? null,
-          ...(locationText ? { location: locationText } : {}),
-          fossilSlugs: p.fossilSlugs || [],
-          members,
-          isLost,
-        };
-      };
-
-      const sanitizeArray = (arr: any): PokemonLink[] => {
-        const list = Array.isArray(arr) ? arr : [];
-        return list.map(sanitizeLink);
-      };
-
-      const sanitizeFossils = (playerFossils: any): FossilEntry[][] => {
-        return normalizedNames.map((_, i) => {
-          const list = Array.isArray(playerFossils) ? playerFossils[i] : null;
-          if (!Array.isArray(list)) return [];
-          return list.map((f: any) => {
-            const locationText =
-              typeof f.location === "string" && f.location.trim().length > 0
-                ? f.location.trim()
-                : "";
-            return {
-              fossilId: f.fossilId || "",
-              ...(locationText ? { location: locationText } : {}),
-              locationSlug:
-                typeof f.locationSlug === "string" ? f.locationSlug : null,
-              inBag: !!f.inBag,
-              revived: !!f.revived,
-              pokemonId: normalizePokemonId(f.pokemonId),
-              ...(typeof f.pokemonName === "string" &&
-              f.pokemonName.trim().length > 0
-                ? { pokemonName: f.pokemonName.trim() }
-                : {}),
-            };
-          });
-        });
-      };
-
-      const sanitizeItems = (playerItems: any): ItemEntry[][] => {
-        return normalizedNames.map((_, i) => {
-          const list = Array.isArray(playerItems) ? playerItems[i] : null;
-          if (!Array.isArray(list)) return [];
-          return list.map((s: any) => {
-            const itemId =
-              typeof s.id === "string" && s.id.trim().length > 0
-                ? s.id.trim()
-                : "";
-            return {
-              ...(itemId ? { id: itemId } : {}),
-              ...(typeof s.name === "string" && s.name.trim().length > 0
-                ? { name: s.name.trim() }
-                : {}),
-              ...(typeof s.location === "string" && s.location.trim().length > 0
-                ? { location: s.location.trim() }
-                : {}),
-              locationSlug:
-                typeof s.locationSlug === "string" ? s.locationSlug : null,
-              inBag: !!s.inBag,
-              used: !!s.used,
-            };
-          });
-        });
-      };
-
-      const resolvedRulesetId =
-        typeof safe.rulesetId === "string" && safe.rulesetId.trim().length > 0
-          ? safe.rulesetId
-          : base.rulesetId || DEFAULT_RULESET_ID;
-      const sanitizedRules = sanitizeRules(safe.rules);
-
-      const stats = ensureStatsForPlayers(safe.stats, playerCount);
-
-      return {
-        playerNames: normalizedNames,
-        team: sanitizeArray(safe.team),
-        box: sanitizeArray(safe.box),
-        graveyard: sanitizeArray(safe.graveyard),
-        rules:
-          sanitizedRules.length > 0
-            ? sanitizedRules
-            : base.rules && base.rules.length > 0
-              ? base.rules
-              : DEFAULT_RULES,
-        rulesetId: resolvedRulesetId,
-        levelCaps: finalLevelCaps,
-        rivalCaps: finalRivalCaps,
-        stats: {
-          ...stats,
-          runs:
-            typeof safe.stats?.runs === "number" ? safe.stats.runs : stats.runs,
-          best:
-            typeof safe.stats?.best === "number" ? safe.stats.best : stats.best,
-        },
-        legendaryTrackerEnabled:
-          safe.legendaryTrackerEnabled ?? base.legendaryTrackerEnabled ?? true,
-        rivalCensorEnabled:
-          safe.rivalCensorEnabled ?? base.rivalCensorEnabled ?? true,
-        rivalCensorMode:
-          safe.rivalCensorMode ??
-          base.rivalCensorMode ??
-          (safe.rivalCensorEnabled === false
-            ? "off"
-            : safe.rivalCensorEnabled === true
-              ? "on"
-              : "on"),
-        hardcoreModeEnabled:
-          safe.hardcoreModeEnabled ?? base.hardcoreModeEnabled ?? true,
-        nicknamesEnabled:
-          safe.nicknamesEnabled ?? base.nicknamesEnabled ?? true,
-        infiniteFossilsEnabled:
-          safe.infiniteFossilsEnabled ?? base.infiniteFossilsEnabled ?? false,
-        megaStoneSpriteStyle:
-          safe.megaStoneSpriteStyle ?? base.megaStoneSpriteStyle ?? "item",
-        fossils: sanitizeFossils(safe.fossils),
-        items: sanitizeItems(safe.items),
-        runStartedAt:
-          typeof safe.runStartedAt === "number"
-            ? safe.runStartedAt
-            : typeof base.runStartedAt === "number"
-              ? base.runStartedAt
-              : 0,
-      };
-    },
-    [activeGameVersion],
-  );
-
   useEffect(() => {
     if (user)
       window.localStorage.setItem(LAST_TRACKER_STORAGE_KEY, activeTrackerId);
@@ -568,6 +372,7 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
 
   const {
     dataLoaded,
+    loadError,
     stateConflict,
     realtimeStatus,
     reloadAfterConflict: handleReloadAfterStateConflict,
@@ -581,7 +386,6 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
     canWrite: Boolean(user && !isReadOnly && !isExiting),
     data,
     setData,
-    coerceState: coerceAppState,
     debounceMs: AUTOSAVE_DEBOUNCE_MS,
   });
 
@@ -592,59 +396,7 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
 
   const handleConfirmReset = () => {
     if (isReadOnly) return;
-    const gameVersionId = activeGameVersionId;
-    setData((prev) => {
-      const playerNames =
-        prev.playerNames.length > 0
-          ? sanitizePlayerNames(prev.playerNames)
-          : sanitizePlayerNames(activeTrackerMeta?.playerNames);
-      const base = createInitialState(gameVersionId, playerNames);
-      const playerCount = playerNames.length;
-      const makeZeroArray = () => Array.from({ length: playerCount }, () => 0);
-      const summedDeaths = Array.from(
-        { length: playerCount },
-        (_, index) =>
-          (prev.stats.sumDeaths?.[index] ?? 0) +
-          (prev.stats.deaths?.[index] ?? 0),
-      );
-      const prevCurrentBest = Array.isArray(prev.levelCaps)
-        ? prev.levelCaps.filter((c) => c && (c as any).done).length
-        : 0;
-      const newBest = Math.max(prev.stats.best ?? 0, prevCurrentBest);
-
-      // Preserve revealed status of rival caps across resets
-      const rivalCapsWithRevealedState = base.rivalCaps.map((rc) => {
-        const prevRc = prev.rivalCaps?.find((p) => p.id === rc.id);
-        return {
-          ...rc,
-          revealed: prevRc?.revealed ?? false,
-        };
-      });
-
-      return {
-        ...base,
-        rivalCaps: rivalCapsWithRevealedState,
-        rules: prev.rules, // keep rule changes
-        rulesetId: prev.rulesetId ?? base.rulesetId,
-        // keep toggled settings
-        legendaryTrackerEnabled: prev.legendaryTrackerEnabled,
-        rivalCensorEnabled: prev.rivalCensorEnabled,
-        rivalCensorMode: prev.rivalCensorMode,
-        hardcoreModeEnabled: prev.hardcoreModeEnabled,
-        nicknamesEnabled: prev.nicknamesEnabled,
-        infiniteFossilsEnabled: prev.infiniteFossilsEnabled,
-        megaStoneSpriteStyle: prev.megaStoneSpriteStyle,
-        stats: {
-          runs: prev.stats.runs + 1, // increase run number by 1
-          best: newBest, // persistiertes best
-          top4Items: makeZeroArray(),
-          deaths: makeZeroArray(),
-          sumDeaths: summedDeaths,
-          legendaryEncounters: prev.stats.legendaryEncounters ?? 0,
-        },
-        runStartedAt: Date.now(),
-      };
-    });
+    setData((previous) => resetTrackerState(previous, activeGameVersionId));
     setShowResetModal(false);
   };
 
@@ -892,7 +644,7 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
     setPendingLossPair(null);
   };
 
-  const handleManualAddToGraveyard = (pair: PokemonLink) => {
+  const handleManualAddToGraveyard = (pair: AppState["graveyard"][number]) => {
     if (isReadOnly) return;
     setData((prev) => ({
       ...prev,
@@ -902,7 +654,7 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
 
   const handleManualAddFromModal = (payload: LinkEditPayload) => {
     if (isReadOnly) return;
-    const newPair: PokemonLink = {
+    const newPair: AppState["graveyard"][number] = {
       id: createLinkId(),
       location: payload.location?.trim() || "",
       locationSlug: payload.locationSlug,
@@ -1026,7 +778,6 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
     setData((prev) => ({
       ...prev,
       rivalCensorMode: mode,
-      rivalCensorEnabled: mode !== "off",
     }));
   };
 
@@ -1062,7 +813,7 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
   ) => {
     if (isReadOnly) return;
     setData((prev) => {
-      const newFossils = [...(prev.fossils || prev.playerNames.map(() => []))];
+      const newFossils = [...prev.fossils];
       const playerList = Array.isArray(newFossils[pIdx])
         ? [...newFossils[pIdx]]
         : [];
@@ -1074,6 +825,7 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
           locationSlug: locationSlug ?? null,
           inBag,
           revived: false,
+          pokemonId: null,
         },
       ];
       return { ...prev, fossils: newFossils };
@@ -1083,7 +835,7 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
   const handleToggleFossilBag = (pIdx: number, fIdx: number) => {
     if (isReadOnly) return;
     setData((prev) => {
-      const newFossils = [...(prev.fossils || [])];
+      const newFossils = [...prev.fossils];
       if (!newFossils[pIdx]) return prev;
       newFossils[pIdx] = newFossils[pIdx].map((f, i) =>
         i === fIdx
@@ -1102,7 +854,7 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
     selectedIndices: number[],
     playerLabels: string[],
   ) => {
-    if (isReadOnly || !data.fossils) return;
+    if (isReadOnly) return;
 
     const selectedFossils = selectedIndices.map(
       (fIdx, pIdx) => data.fossils[pIdx][fIdx].fossilId,
@@ -1130,7 +882,7 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
     if (!targets) return;
 
     setData((prev) => {
-      const newFossils = [...(prev.fossils || [])];
+      const newFossils = [...prev.fossils];
       targets.forEach(({ fossilSlug, originalIndex }, pIdx) => {
         const playerFossils = newFossils[pIdx];
         if (playerFossils) {
@@ -1181,7 +933,7 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
   ) => {
     if (isReadOnly) return;
     setData((prev) => {
-      const newItems = [...(prev.items || prev.playerNames.map(() => []))];
+      const newItems = [...prev.items];
       const playerList = Array.isArray(newItems[pIdx])
         ? [...newItems[pIdx]]
         : [];
@@ -1203,7 +955,7 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
   const handleToggleItemBag = (pIdx: number, sIdx: number) => {
     if (isReadOnly) return;
     setData((prev) => {
-      const newItems = [...(prev.items || [])];
+      const newItems = [...prev.items];
       if (!newItems[pIdx]) return prev;
       newItems[pIdx] = newItems[pIdx].map((s, i) =>
         i === sIdx
@@ -1219,9 +971,9 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
   };
 
   const handleUseStone = (pIdx: number, sIdx: number) => {
-    if (isReadOnly || !data.items) return;
+    if (isReadOnly) return;
     setData((prev) => {
-      const newItems = [...(prev.items || [])];
+      const newItems = [...prev.items];
       if (newItems[pIdx] && newItems[pIdx][sIdx]) {
         newItems[pIdx] = newItems[pIdx].map((s, i) =>
           i === sIdx ? { ...s, used: true } : s,
@@ -1592,18 +1344,7 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
     user && activeTrackerMeta?.members?.[user.uid]?.role === "owner",
   );
 
-  const resolvedPlayerNames = useMemo(() => {
-    if (Array.isArray(data.playerNames) && data.playerNames.length > 0) {
-      return data.playerNames;
-    }
-    if (
-      Array.isArray(activeTrackerMeta?.playerNames) &&
-      activeTrackerMeta.playerNames.length > 0
-    ) {
-      return sanitizePlayerNames(activeTrackerMeta.playerNames);
-    }
-    return [];
-  }, [data.playerNames, activeTrackerMeta?.playerNames]);
+  const resolvedPlayerNames = data.playerNames;
   const editableLinkIds = useMemo(
     () =>
       new Set(
@@ -1616,27 +1357,6 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
     () => resolvedPlayerNames.map((_, index) => PLAYER_COLORS[index]),
     [resolvedPlayerNames],
   );
-
-  // Backfill runStartedAt for legacy trackers once
-  useEffect(() => {
-    if (!user || isReadOnly || !dataLoaded || !activeTrackerId) return;
-    const hasRunStarted =
-      typeof data.runStartedAt === "number" && data.runStartedAt > 0;
-    const metaCreated =
-      typeof activeTrackerMeta?.createdAt === "number"
-        ? activeTrackerMeta.createdAt
-        : 0;
-    if (!hasRunStarted && metaCreated > 0) {
-      setData((prev) => ({ ...prev, runStartedAt: metaCreated }));
-    }
-  }, [
-    user,
-    isReadOnly,
-    dataLoaded,
-    activeTrackerId,
-    data.runStartedAt,
-    activeTrackerMeta?.createdAt,
-  ]);
 
   const nameTitleFallback = resolvedPlayerNames
     .map((n) => n?.trim())
@@ -1654,7 +1374,18 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
         ? t("app.publicReadOnlyNotice")
         : null
     : null;
-  if (!dataLoaded) return <LoadingScreen />;
+  if (!dataLoaded) {
+    if (loadError)
+      return (
+        <div role="alert" className="p-6 text-center">
+          <p>{t("app.trackerStateLoadError")}</p>
+          <button type="button" onClick={retryRealtimeSync}>
+            {t("app.trackerStateRetry")}
+          </button>
+        </div>
+      );
+    return <LoadingScreen />;
+  }
 
   return (
     <MultiLocaleSearchContext.Provider value={userMultiLocaleSearch}>
@@ -1699,18 +1430,15 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
           playerNames={resolvedPlayerNames}
           onPlayerNameChange={handlePlayerNameChange}
           onBack={closeSettingsPanel}
-          legendaryTrackerEnabled={data.legendaryTrackerEnabled ?? true}
+          legendaryTrackerEnabled={data.legendaryTrackerEnabled}
           onlegendaryTrackerToggle={handleLegendaryTrackerToggle}
-          rivalCensorMode={
-            data.rivalCensorMode ??
-            (data.rivalCensorEnabled === false ? "off" : "on")
-          }
+          rivalCensorMode={data.rivalCensorMode}
           onRivalCensorModeChange={handleRivalCensorToggle}
-          hardcoreModeEnabled={data.hardcoreModeEnabled ?? true}
+          hardcoreModeEnabled={data.hardcoreModeEnabled}
           onHardcoreModeToggle={handleHardcoreModeToggle}
-          nicknamesEnabled={data.nicknamesEnabled ?? true}
+          nicknamesEnabled={data.nicknamesEnabled}
           onNicknamesToggle={handleNicknamesToggle}
-          infiniteFossilsEnabled={data.infiniteFossilsEnabled ?? false}
+          infiniteFossilsEnabled={data.infiniteFossilsEnabled}
           onInfiniteFossilsToggle={handleInfiniteFossilsToggle}
           allPokemonAndItems={activeTrackerAllPokemonAndItems}
           onAllPokemonAndItemsToggle={handleAllPokemonAndItemsToggle}
@@ -1772,7 +1500,7 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
             pair: pendingLossPair,
             playerNames: resolvedPlayerNames,
             generationSpritePath,
-            nicknamesEnabled: data.nicknamesEnabled ?? true,
+            nicknamesEnabled: data.nicknamesEnabled,
           }}
           deleteLinkModalProps={{
             isOpen: !isReadOnly && showDeleteLinkModal,
@@ -1784,7 +1512,7 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
             pair: pendingDeletePair,
             generationSpritePath,
             playerNames: resolvedPlayerNames,
-            nicknamesEnabled: data.nicknamesEnabled ?? true,
+            nicknamesEnabled: data.nicknamesEnabled,
           }}
           resetModalProps={{
             isOpen: !isReadOnly && showResetModal,
@@ -1797,12 +1525,12 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
             team: data.team,
             box: data.box,
             graveyard: data.graveyard,
-            fossils: data.fossils ?? [],
-            items: data.items ?? [],
+            fossils: data.fossils,
+            items: data.items,
             generationSpritePath,
             gameVersionId: activeGameVersionId || undefined,
             wikiId: effectiveWikiId,
-            nicknamesEnabled: data.nicknamesEnabled ?? true,
+            nicknamesEnabled: data.nicknamesEnabled,
           }}
           teamTableProps={{
             title: t("team.teamTitle"),
@@ -1838,7 +1566,7 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
             badLinkIds: hiddenLinkIds,
             onToggleBadLink: isReadOnly ? undefined : toggleHiddenLink,
             filtersExpanded: boxFiltersExpanded,
-            nicknamesEnabled: data.nicknamesEnabled ?? true,
+            nicknamesEnabled: data.nicknamesEnabled,
           }}
           boxTableProps={{
             title: t("team.boxTitle"),
@@ -1875,7 +1603,7 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
             badLinkIds: hiddenLinkIds,
             onToggleBadLink: isReadOnly ? undefined : toggleHiddenLink,
             filtersExpanded: boxFiltersExpanded,
-            nicknamesEnabled: data.nicknamesEnabled ?? true,
+            nicknamesEnabled: data.nicknamesEnabled,
           }}
           boxFiltersProps={{
             playerNames: resolvedPlayerNames,
@@ -1901,15 +1629,12 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
             onRivalCapReveal: handleRivalCapReveal,
             onStatChange: handleStatChange,
             onPlayerStatChange: handlePlayerStatChange,
-            legendaryTrackerEnabled: data.legendaryTrackerEnabled ?? true,
-            rivalCensorEnabled: data.rivalCensorEnabled ?? true,
-            rivalCensorMode:
-              data.rivalCensorMode ??
-              (data.rivalCensorEnabled === false ? "off" : "on"),
-            hardcoreModeEnabled: data.hardcoreModeEnabled ?? true,
+            legendaryTrackerEnabled: data.legendaryTrackerEnabled,
+            rivalCensorMode: data.rivalCensorMode,
+            hardcoreModeEnabled: data.hardcoreModeEnabled,
             onlegendaryIncrement: handleLegendaryIncrement,
             onlegendaryDecrement: handleLegendaryDecrement,
-            runStartedAt: data.runStartedAt ?? activeTrackerMeta?.createdAt,
+            runStartedAt: data.runStartedAt,
             gameVersion: activeGameVersion,
             rivalPreferences: currentUserRivalPreferences,
             activeTrackerId,
@@ -1919,10 +1644,10 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
           }}
           itemTrackerProps={{
             playerNames: resolvedPlayerNames,
-            fossils: data.fossils || resolvedPlayerNames.map(() => []),
-            items: data.items || resolvedPlayerNames.map(() => []),
+            fossils: data.fossils,
+            items: data.items,
             maxGeneration: itemGenerationLimit,
-            infiniteFossilsEnabled: data.infiniteFossilsEnabled ?? false,
+            infiniteFossilsEnabled: data.infiniteFossilsEnabled,
             onAddFossil: handleAddFossil,
             onToggleBag: handleToggleFossilBag,
             onRevive: (selectedIndices) =>
@@ -1936,7 +1661,7 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
             gameVersionId: activeGameVersionId || undefined,
             allPokemonAndItems: activeTrackerAllPokemonAndItems,
             generationSpritePath,
-            megaStoneSpriteStyle: data.megaStoneSpriteStyle ?? "item",
+            megaStoneSpriteStyle: data.megaStoneSpriteStyle,
             onMegaStoneSpriteStyleToggle: handleMegaStoneSpriteStyleToggle,
           }}
           rulesProps={{
@@ -1971,7 +1696,7 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
             pokemonGenerationLimit,
             gameVersionId: activeGameVersionId || undefined,
             wikiId: effectiveWikiId,
-            nicknamesEnabled: data.nicknamesEnabled ?? true,
+            nicknamesEnabled: data.nicknamesEnabled,
           }}
           clearedLocationsProps={{ locations: clearedLocations }}
           reviveModalProps={
@@ -1995,7 +1720,7 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
                   generationLimit: pokemonGenerationLimit,
                   gameVersionId: activeGameVersionId || undefined,
                   generationSpritePath,
-                  nicknamesEnabled: data.nicknamesEnabled ?? true,
+                  nicknamesEnabled: data.nicknamesEnabled,
                 }
               : null
           }

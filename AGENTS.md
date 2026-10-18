@@ -63,14 +63,14 @@ Update the Handbook for any major changes.
 - `public.trackers`: tracker metadata such as title, players, game version, ruleset, and public visibility.
 - `public.tracker_members`: owner/editor/guest membership and per-user tracker settings.
 - `public.tracker_states`: JSONB tracker state plus schema version, optimistic-lock revision, and computed summary.
-- Pokemon links inside tracker state use globally unique UUID strings across team, box, and graveyard. Tracker-state schema version 2 enforces this invariant.
+- Pokemon links inside tracker state use globally unique UUID strings across team, box, and graveyard. Tracker-state schema version 3 retains this invariant and validates the canonical state shape.
 - `public.rulesets`: user-owned custom rulesets, keyed by `(owner_id, id)`.
 - Tracker creation, invitations, member removal, and revision-aware state updates use PostgreSQL RPC functions.
 - Supabase Realtime subscriptions keep tracker metadata, membership, state, and rulesets synchronized.
 - Row Level Security and grants are the authorization boundary. Public trackers are selectable anonymously; guests remain read-only.
 
-When changing tracker shape, add a database migration, update state schema/version handling, regenerate `src/types/database.ts`, and update default-state helpers. The main normalization logic currently lives in `src/services/init.ts` and `src/components/pages/TrackerPage.tsx`. Create new Pokemon-link IDs through `src/services/linkIds.ts`.
-Runtime sanitization should only be used as a last resort. Prefer an idempotent SQL/data migration for existing rows.
+When changing tracker shape, add a database migration, update state schema/version handling, regenerate `src/types/database.ts`, and update default-state helpers. Legacy state conversion belongs in idempotent SQL migrations. `src/services/init.ts` supplies new-tracker defaults and explicit player-stat resizing; `src/services/backend/supabaseTrackerMapper.ts` composes relational metadata and reconciles current game cap templates into a trusted `AppState`. Never repair individual persisted fields on load. Failed initial loads remain non-writable and expose retry. Create new Pokemon-link IDs through `src/services/linkIds.ts`.
+Schema v3 requires explicit graveyard `isLost`, tracker settings, stats, item/fossil arrays, and `runStartedAt`. New graveyard writes must set lost/death status explicitly. The deprecated censor boolean is no longer accepted. Deferred constraints enforce player-array counts; any deliberate count change must update metadata and resized state in one transaction. The migration preserves UUIDs and extensions and aborts unsafe conversions with tracker IDs and field paths. Deploy the v3 database migration before the frontend; stale writes fail validation or revision checks. The unchanged Firebase importer still emits v2 and is not compatible with a v3 database.
 
 Tracker selection is driven by the URL, not shared active-tracker state. `src/app/TrackerRoute.tsx` resolves access before mounting the editor, keyed by tracker ID. Keep tracker loading, autosave, and modal effects inside that route boundary; home and account pages must not load a remembered tracker's state. Settings permissions control rendering and must not trigger search-parameter navigation from an effect. `useActiveTracker` flushes pending debounced edits on ordinary unmount; successful delete/leave flows navigate home with replacement, suspending and discarding pending writes before the operation and resuming on failure.
 

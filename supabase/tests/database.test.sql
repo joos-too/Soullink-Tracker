@@ -91,8 +91,8 @@ select ok(
 );
 select is(
   (select min(schema_version) from public.tracker_states),
-  2,
-  'seeded tracker states use schema version 2'
+  3,
+  'seeded tracker states use schema version 3'
 );
 select ok(
   not exists (
