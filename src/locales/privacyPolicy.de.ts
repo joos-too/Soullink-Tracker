@@ -17,7 +17,7 @@ export const privacyPolicyDe = {
     "Die tatsächlichen Aufbewahrungs- und Löschfristen für Webserver-, Docker-, Supabase-/Logflare-, Authentifizierungs- und SMTP-Protokolle prüfen und festlegen. Aus der Standardkonfiguration ergibt sich keine hier verifizierte einheitliche Frist.",
     "Prüfen, ob neben dem laufenden Datenbestand manuelle Sicherungen, Migrationskopien, Server-Snapshots oder Backups des Hosters bestehen. Der Entwurf geht bisher von keinem zusätzlich eingerichteten regelmäßigen Backup-Verfahren aus.",
     "Die konkreten Leistungs- und Verarbeitungsbedingungen des genutzten Hetzner-SMTP-Dienstes einschließlich Verarbeitungsstandorten und Löschfristen prüfen.",
-    "Die Einbindung der Gmail-Kontaktadresse und mögliche Drittlandverarbeitungen bei Gmail und GitHub sowie die Nachweisbarkeit erteilter Einwilligungen prüfen.",
+    "Die Einbindung der Gmail-Kontaktadresse und mögliche Drittlandverarbeitungen bei Gmail prüfen.",
   ],
   sections: [
     {
@@ -110,7 +110,7 @@ export const privacyPolicyDe = {
       paragraphs: [
         "Neben Cookies verwendet die Anwendung den lokalen Browserspeicher. Im Local Storage werden beispielsweise die ausgewählte Sprache, das Farbschema, Filter- und Darstellungsoptionen, ausgeblendete Einträge, geschlossene Hinweise und ein zuletzt verwendeter Tracker gespeichert. Dies dient dazu, die von Ihnen verwendeten Funktionen und Einstellungen bei weiteren Aufrufen wiederherzustellen. Diese lokalen Einstellungswerte werden nicht allein durch ihre Speicherung an GitHub übermittelt.",
         "Für diese Local-Storage-Einträge ist in der Anwendung keine allgemeine automatische Ablaufzeit hinterlegt. Sie bleiben bestehen, bis die Anwendung sie anlassbezogen entfernt, Sie die Website-Daten löschen oder der Browser sie entfernt. Bei Abmeldung wird die lokal gespeicherte Zuordnung zum zuletzt verwendeten Tracker entfernt; andere lokale Einstellungen werden dadurch nicht pauschal gelöscht.",
-        "Die Entscheidung über externe Bilder wird bei angemeldeten Nutzern als Kontoeinstellung gespeichert. Bei nicht angemeldeten Besuchern wird sie getrennt davon im Session Storage des aktuellen Browser-Tabs gespeichert und übersteht dort ein Neuladen. Sie besteht grundsätzlich für die jeweilige Tab-Sitzung; Wiederherstellungsfunktionen des Browsers können die tatsächliche Dauer beeinflussen.",
+        "Bei angemeldeten Nutzern wird die letzte Entscheidung über externe Bilder als Kontoeinstellung zusammen mit einem vom Server gesetzten Zeitpunkt für die Dauer des Benutzerkontos gespeichert. Bei nicht angemeldeten Besuchern wird nur die Entscheidung ohne Zeitstempel getrennt davon im Session Storage des aktuellen Browser-Tabs gespeichert und übersteht dort ein Neuladen. Sie besteht grundsätzlich für die jeweilige Tab-Sitzung; Wiederherstellungsfunktionen des Browsers können die tatsächliche Dauer beeinflussen. Bei einer neuen Auswahl, einschließlich einer Ablehnung oder eines Widerrufs, wird die bisherige Entscheidung ersetzt und bei angemeldeten Nutzern ihr Zeitpunkt aktualisiert. Ein gesonderter Verlauf der Entscheidungen wird nicht gespeichert.",
         "Soweit eine Speicherung für eine ausdrücklich gewünschte Einstellung oder das Merken Ihrer Datenschutzentscheidung unbedingt erforderlich ist, erfolgt sie nach § 25 Abs. 2 Nr. 2 TDDDG. Die Verarbeitung personenbezogener Daten zur Bereitstellung der gewünschten Einstellungen erfolgt nach Art. 6 Abs. 1 lit. b DSGVO beziehungsweise zur Beachtung Ihrer Datenschutzentscheidung nach Art. 6 Abs. 1 lit. c DSGVO. Die optionale Bildverarbeitung selbst beruht auf der im folgenden Abschnitt beschriebenen Einwilligung.",
       ],
     },
@@ -123,13 +123,22 @@ export const privacyPolicyDe = {
         "Ohne Entscheidung oder bei Ablehnung veranlasst die Bildanzeige keine externen Bildabrufe. Lokal von unserer Website bereitgestellte Bilder, beispielsweise Logos und Abzeichen, können weiterhin angezeigt werden. Die externe Bildanzeige und ihre Zwischenspeicherung beruhen auf Ihrer Einwilligung nach Art. 6 Abs. 1 lit. a DSGVO und § 25 Abs. 1 TDDDG. Die Nutzung des Trackers ist auch ohne externe Bilder möglich.",
         "Bei erlaubter Bildanzeige kann ein Service Worker Bilder im Cache Ihres Browsers speichern, um erneute Downloads zu vermeiden. Für diesen von der App verwalteten Cache ist derzeit keine feste zeitliche Ablaufgrenze eingerichtet. Ein Widerruf stoppt weitere externe Bildabrufe durch die Anwendung, meldet den Bild-Service-Worker ab und löscht diesen Cache im aktuellen Browser. Die normale HTTP-Zwischenspeicherung des Browsers wird durch dessen eigene Regeln gesteuert; sie kann über das Löschen der Website-Daten entfernt werden. Bereits erfolgte Datenübermittlungen und von GitHub gespeicherte Daten werden durch unseren Widerrufsschalter nicht rückwirkend gelöscht.",
         "Die erstmalige Entscheidung erfolgt in einem Dialog vor der Nutzung externer Bilder. Bei Ablehnung können anklickbare Bildplatzhalter den Einstellungsdialog erneut öffnen; vorhandene Ersatzbilder bleiben erhalten. Sie können Ihre Auswahl jederzeit ändern: angemeldet in den Kontoeinstellungen unter „Externe Bilder von GitHub“, als nicht angemeldeter Besucher über „Datenschutzeinstellungen“ im Footer des öffentlichen Trackers. Die Rechtmäßigkeit der Verarbeitung bis zum Widerruf bleibt unberührt.",
-        "GitHub weist auf eine Verarbeitung unter anderem in den USA hin und nennt für internationale Übermittlungen unter anderem das EU-US Data Privacy Framework sowie Standardvertragsklauseln. Welche Garantie den konkreten Abruf absichert, ist für die abschließende Fassung zu prüfen. Die Einwilligung zur Bildanzeige wird hier nicht als pauschale Ausnahme nach Art. 49 DSGVO für beliebige Drittlandübermittlungen verstanden.",
+        "GitHub verarbeitet personenbezogene Daten unter anderem in den USA. Für Übermittlungen an GitHub, Inc. in den USA stützen wir uns auf den Angemessenheitsbeschluss der Europäischen Kommission zum EU–US Data Privacy Framework nach Art. 45 DSGVO. GitHub ist im offiziellen Teilnehmerregister aktiv für Daten außerhalb von Beschäftigungsverhältnissen (Non-HR Data) zertifiziert; der dort beschriebene Umfang umfasst Website-Besucher und Geräteinformationen einschließlich IP-Adressen. GitHub nennt für weitere internationale Übermittlungen außerdem Standardvertragsklauseln. Die Einwilligung zur externen Bildanzeige bleibt davon unabhängig erforderlich.",
       ],
       links: [
         {
           label:
             "Datenschutzerklärung von GitHub und Hinweise zu internationalen Übermittlungen",
           href: "https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement",
+        },
+        {
+          label:
+            "GitHub im offiziellen Data-Privacy-Framework-Teilnehmerregister",
+          href: "https://www.dataprivacyframework.gov/participant/6174",
+        },
+        {
+          label: "Angemessenheitsbeschlüsse der Europäischen Kommission",
+          href: "https://commission.europa.eu/law/law-topic/data-protection/international-dimension-data-protection/adequacy-decisions_en",
         },
       ],
     },

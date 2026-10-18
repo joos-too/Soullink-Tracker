@@ -42,6 +42,7 @@ export type Database = {
           display_name_requires_update: boolean;
           firebase_uid: string | null;
           id: string;
+          image_consent_updated_at: string | null;
           last_login_at: string;
           multi_locale_search: boolean;
           use_generation_sprites: boolean;
@@ -55,6 +56,7 @@ export type Database = {
           display_name_requires_update?: boolean;
           firebase_uid?: string | null;
           id: string;
+          image_consent_updated_at?: string | null;
           last_login_at?: string;
           multi_locale_search?: boolean;
           use_generation_sprites?: boolean;
@@ -68,6 +70,7 @@ export type Database = {
           display_name_requires_update?: boolean;
           firebase_uid?: string | null;
           id?: string;
+          image_consent_updated_at?: string | null;
           last_login_at?: string;
           multi_locale_search?: boolean;
           use_generation_sprites?: boolean;

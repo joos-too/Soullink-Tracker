@@ -724,7 +724,7 @@ export const en = {
       placeholder: "Images blocked – open settings",
       title: "External images from GitHub",
       description:
-        "Pokémon and item images are downloaded from GitHub. Downloads transmit your IP address and technical request information to GitHub. Images may be stored in your browser’s cache to reduce loading times. You can use the tracker without external images and change your choice afterwards.",
+        "Pokémon and item images are downloaded from GitHub. Downloads transmit your IP address and technical request information to GitHub. Images may be stored in your browser’s cache to reduce loading times. For signed-in users, we store the latest choice together with its timestamp. For guests, only the choice is stored for the tab session. You can use the tracker without external images and change your choice afterwards.",
       withdrawal:
         "Turning this off stops external image loading and removes the app’s image cache from this browser!",
       allow: "Allow external images",

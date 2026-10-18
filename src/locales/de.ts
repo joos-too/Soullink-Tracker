@@ -733,7 +733,7 @@ export const de = {
       placeholder: "Bilder gesperrt – Einstellungen öffnen",
       title: "Externe Bilder von GitHub",
       description:
-        "Pokémon- und Item-Bilder werden von GitHub heruntergeladen. Dabei werden deine IP-Adresse und technische Anfragedaten an GitHub übermittelt. Die Bilder können zur Verkürzung der Ladezeiten im Cache deines Browsers gespeichert werden. Du kannst den Tracker ohne externe Bilder verwenden und deine Auswahl im Nachhinein ändern.",
+        "Pokémon- und Item-Bilder werden von GitHub heruntergeladen. Dabei werden deine IP-Adresse und technische Anfragedaten an GitHub übermittelt. Die Bilder können zur Verkürzung der Ladezeiten im Cache deines Browsers gespeichert werden. Bei angemeldeten Nutzern speichern wir die letzte Auswahl zusammen mit ihrem Zeitpunkt. Als Gast wird nur deine Auswahl für die Tab-Sitzung gespeichert. Du kannst den Tracker ohne externe Bilder verwenden und deine Auswahl im Nachhinein ändern.",
       withdrawal:
         "Beim Ausschalten werden keine externen Bilder mehr geladen und der Bild-Cache der App wird in diesem Browser gelöscht!",
       allow: "Externe Bilder erlauben",

@@ -42,14 +42,71 @@ auch bei englischer Oberflächensprache. Textquelle: `src/locales/privacyPolicy.
 4. Die öffentliche Kontaktadresse ist weiterhin eine Gmail-Adresse; deren
    Verarbeitung ist vom Systemmail-Versand über Hetzner
    getrennt zu bewerten und bei Beibehaltung zu konkretisieren.
-5. GitHubs tatsächlich anwendbare Drittland-Transfergrundlage prüfen. Die
-   Einwilligung in externe Bilder ersetzt diese Prüfung nicht.
-6. Nachweis der Einwilligungen und die Erforderlichkeit der jeweiligen dauerhaften
-   lokalen Einstellungen prüfen. `allow_image_loading` speichert derzeit nur die
-   Entscheidung; Zeitpunkt und Textversion werden darüber nicht protokolliert.
+5. Die Erforderlichkeit der jeweiligen dauerhaften lokalen Einstellungen prüfen.
+   Für die zeitliche Nachvollziehbarkeit der Bildentscheidung die tatsächlichen
+   Deployment- und Rollback-Zeitpunkte mit dem ausgelieferten Commit dokumentieren
+   und ältere Texte und Dialogabläufe erhalten (siehe unten).
 
 Der Entwurf dokumentiert diese Unsicherheiten sichtbar. Er ändert keine
 Server-Konfiguration, Log-Aufbewahrung, Backup-Verfahren oder Einwilligungsdaten.
+
+## GitHub-Bildabrufe: DPF-Prüfung vom 18. Oktober 2026
+
+- Das offizielle DPF-Register führt GitHub (Teilnehmer 6174) als aktiv für das
+  EU–US DPF und Non-HR Data. Als nächsten Rezertifizierungstermin nennt es den 3. August 2027; das ist kein pauschales Ablaufdatum des Datenschutzes.
+- Der Eintrag nennt ausdrücklich Website-Besucher sowie Geräteinformationen
+  einschließlich IP-Adressen und verweist auf GitHubs allgemeine
+  Datenschutzerklärung. Die Teilnahme ist damit nicht auf Mitarbeiterdaten oder
+  zahlende Enterprise-Kunden beschränkt.
+- GitHubs Datenschutzerklärung nennt die DPF-Teilnahme und die Verarbeitung von
+  IP-Adressen und Anfragedaten. Die Europäische Kommission führt die USA für am
+  DPF teilnehmende Unternehmen weiterhin unter den Angemessenheitsbeschlüssen.
+- Einordnung für diese App: Die Verbindungsdaten beim öffentlichen Abruf von
+  PokeAPI-Sprites über `raw.githubusercontent.com` lassen sich dem beschriebenen
+  Besucher- und Dienstdatenumfang zuordnen. Das ist eine Schlussfolgerung aus
+  Registerumfang und Datenschutzhinweisen; eine gesonderte Bestätigung speziell
+  dieser Domain wurde nicht gefunden. Der Entwurf benennt für Übermittlungen an
+  GitHub, Inc. in den USA daher Art. 45 DSGVO und das EU–US DPF.
+- Der bisherige pauschale Recherchepunkt zur GitHub-Transfergrundlage ist damit
+  bearbeitet. Die Einwilligung zur Bildanzeige bleibt eigenständig erforderlich.
+  Bei Konten wird die letzte Entscheidung wie unten beschrieben mit einem
+  Zeitpunkt gespeichert, bei Gästen nur für die Tab-Sitzung ohne Zeitstempel.
+  DPF-Status, Beschluss und Anbieterangaben sind bei späteren
+  Überarbeitungen erneut zu prüfen.
+
+## Bildentscheidung mit Zeitstempel
+
+- Bei Konten speichert `profiles.allow_image_loading` die letzte Entscheidung.
+  `image_consent_updated_at` enthält den Zeitpunkt der letzten ausdrücklichen
+  Auswahl, einschließlich Ablehnung und Widerruf. Ein Datenbank-Trigger setzt
+  beide Angaben im selben Schreibvorgang; der Browser darf den Zeitpunkt nicht
+  vorgeben. Andere Profiländerungen und erneutes Einlesen verändern ihn nicht.
+- Bei Gästen enthält `sessionStorage` unter `soullink:allowImageLoading` nur die
+  Entscheidung als `"true"` oder `"false"` für die Tab-Sitzung, ohne Zeitstempel.
+  Es erfolgt keine Übermittlung dieser Gastentscheidung an die Datenbank. Bei gesperrtem
+  Browserspeicher bleibt die Entscheidung nur im Arbeitsspeicher.
+- Eine neue ausdrückliche Auswahl ersetzt die vorherige Entscheidung und bei
+  Konten deren Zeitpunkt. Es werden weder eine Entscheidungshistorie noch eine Textversion,
+  Gastkennung, zusätzliche IP-Adresse oder eine neue Aufbewahrungsfrist erfasst.
+  Vorhandene lokale Entscheidungen ohne Zeitpunkt erhalten keinen erfundenen
+  Zeitstempel. Laut Betreiber war der bisherige Einwilligungsablauf noch nicht live.
+- Texte und Dialogabläufe beider Sprachen bleiben über die Git-Historie erhalten.
+  Für die betriebliche Dokumentation sind erfolgreiche Deployments und Rollbacks
+  je Umgebung mit tatsächlichem Zeitpunkt und Commit zu archivieren. Ein Commit-
+  oder Build-Zeitpunkt allein belegt nicht den Zeitpunkt der Veröffentlichung.
+  Dies ist eine Betriebsaufgabe; die Zeitstempel-Migration erzeugt kein
+  Deployment-Archiv. Screenshots der Dialoge und Tests der Bildsperre ergänzen
+  die Prozessdokumentation.
+- Grenze der Zuordnung: Ein länger geöffneter Tab oder eine zwischengespeicherte
+  Seite kann beim Klick noch ein älteres Release anzeigen. Auch die gewählte
+  Sprache lässt sich aus dem Zeitstempel allein nicht ermitteln. Der Zeitstempel
+  und die Release-Dokumentation ermöglichen eine zeitliche Einordnung, garantieren
+  aber keine eindeutige Rekonstruktion des tatsächlich angezeigten Texts.
+- Die DSK beschreibt in ihrer Orientierungshilfe Digitale Dienste, Randnummern
+  84–85, einen Nachweis über dokumentierte Prozesse und gespeicherte Entscheidungen.
+  Die Dokumentation umfasst auch frühere Texte, Konfigurationen und technische
+  Abläufe. Ein zusätzliches personenbezogenes Ereignisprotokoll wird mit dieser
+  Umsetzung nicht eingeführt.
 
 ## Primärquellen
 
@@ -58,9 +115,12 @@ Server-Konfiguration, Log-Aufbewahrung, Backup-Verfahren oder Einwilligungsdaten
 - [Offizielle Vector-Konfiguration: Protokollquellen und Felder](https://github.com/supabase/supabase/blob/master/docker/volumes/logs/vector.yml)
 - [Supabase: Analytics-Konfiguration](https://supabase.com/docs/guides/self-hosting/analytics/config)
 - [GitHub: Datenkategorien und internationale Übermittlungen](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement)
+- [Offizielles DPF-Register: GitHub, Teilnehmer 6174](https://www.dataprivacyframework.gov/participant/6174)
+- [Europäische Kommission: geltende Angemessenheitsbeschlüsse](https://commission.europa.eu/law/law-topic/data-protection/international-dimension-data-protection/adequacy-decisions_en)
 - [Hetzner: Impressum](https://www.hetzner.com/de/legal/legal-notice/)
 - [Hetzner: Datenschutz und Auftragsverarbeitung](https://docs.hetzner.com/de/general/company-and-policy/data-protection-at-hetzner/)
 - [DSGVO, insbesondere Art. 6, 7, 13, 15–22, 28 und 44 ff.](https://eur-lex.europa.eu/eli/reg/2016/679/oj?locale=de)
+- [DSK: Orientierungshilfe Digitale Dienste, insbesondere Randnummern 84–85](https://www.datenschutzkonferenz-online.de/media/oh/OH_Digitale_Dienste.pdf)
 - [§ 25 TDDDG](https://www.gesetze-im-internet.de/ttdsg/__25.html)
 
 Die recherchierten Upstream-Konfigurationen beschreiben Standards, nicht den

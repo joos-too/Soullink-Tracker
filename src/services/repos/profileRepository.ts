@@ -14,6 +14,7 @@ export interface UserProfilePreferences {
   wikiId: string | null;
   multiLocaleSearch: boolean;
   allowImageLoading: boolean | null;
+  imageConsentUpdatedAt: string | null;
 }
 
 const normalizeEmail = (email?: string | null): string =>
@@ -41,7 +42,7 @@ const getSupabaseProfile = async (userId: string) => {
   const { data, error } = await getSupabaseClient()
     .from("profiles")
     .select(
-      "display_name, display_name_requires_update, use_generation_sprites, use_sprites_in_team_table, wiki_id, multi_locale_search, allow_image_loading",
+      "display_name, display_name_requires_update, use_generation_sprites, use_sprites_in_team_table, wiki_id, multi_locale_search, allow_image_loading, image_consent_updated_at",
     )
     .eq("id", userId)
     .single();
@@ -72,6 +73,7 @@ export const getUserProfilePreferences = async (
     wikiId: profile.wiki_id,
     multiLocaleSearch: profile.multi_locale_search,
     allowImageLoading: profile.allow_image_loading,
+    imageConsentUpdatedAt: profile.image_consent_updated_at,
   };
 };
 

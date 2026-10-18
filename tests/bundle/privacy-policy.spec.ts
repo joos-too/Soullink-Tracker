@@ -35,7 +35,12 @@ for (const language of ["de", "en"]) {
       }),
     ).toBeAttached();
     await expect(
-      page.getByText("Hetzner Online GmbH", { exact: false }),
+      page
+        .getByRole("region", {
+          name: "3. Hosting und selbst gehostete Dienste",
+          exact: true,
+        })
+        .getByText("Hetzner Online GmbH", { exact: false }),
     ).toBeAttached();
     await expect(
       page.getByRole("heading", { name: "13. Ihre Rechte", exact: true }),
