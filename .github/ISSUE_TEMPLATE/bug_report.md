@@ -27,13 +27,13 @@ assignees: ""
 ## Screenshots
 
 <!-- If applicable, add screenshots to help explain the problem
-you can either drag and drop the image here or just ctrl+v -->
+you can either drag and drop the image here or just ctrl + v -->
 
 ## Environment
 
 - **Browser**: <!-- e.g. Chrome or Firefox -->
 - **Hosting**: <!-- Official app or self-hosted? -->
-- **Release**: <!-- e.g. latest, or a specific version/tag -->
+- **Release**: <!-- if selfhosted: e.g. latest, or a specific version/tag -->
 
 ## Additional Context
 
