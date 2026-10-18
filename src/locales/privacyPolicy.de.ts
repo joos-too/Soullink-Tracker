@@ -14,10 +14,10 @@ export const privacyPolicyDe = {
   draftDescription:
     "Dieser Entwurf beschreibt den derzeit vorgesehenen Betrieb des Soullink Trackers. Die folgenden offenen Angaben müssen vor Verwendung als abschließende Datenschutzerklärung geprüft und ergänzt werden:",
   openPoints: [
-    "Den tatsächlich abgeschlossenen Auftragsverarbeitungsvertrag mit Hetzner und den Standort der eingesetzten Server bestätigen.",
     "Die tatsächlichen Aufbewahrungs- und Löschfristen für Webserver-, Docker-, Supabase-/Logflare-, Authentifizierungs- und SMTP-Protokolle prüfen und festlegen. Aus der Standardkonfiguration ergibt sich keine hier verifizierte einheitliche Frist.",
     "Prüfen, ob neben dem laufenden Datenbestand manuelle Sicherungen, Migrationskopien, Server-Snapshots oder Backups des Hosters bestehen. Der Entwurf geht bisher von keinem zusätzlich eingerichteten regelmäßigen Backup-Verfahren aus.",
-    "Den angenommenen selbst gehosteten SMTP-Betrieb, etwaige zusätzliche Dienstleister sowie die Nachweisbarkeit erteilter Einwilligungen bestätigen.",
+    "Die konkreten Leistungs- und Verarbeitungsbedingungen des genutzten Hetzner-SMTP-Dienstes einschließlich Verarbeitungsstandorten und Löschfristen prüfen.",
+    "Die Einbindung der Gmail-Kontaktadresse und mögliche Drittlandverarbeitungen bei Gmail und GitHub sowie die Nachweisbarkeit erteilter Einwilligungen prüfen.",
   ],
   sections: [
     {
@@ -48,10 +48,10 @@ export const privacyPolicyDe = {
       id: "hosting",
       title: "3. Hosting und selbst gehostete Dienste",
       paragraphs: [
-        "Wir betreiben die Website, die Datenbank und die Authentifizierung auf einem eigenen Server bei folgendem Hosting-Anbieter:",
+        "Wir betreiben die Website, die Datenbank und die Authentifizierung auf einem eigenen Server mit Standort in Deutschland bei folgendem Hosting-Anbieter:",
         "Hetzner Online GmbH\nIndustriestr. 25\n91710 Gunzenhausen\nDeutschland",
-        "Bei Hetzner werden die für den Betrieb erforderlichen Daten verarbeitet, insbesondere technische Verbindungsdaten sowie die auf dem Server gespeicherten Konto- und Tracker-Daten. Rechtsgrundlagen sind Art. 6 Abs. 1 lit. b DSGVO für die Bereitstellung der gewünschten Funktionen und Art. 6 Abs. 1 lit. f DSGVO für den sicheren und zuverlässigen Betrieb. Der Einsatz von Hetzner als Auftragsverarbeiter ist nach Art. 28 DSGVO abzusichern; die Bestätigung des abgeschlossenen AVV ist oben als offener Punkt ausgewiesen.",
-        "Für Datenbank, Anmeldung und Echtzeit-Synchronisierung verwenden wir selbst gehostete Supabase-Software. Allein durch diese Verwendung werden Konto- und Tracker-Daten nicht an einen von Supabase betriebenen Cloud-Dienst ausgelagert. Die technische Protokollauswertung mit Vector und Logflare sowie der für System-E-Mails angenommene SMTP-Server werden ebenfalls selbst betrieben.",
+        "Bei Hetzner werden die für den Betrieb erforderlichen Daten verarbeitet, insbesondere technische Verbindungsdaten sowie die auf dem Server gespeicherten Konto- und Tracker-Daten. Rechtsgrundlagen sind Art. 6 Abs. 1 lit. b DSGVO für die Bereitstellung der gewünschten Funktionen und Art. 6 Abs. 1 lit. f DSGVO für den sicheren und zuverlässigen Betrieb. Mit Hetzner haben wir einen Auftragsverarbeitungsvertrag nach Art. 28 DSGVO abgeschlossen.",
+        "Für Datenbank, Anmeldung und Echtzeit-Synchronisierung verwenden wir selbst gehostete Supabase-Software. Allein durch diese Verwendung werden Konto- und Tracker-Daten nicht an einen von Supabase betriebenen Cloud-Dienst ausgelagert. Die technische Protokollauswertung mit Vector und Logflare wird ebenfalls selbst betrieben. Für den Versand von System-E-Mails nutzen wir den SMTP-Dienst von Hetzner, wie in Abschnitt 10 beschrieben.",
       ],
       links: [
         {
@@ -137,9 +137,9 @@ export const privacyPolicyDe = {
       id: "email",
       title: "10. System-E-Mails und Kontaktanfragen",
       paragraphs: [
-        "Bestätigungs- und Wiederherstellungs-E-Mails werden nach der für diesen Entwurf zugrunde gelegten Konfiguration über einen selbst gehosteten SMTP-Server versendet. Dabei werden insbesondere Empfängeradresse, Nachrichteninhalt, erforderliche Bestätigungs- oder Wiederherstellungslinks sowie technische Zustellinformationen verarbeitet. Zur Zustellung werden Nachrichten an die Mailserver Ihres E-Mail-Anbieters weitergegeben. Wir setzen für diese Systemnachrichten keinen zusätzlich beauftragten externen Versanddienst voraus.",
+        "Bestätigungs- und Wiederherstellungs-E-Mails werden über den SMTP-Dienst der Hetzner Online GmbH versendet. Dabei verarbeitet Hetzner insbesondere die Empfängeradresse, den Nachrichteninhalt, erforderliche Bestätigungs- oder Wiederherstellungslinks sowie technische Zustellinformationen. Zur Zustellung werden Nachrichten an die Mailserver Ihres E-Mail-Anbieters weitergegeben. Die Angaben zu Hetzner und zum abgeschlossenen Auftragsverarbeitungsvertrag finden Sie in Abschnitt 3.",
         "Die Verarbeitung der System-E-Mails erfolgt zur Bereitstellung und Absicherung des gewünschten Kontos nach Art. 6 Abs. 1 lit. b DSGVO beziehungsweise Art. 6 Abs. 1 lit. f DSGVO. Nachrichtenwarteschlangen und Zustellprotokolle können bis zur Zustellung, zum endgültigen Fehlschlagen des Versands oder entsprechend den eingerichteten Protokollregeln bestehen bleiben. Die konkreten Fristen des SMTP-Betriebs sind noch zu prüfen; eine bestimmte Aufbewahrungsdauer wird im Entwurf nicht behauptet.",
-        "Wenn Sie uns per E-Mail oder Telefon kontaktieren, verarbeiten wir die mitgeteilten Kontaktdaten und den Inhalt Ihrer Anfrage zur Bearbeitung. Rechtsgrundlage ist bei kontobezogenen Anliegen Art. 6 Abs. 1 lit. b DSGVO, bei sonstigen Anfragen unser berechtigtes Interesse an deren Bearbeitung nach Art. 6 Abs. 1 lit. f DSGVO und bei der Erfüllung gesetzlicher Pflichten Art. 6 Abs. 1 lit. c DSGVO. Die im Verantwortlichenabschnitt genannte Gmail-Adresse ist von dem hier angenommenen SMTP-Versand der App zu unterscheiden; bei Kontakt an diese Adresse erfolgt die Verarbeitung auch über den zugehörigen E-Mail-Anbieter. Dessen Einbindung und mögliche Drittlandverarbeitung sind vor Abschluss dieses Entwurfs gesondert zu prüfen.",
+        "Wenn Sie uns per E-Mail oder Telefon kontaktieren, verarbeiten wir die mitgeteilten Kontaktdaten und den Inhalt Ihrer Anfrage zur Bearbeitung. Rechtsgrundlage ist bei kontobezogenen Anliegen Art. 6 Abs. 1 lit. b DSGVO, bei sonstigen Anfragen unser berechtigtes Interesse an deren Bearbeitung nach Art. 6 Abs. 1 lit. f DSGVO und bei der Erfüllung gesetzlicher Pflichten Art. 6 Abs. 1 lit. c DSGVO. Die im Verantwortlichenabschnitt genannte Gmail-Adresse ist vom SMTP-Versand der App über Hetzner zu unterscheiden; bei Kontakt an diese Adresse erfolgt die Verarbeitung auch über den zugehörigen E-Mail-Anbieter. Dessen Einbindung und mögliche Drittlandverarbeitung sind vor Abschluss dieses Entwurfs gesondert zu prüfen.",
         "Kontaktanfragen werden gespeichert, solange sie zur Bearbeitung erforderlich sind. Danach werden sie gelöscht, soweit keine gesetzlichen Aufbewahrungspflichten oder erforderlichen Gründe zur Geltendmachung, Ausübung oder Verteidigung von Rechtsansprüchen entgegenstehen.",
       ],
     },
@@ -156,7 +156,7 @@ export const privacyPolicyDe = {
       id: "empfaenger",
       title: "12. Empfänger, externe Verweise und Sicherheit",
       paragraphs: [
-        "Empfänger können im beschriebenen Umfang der Hosting-Anbieter, technisch notwendige E-Mail-Empfänger beziehungsweise deren Mailserver, berechtigte Tracker-Mitglieder sowie bei öffentlichen Freigaben die Öffentlichkeit sein. Nach Einwilligung kommen die genannten GitHub-Dienste für externe Bilder hinzu. Eine Übermittlung an Behörden oder weitere Stellen erfolgt, soweit hierfür eine gesetzliche Pflicht oder andere zulässige Grundlage besteht.",
+        "Empfänger können im beschriebenen Umfang Hetzner als Hosting- und SMTP-Anbieter, technisch notwendige E-Mail-Empfänger beziehungsweise deren Mailserver, bei Kontaktanfragen der Anbieter unserer Kontakt-Mailbox, berechtigte Tracker-Mitglieder sowie bei öffentlichen Freigaben die Öffentlichkeit sein. Nach Einwilligung kommen die genannten GitHub-Dienste für externe Bilder hinzu. Eine Übermittlung an Behörden oder weitere Stellen erfolgt, soweit hierfür eine gesetzliche Pflicht oder andere zulässige Grundlage besteht.",
         "Links zu GitHub oder Pokémon-Nachschlagewerken sind von automatisch geladenen Bildern zu unterscheiden: Wenn Sie einen externen Link öffnen, verlassen Sie unser Angebot und Ihr Browser stellt eine Verbindung zum Zielanbieter her. Für die dortige Verarbeitung gelten dessen Datenschutzhinweise.",
         "Die Anwendung verwendet HTTPS zur geschützten Übertragung. Zugriffsrechte begrenzen den Zugriff auf Konto- und Tracker-Daten entsprechend der jeweiligen Berechtigungen. Eine vollständige Sicherheit jeder Internetübertragung kann dennoch nicht gewährleistet werden.",
       ],

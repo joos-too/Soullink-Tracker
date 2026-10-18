@@ -6,8 +6,12 @@ auch bei englischer Oberflächensprache. Textquelle: `src/locales/privacyPolicy.
 ## Zugrunde gelegter Betrieb
 
 - Laut Betreiber laufen Frontend, Datenbank und Authentifizierung auf dem eigenen
-  Hetzner-Server. Der Entwurf setzt für System-E-Mails einen selbst gehosteten
-  SMTP-Server voraus.
+  Hetzner-Server mit Standort in Deutschland. Ein Auftragsverarbeitungsvertrag
+  mit Hetzner ist abgeschlossen. Diese Angaben wurden am 18. Oktober 2026 bestätigt.
+- Für System-E-Mails wird laut Betreiber der SMTP-Dienst von Hetzner verwendet.
+  Die frühere Annahme eines selbst betriebenen SMTP-Servers entfällt. Der genaue
+  SMTP-Tarif, dessen Verarbeitungsstandorte und Löschfristen sind damit noch nicht
+  bestätigt; der Standort des App-Servers belegt diese Angaben nicht.
 - Die Projektanleitung aktiviert Supabase Logs & Analytics mit einem separaten
   Compose-Override. Die offizielle Konfiguration verwendet Vector zur Sammlung
   von Container-Protokollen und Logflare mit einem eigenen PostgreSQL-Backend.
@@ -27,15 +31,16 @@ auch bei englischer Oberflächensprache. Textquelle: `src/locales/privacyPolicy.
 
 ## Vor einer abschließenden Veröffentlichung bestätigen
 
-1. Serverstandort und abgeschlossenen Hetzner-AVV prüfen.
+1. Konkreten Hetzner-SMTP-Dienst und dessen Verarbeitungsstandorte sowie die
+   Abdeckung der genutzten Leistungen durch den abgeschlossenen AVV prüfen.
 2. Versionen und konkrete Retention/Löschmechanismen von Logflare, PostgreSQL/Auth,
    Docker, Reverse Proxy/Webserver und SMTP prüfen; Fristen festlegen und technisch
    durchsetzen. Auth-Auditdaten und Docker-Logs sind nicht mit dem Bild-Cache oder
    einem einzigen Logflare-Speicher gleichzusetzen.
 3. Bestehende Backups, Snapshots und frühere Migrationskopien inventarisieren und
    gegebenenfalls deren Löschfristen ergänzen.
-4. Eigenen SMTP-Betrieb bestätigen. Die öffentliche Kontaktadresse ist weiterhin
-   eine Gmail-Adresse; deren Verarbeitung ist vom eigenen Systemmail-Versand
+4. Die öffentliche Kontaktadresse ist weiterhin eine Gmail-Adresse; deren
+   Verarbeitung ist vom Systemmail-Versand über Hetzner
    getrennt zu bewerten und bei Beibehaltung zu konkretisieren.
 5. GitHubs tatsächlich anwendbare Drittland-Transfergrundlage prüfen. Die
    Einwilligung in externe Bilder ersetzt diese Prüfung nicht.
@@ -60,3 +65,6 @@ Server-Konfiguration, Log-Aufbewahrung, Backup-Verfahren oder Einwilligungsdaten
 
 Die recherchierten Upstream-Konfigurationen beschreiben Standards, nicht den
 ausgelesenen Istzustand des Produktionsservers.
+Die Hetzner-Dokumentation nennt für Webhosting und Managed Server eigene
+Aufbewahrungsfristen. Diese werden ohne Bestätigung des eingesetzten SMTP-Produkts
+nicht als Fristen für den konkreten Systemmail-Versand übernommen.
