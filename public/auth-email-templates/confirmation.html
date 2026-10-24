@@ -203,10 +203,26 @@
                 style="padding: 24px; background-color: #111827; color: #d1d5db"
               >
                 <p style="margin: 0; font-size: 12px; line-height: 1.5">
-                  {{ if eq .Data.language "de" }}Diese Email wurde automatisch
-                  versendet. Bitte antworte nicht auf diese Nachricht.{{ else
-                  }}This email was sent automatically. Please do not reply to
-                  this message.{{ end }}
+                  {{ if eq .Data.language "de" }}Diese E-Mail wurde automatisch
+                  von soullink-tracker.de versendet.<br />Bitte antworte nicht
+                  auf diese Nachricht.{{ else }}This email was sent
+                  automatically by soullink-tracker.de.<br />Please do not reply
+                  to this message.{{ end }}
+                </p>
+                <p style="margin: 8px 0 0; font-size: 12px; line-height: 1.5">
+                  <a
+                    href="https://soullink-tracker.de/legalnotice"
+                    style="color: #d1d5db"
+                    >{{ if eq .Data.language "de" }}Impressum{{ else }}Legal
+                    notice{{ end }}</a
+                  >
+                  &bull;
+                  <a
+                    href="https://soullink-tracker.de/privacypolicy"
+                    style="color: #d1d5db"
+                    >{{ if eq .Data.language "de" }}Datenschutz{{ else }}Privacy
+                    policy{{ end }}</a
+                  >
                 </p>
               </td>
             </tr>
