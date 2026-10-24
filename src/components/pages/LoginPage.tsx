@@ -1,3 +1,4 @@
+import PageLayout from "@/src/components/layout/PageLayout";
 import React, { useState } from "react";
 import { requestPasswordReset, signIn } from "@/src/services/backend/auth.ts";
 import {
@@ -7,6 +8,7 @@ import {
 } from "@/src/styles/focusRing.ts";
 import { useTranslation } from "react-i18next";
 import PasswordInput from "@/src/components/auth/PasswordInput.tsx";
+import StaySignedInCheckbox from "@/src/components/auth/StaySignedInCheckbox.tsx";
 
 type LoginPageProps = {
   onSwitchToRegister: () => void;
@@ -15,6 +17,7 @@ type LoginPageProps = {
 const LoginPage: React.FC<LoginPageProps> = ({ onSwitchToRegister }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [staySignedIn, setStaySignedIn] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
@@ -26,7 +29,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onSwitchToRegister }) => {
     setError(null);
     setLoading(true);
     try {
-      await signIn(email, password);
+      await signIn(email, password, staySignedIn);
     } catch (err) {
       console.error("Error signing in", err);
       setError(t("auth.login.error"));
@@ -53,7 +56,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onSwitchToRegister }) => {
 
   return (
     <div className="bg-[#f0f0f0] dark:bg-gray-900 min-h-screen p-2 sm:p-4 md:p-8 text-gray-800 flex items-center justify-center">
-      <div className="w-full max-w-md">
+      <PageLayout width="auth" compactFooter>
         <div className="bg-white dark:bg-gray-800 shadow-[6px_6px_0_0_rgba(31,41,55,0.25)] dark:shadow-[6px_6px_0_0_rgba(0,0,0,0.35)] border border-gray-200 dark:border-gray-700 p-6 sm:p-8 rounded-lg">
           <header className="text-center pb-4 border-b border-gray-200 dark:border-gray-700">
             <img
@@ -130,7 +133,12 @@ const LoginPage: React.FC<LoginPageProps> = ({ onSwitchToRegister }) => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
-                <div className="mt-2 text-right">
+                <div className="mt-4 flex items-center justify-between gap-3">
+                  <StaySignedInCheckbox
+                    checked={staySignedIn}
+                    disabled={loading}
+                    onChange={setStaySignedIn}
+                  />
                   <button
                     type="button"
                     onClick={() => {
@@ -183,7 +191,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onSwitchToRegister }) => {
             )}
           </form>
         </div>
-      </div>
+      </PageLayout>
     </div>
   );
 };

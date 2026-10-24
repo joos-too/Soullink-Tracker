@@ -12,6 +12,7 @@ import LoadingScreen from "@/src/app/LoadingScreen";
 import { getInitialActiveTrackerId } from "@/src/app/trackerStorage";
 
 import RegisterPage from "@/src/components/pages/RegisterPage";
+import LegalPage from "@/src/components/pages/LegalPage";
 const HomeRoute = lazy(() => import("@/src/app/HomeRoute"));
 const TrackerRoute = lazy(() => import("@/src/app/TrackerRoute"));
 const AccountRoute = lazy(() => import("@/src/app/AccountRoute"));
@@ -50,10 +51,19 @@ function PasswordResetRoute() {
 function AppRoutes() {
   const { authLoading } = useAppSession();
   const { pathname } = useLocation();
-  if (authLoading && pathname !== "/reset") return <LoadingScreen />;
+  if (
+    authLoading &&
+    !["/reset", "/legalnotice", "/privacypolicy"].includes(pathname)
+  )
+    return <LoadingScreen />;
   return (
     <Suspense fallback={<LoadingScreen />}>
       <Routes>
+        <Route path="/legalnotice" element={<LegalPage kind="legalNotice" />} />
+        <Route
+          path="/privacypolicy"
+          element={<LegalPage kind="privacyPolicy" />}
+        />
         <Route
           path="/"
           element={
