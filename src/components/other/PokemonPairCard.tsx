@@ -38,7 +38,7 @@ const PokemonPairCard: React.FC<PokemonPairCardProps> = ({
     <div className="relative p-2 border rounded-md text-xs border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700">
       {status && (
         <div
-          className={`absolute left-2 top-2 rounded-full px-2 py-0.5 text-[10px] font-semibold ${status === "lost" ? "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200" : "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-200"}`}
+          className={`absolute left-2 top-2 rounded-full px-2 py-0.5 text-[10px] font-semibold ${status === "lost" ? "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400" : "bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400"}`}
         >
           {status === "lost"
             ? t("graveyard.statusLost")
