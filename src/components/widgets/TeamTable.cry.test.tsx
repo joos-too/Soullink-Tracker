@@ -8,6 +8,7 @@ import { ImageLoadingContext } from "@/src/contexts/ImageLoadingContext.ts";
 import { ImageConsentContext } from "@/src/contexts/ImageConsentContext.ts";
 import TeamTable from "./TeamTable.tsx";
 import { playLatestPokemonCry } from "@/src/services/pokemonCries.ts";
+import { CryVolumeContext } from "@/src/contexts/CryVolumeContext.ts";
 
 vi.mock("@/src/services/pokemonCries.ts", () => ({
   playLatestPokemonCry: vi.fn().mockResolvedValue(undefined),
@@ -45,7 +46,9 @@ describe("TeamTable Pokémon cries", () => {
     const user = userEvent.setup();
     render(
       <ImageLoadingContext.Provider value={true}>
-        <TeamTable {...props} />
+        <CryVolumeContext.Provider value={60}>
+          <TeamTable {...props} />
+        </CryVolumeContext.Provider>
       </ImageLoadingContext.Provider>,
     );
 
@@ -55,7 +58,7 @@ describe("TeamTable Pokémon cries", () => {
     expect(playLatestPokemonCry).not.toHaveBeenCalled();
 
     await user.click(sprite);
-    expect(playLatestPokemonCry).toHaveBeenCalledWith(1);
+    expect(playLatestPokemonCry).toHaveBeenCalledWith(1, 60);
 
     sprite.focus();
     await user.keyboard("{Enter} ");

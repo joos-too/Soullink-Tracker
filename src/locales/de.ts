@@ -713,6 +713,12 @@ export const de = {
     sprites: {
       title: "Sprites",
     },
+    cries: {
+      title: "Pokémon-Rufe",
+      description:
+        "Lege fest, wie laut Pokémon-Rufe beim klicken auf einen Pokémon Sprite abgespielt werden.",
+      volume: "Lautstärke der Rufe",
+    },
     wiki: {
       title: "Wiki-Anbieter",
       description:

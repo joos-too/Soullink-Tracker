@@ -38,6 +38,11 @@ import { ImageConsentContext } from "@/src/contexts/ImageConsentContext";
 import { setImageCachingAllowed } from "@/src/services/imageCache";
 import ImageConsentModal from "@/src/components/modals/ImageConsentModal";
 import { useLocation } from "react-router-dom";
+import {
+  CryVolumeContext,
+  readStoredCryVolumePercent,
+  storeCryVolumePercent,
+} from "@/src/contexts/CryVolumeContext.ts";
 
 function useSession() {
   const { user, loading } = useAuthSession();
@@ -67,6 +72,9 @@ function useSession() {
   const [userWikiId, setUserWikiId] = useState<string | null>(null);
   const [userMultiLocaleSearch, setUserMultiLocaleSearch] = useState(false);
   const [userDisplayName, setUserDisplayName] = useState("");
+  const [cryVolumePercent, setCryVolumePercent] = useState(
+    readStoredCryVolumePercent,
+  );
   const [imageConsent, setImageConsent] = useState<{
     userId: string;
     value: boolean | null;
@@ -161,6 +169,10 @@ function useSession() {
     [user],
   );
 
+  const handleCryVolumeChange = useCallback((nextVolumePercent: number) => {
+    setCryVolumePercent(storeCryVolumePercent(nextVolumePercent));
+  }, []);
+
   const effectiveWikiId: WikiId =
     (userWikiId as WikiId | null) ??
     ((i18n.resolvedLanguage || i18n.language || "")
@@ -242,12 +254,14 @@ function useSession() {
     userMultiLocaleSearch,
     userDisplayName,
     userDisplayNameRequiresUpdate,
+    cryVolumePercent,
     effectiveWikiId,
     handleGenerationSpritesToggle,
     handleSpritesInTeamTableToggle,
     handleWikiChange,
     handleMultiLocaleSearchToggle,
     handleDisplayNameChange,
+    handleCryVolumeChange,
   };
 }
 const AppSessionContext = createContext<ReturnType<typeof useSession> | null>(
@@ -298,41 +312,44 @@ export function AppSessionProvider({
   const openConsent = useCallback(() => setManualActor(actor), [actor]);
   return (
     <AppSessionContext.Provider value={session}>
-      <ImageLoadingContext.Provider value={imagesAllowed}>
-        <ImageConsentContext.Provider
-          value={{
-            decision,
-            isOpen: showConsent,
-            openConsent: inApp && ready ? openConsent : null,
-            showGuestFooterEntry:
-              ready && !session.user && pathname.startsWith("/tracker/"),
-          }}
-        >
-          {children}
-        </ImageConsentContext.Provider>
-        {showConsent && (
-          <ImageConsentModal
-            key={actor}
-            requireDecision={decision === null}
-            onClose={() => setManualActor(null)}
-            onChoose={async (allowed) => {
-              if (session.user) await session.handleImageLoadingChange(allowed);
-              else {
-                try {
-                  sessionStorage.setItem(
-                    "soullink:allowImageLoading",
-                    String(allowed),
-                  );
-                } catch {
-                  /* Keep the choice in memory if storage is unavailable. */
-                }
-                setAnonymousConsent(allowed);
-              }
-              setManualActor(null);
+      <CryVolumeContext.Provider value={session.cryVolumePercent}>
+        <ImageLoadingContext.Provider value={imagesAllowed}>
+          <ImageConsentContext.Provider
+            value={{
+              decision,
+              isOpen: showConsent,
+              openConsent: inApp && ready ? openConsent : null,
+              showGuestFooterEntry:
+                ready && !session.user && pathname.startsWith("/tracker/"),
             }}
-          />
-        )}
-      </ImageLoadingContext.Provider>
+          >
+            {children}
+          </ImageConsentContext.Provider>
+          {showConsent && (
+            <ImageConsentModal
+              key={actor}
+              requireDecision={decision === null}
+              onClose={() => setManualActor(null)}
+              onChoose={async (allowed) => {
+                if (session.user)
+                  await session.handleImageLoadingChange(allowed);
+                else {
+                  try {
+                    sessionStorage.setItem(
+                      "soullink:allowImageLoading",
+                      String(allowed),
+                    );
+                  } catch {
+                    /* Keep the choice in memory if storage is unavailable. */
+                  }
+                  setAnonymousConsent(allowed);
+                }
+                setManualActor(null);
+              }}
+            />
+          )}
+        </ImageLoadingContext.Provider>
+      </CryVolumeContext.Provider>
     </AppSessionContext.Provider>
   );
 }

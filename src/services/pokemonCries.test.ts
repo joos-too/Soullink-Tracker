@@ -22,6 +22,7 @@ describe("pokemon cries", () => {
       pause = vi.fn();
       play = vi.fn().mockResolvedValue(undefined);
       addEventListener = vi.fn();
+      volume = 1;
 
       constructor(public src: string) {
         instances.push(this);
@@ -33,10 +34,12 @@ describe("pokemon cries", () => {
     expect(instances).toHaveLength(0);
     await playLatestPokemonCry(1);
     expect(instances[0]?.src).toBe(getLatestPokemonCryUrl(1));
+    expect(instances[0]?.volume).toBe(0.25);
     expect(instances[0]?.play).toHaveBeenCalledOnce();
 
-    await playLatestPokemonCry(2);
+    await playLatestPokemonCry(2, 80);
     expect(instances[0]?.pause).toHaveBeenCalledOnce();
     expect(instances[1]?.src).toBe(getLatestPokemonCryUrl(2));
+    expect(instances[1]?.volume).toBe(0.8);
   });
 });

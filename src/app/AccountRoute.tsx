@@ -19,6 +19,8 @@ export default function AccountRoute() {
     allowImageLoading,
     imageLoadingAllowed,
     handleImageLoadingChange,
+    cryVolumePercent,
+    handleCryVolumeChange,
   } = useAppSession();
   const navigate = useNavigate();
   const handleNavigateHome = () => navigate("/");
@@ -48,6 +50,8 @@ export default function AccountRoute() {
       onWikiChange={handleWikiChange}
       multiLocaleSearch={userMultiLocaleSearch}
       onMultiLocaleSearchToggle={handleMultiLocaleSearchToggle}
+      cryVolumePercent={cryVolumePercent}
+      onCryVolumeChange={handleCryVolumeChange}
     />
   );
 }

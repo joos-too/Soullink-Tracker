@@ -7,6 +7,7 @@ import i18n from "@/src/i18n";
 import { AppSessionProvider, useAppSession } from "./AppSession";
 import SpriteImage from "@/src/components/other/SpriteImage";
 import AppFooter from "@/src/components/layout/AppFooter";
+import { CRY_VOLUME_STORAGE_KEY } from "@/src/contexts/CryVolumeContext.ts";
 
 const mocks = vi.hoisted(() => ({
   authLoading: false,
@@ -40,7 +41,8 @@ vi.mock("@/src/services/repos/profileRepository.ts", () => ({
 }));
 
 function Controls() {
-  const { handleImageLoadingChange } = useAppSession();
+  const { handleImageLoadingChange, handleCryVolumeChange, cryVolumePercent } =
+    useAppSession();
   return (
     <>
       <SpriteImage
@@ -52,6 +54,8 @@ function Controls() {
       >
         Withdraw
       </button>
+      <output data-testid="cry-volume">{cryVolumePercent}</output>
+      <button onClick={() => handleCryVolumeChange(60)}>Set volume</button>
       <AppFooter />
     </>
   );
@@ -71,6 +75,7 @@ const preferences = (allowImageLoading: boolean | null) => ({
 describe("account image consent", () => {
   beforeEach(async () => {
     sessionStorage.clear();
+    localStorage.removeItem(CRY_VOLUME_STORAGE_KEY);
     mocks.authLoading = false;
     await i18n.changeLanguage("en");
     mocks.user = {
@@ -251,5 +256,21 @@ describe("account image consent", () => {
     const { container } = render(app());
     await screen.findByRole("button", { name: "Allow external images" });
     expect(container.querySelector("img")).toBeNull();
+  });
+
+  it("loads and updates the locally stored cry volume", async () => {
+    localStorage.setItem(CRY_VOLUME_STORAGE_KEY, "70");
+    mocks.getPreferences.mockResolvedValue(preferences(true));
+    render(app());
+
+    await waitFor(() =>
+      expect(screen.getByTestId("cry-volume")).toHaveTextContent("70"),
+    );
+    await userEvent
+      .setup()
+      .click(screen.getByRole("button", { name: "Set volume" }));
+
+    expect(localStorage.getItem(CRY_VOLUME_STORAGE_KEY)).toBe("60");
+    expect(screen.getByTestId("cry-volume")).toHaveTextContent("60");
   });
 });

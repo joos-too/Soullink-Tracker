@@ -25,6 +25,7 @@ import { resolvePokemonLocationDisplay } from "@/src/services/search/locationSea
 import { normalizeLanguage } from "@/src/utils/language.ts";
 import { playLatestPokemonCry } from "@/src/services/pokemonCries.ts";
 import { useImageLoading } from "@/src/contexts/ImageLoadingContext.ts";
+import { useCryVolume } from "@/src/contexts/CryVolumeContext.ts";
 
 interface TeamTableProps {
   title: string;
@@ -102,6 +103,7 @@ const TeamTable: React.FC<TeamTableProps> = ({
 }) => {
   const { t, i18n } = useTranslation();
   const externalImagesAllowed = useImageLoading();
+  const cryVolumePercent = useCryVolume();
   const locale = normalizeLanguage(i18n.language);
   const [pairSession, setPairSession] = useState<PairModalSession | null>(null);
   const [evolutionSession, setEvolutionSession] =
@@ -291,7 +293,10 @@ const TeamTable: React.FC<TeamTableProps> = ({
                         : null;
                     const playCry = () => {
                       if (!pokemonId || !externalImagesAllowed) return;
-                      void playLatestPokemonCry(pokemonId).catch(() => {
+                      void playLatestPokemonCry(
+                        pokemonId,
+                        cryVolumePercent,
+                      ).catch(() => {
                         // Missing files and unsupported codecs should not
                         // interrupt tracker interaction.
                       });

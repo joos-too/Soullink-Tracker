@@ -12,6 +12,7 @@ import {
   FiRefreshCw,
   FiSave,
   FiUser,
+  FiVolume2,
 } from "react-icons/fi";
 import {
   focusRingClasses,
@@ -41,6 +42,8 @@ interface UserSettingsPageProps {
   onWikiChange: (id: WikiId) => void;
   multiLocaleSearch?: boolean;
   onMultiLocaleSearchToggle: (enabled: boolean) => void;
+  cryVolumePercent?: number;
+  onCryVolumeChange: (volumePercent: number) => void;
 }
 
 const UserSettingsPage: React.FC<UserSettingsPageProps> = ({
@@ -59,6 +62,8 @@ const UserSettingsPage: React.FC<UserSettingsPageProps> = ({
   onMultiLocaleSearchToggle,
   allowImageLoading,
   onImageLoadingChange,
+  cryVolumePercent = 25,
+  onCryVolumeChange,
 }) => {
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
   const [message, setMessage] = useState<string | null>(null);
@@ -68,11 +73,16 @@ const UserSettingsPage: React.FC<UserSettingsPageProps> = ({
   const [displayNameError, setDisplayNameError] = useState<string | null>(null);
   const [imageConsentSaving, setImageConsentSaving] = useState(false);
   const [imageConsentError, setImageConsentError] = useState(false);
+  const [cryVolumeDraft, setCryVolumeDraft] = useState(cryVolumePercent);
   const { t } = useTranslation();
 
   useEffect(() => {
     setDisplayNameDraft(displayName);
   }, [displayName]);
+
+  useEffect(() => {
+    setCryVolumeDraft(cryVolumePercent);
+  }, [cryVolumePercent]);
 
   const handleDisplayNameSave = async (event: React.SubmitEvent) => {
     event.preventDefault();
@@ -428,6 +438,56 @@ const UserSettingsPage: React.FC<UserSettingsPageProps> = ({
                 onChange={onSpritesInTeamTableToggle}
                 ariaLabel={t("settings.features.spritesInTeamTable.title")}
               />
+            </div>
+          </section>
+
+          <section className="pt-6 border-t border-gray-200 dark:border-gray-700 mt-6 space-y-4">
+            <div className="space-y-2">
+              <h2 className={sectionHeadingClasses}>
+                {t("userSettings.cries.title")}
+              </h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {t("userSettings.cries.description")}
+              </p>
+            </div>
+            <div className="flex items-center gap-4 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900/40">
+              <FiVolume2 className="shrink-0" size={22} aria-hidden="true" />
+              <div className="min-w-0 flex-1">
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <label
+                    htmlFor="cry-volume"
+                    className="font-medium text-gray-800 dark:text-gray-200"
+                  >
+                    {t("userSettings.cries.volume")}
+                  </label>
+                  <output
+                    htmlFor="cry-volume"
+                    className="min-w-12 text-right text-sm font-semibold tabular-nums text-gray-700 dark:text-gray-300"
+                  >
+                    {cryVolumeDraft}%
+                  </output>
+                </div>
+                <input
+                  id="cry-volume"
+                  type="range"
+                  min={0}
+                  max={100}
+                  step={1}
+                  value={cryVolumeDraft}
+                  aria-valuetext={`${cryVolumeDraft}%`}
+                  style={
+                    {
+                      "--cry-volume": `${cryVolumeDraft}%`,
+                    } as React.CSSProperties
+                  }
+                  onChange={(event) => {
+                    const volumePercent = Number(event.currentTarget.value);
+                    setCryVolumeDraft(volumePercent);
+                    onCryVolumeChange(volumePercent);
+                  }}
+                  className="cry-volume-slider w-full cursor-pointer"
+                />
+              </div>
             </div>
           </section>
 

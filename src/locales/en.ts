@@ -704,6 +704,12 @@ export const en = {
     sprites: {
       title: "Sprites",
     },
+    cries: {
+      title: "Pokémon cries",
+      description:
+        "Choose how loud Pokémon cries play when you click on a Pokémon sprite.",
+      volume: "Cry volume",
+    },
     wiki: {
       title: "Wiki-Provider",
       description:
