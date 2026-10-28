@@ -55,6 +55,35 @@ describe("SpriteImage", () => {
     expect(card).not.toHaveBeenCalled();
   });
 
+  it("uses a public GIF for blocked images and falls back to the public PNG", () => {
+    render(
+      <ImageConsentContext.Provider
+        value={{
+          decision: false,
+          isOpen: false,
+          openConsent: vi.fn(),
+          showGuestFooterEntry: false,
+        }}
+      >
+        <SpriteImage src="https://example.com/pokemon.png" alt="" />
+      </ImageConsentContext.Provider>,
+    );
+
+    const button = screen.getByRole("button");
+    expect(button).not.toHaveClass("border", "border-blue-500");
+    const gif = button.querySelector("img")!;
+    expect(gif).toHaveAttribute("src", "/github-image-blocked.gif");
+    expect(gif).toHaveStyle({ imageRendering: "pixelated" });
+
+    fireEvent.error(gif);
+    const png = button.querySelector("img")!;
+    expect(png).toHaveAttribute("src", "/github-image-blocked.png");
+
+    fireEvent.error(png);
+    expect(button.querySelector("img")).toBeNull();
+    expect(button.querySelector("svg")).toBeInTheDocument();
+  });
+
   it("preserves custom fallbacks and does not invent placeholders for missing sources", () => {
     const { container } = render(
       <ImageConsentContext.Provider

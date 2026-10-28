@@ -10,6 +10,41 @@ interface SpriteImageProps
   fallback?: React.ReactNode;
 }
 
+// Files in public are served from the site root. Prefer an animated
+// placeholder when present, then fall back to the static PNG.
+const BLOCKED_IMAGE_PLACEHOLDER_SOURCES = [
+  "/github-image-blocked.gif",
+  "/github-image-blocked.png",
+] as const;
+
+const BlockedImagePlaceholder: React.FC = () => {
+  const [sourceIndex, setSourceIndex] = useState(0);
+  const source = BLOCKED_IMAGE_PLACEHOLDER_SOURCES[sourceIndex];
+
+  if (!source) {
+    return (
+      <span
+        className="relative flex h-full w-full items-center justify-center"
+        aria-hidden="true"
+      >
+        <FiImage className="h-2/3 w-2/3" />
+        <FiSettings className="absolute bottom-0 right-0 h-1/2 w-1/2 rounded-full bg-blue-50 dark:bg-gray-800" />
+      </span>
+    );
+  }
+
+  return (
+    <img
+      src={source}
+      alt=""
+      aria-hidden="true"
+      className="h-full w-full object-contain"
+      style={{ imageRendering: "pixelated" }}
+      onError={() => setSourceIndex((current) => current + 1)}
+    />
+  );
+};
+
 const SpriteImageAttempt: React.FC<SpriteImageProps> = ({
   src,
   fallback,
@@ -78,7 +113,7 @@ const SpriteImage: React.FC<SpriteImageProps> = (props) => {
             .split(/\s+/)
             .filter((name) => name !== "pointer-events-none")
             .join(" ") ?? ""
-        } inline-flex shrink-0 cursor-pointer items-center justify-center rounded border border-blue-500 bg-blue-50 text-blue-700 hover:bg-blue-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:bg-gray-800 dark:text-blue-300 dark:hover:bg-gray-700`}
+        } inline-flex shrink-0 cursor-pointer items-center justify-center rounded bg-blue-50 text-blue-700 hover:bg-blue-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:bg-gray-800 dark:text-blue-300 dark:hover:bg-gray-700`}
         style={{
           width: props.width,
           height: props.height,
@@ -101,13 +136,7 @@ const SpriteImage: React.FC<SpriteImageProps> = (props) => {
           event.preventDefault();
         }}
       >
-        <span
-          className="relative flex h-full w-full items-center justify-center"
-          aria-hidden="true"
-        >
-          <FiImage className="h-2/3 w-2/3" />
-          <FiSettings className="absolute bottom-0 right-0 h-1/2 w-1/2 rounded-full bg-blue-50 dark:bg-gray-800" />
-        </span>
+        <BlockedImagePlaceholder />
       </button>
     );
   }
