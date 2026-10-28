@@ -422,6 +422,7 @@ export const en = {
   },
   team: {
     teamTitle: "Team",
+    playCry: "Play cry of {{pokemon}}",
     teamEmpty: "No Pokémon in the team yet",
     teamFull: "Team is full (max 6)",
     boxTitle: "Box",

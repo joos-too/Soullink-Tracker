@@ -425,6 +425,7 @@ export const de = {
   },
   team: {
     teamTitle: "Team",
+    playCry: "Ruf von {{pokemon}} abspielen",
     teamEmpty: "Noch keine Pokémon im Team",
     teamFull: "Team ist voll (max. 6)",
     boxTitle: "Box",

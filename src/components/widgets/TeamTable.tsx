@@ -23,6 +23,8 @@ import { getWikiUrlById, type WikiId } from "@/src/utils/wiki.ts";
 import { resolvePokemonDisplay } from "@/src/services/pokemons/pokemonDisplay.ts";
 import { resolvePokemonLocationDisplay } from "@/src/services/search/locationSearch.ts";
 import { normalizeLanguage } from "@/src/utils/language.ts";
+import { playLatestPokemonCry } from "@/src/services/pokemonCries.ts";
+import { useImageLoading } from "@/src/contexts/ImageLoadingContext.ts";
 
 interface TeamTableProps {
   title: string;
@@ -99,6 +101,7 @@ const TeamTable: React.FC<TeamTableProps> = ({
   canonicalLinkIds,
 }) => {
   const { t, i18n } = useTranslation();
+  const externalImagesAllowed = useImageLoading();
   const locale = normalizeLanguage(i18n.language);
   const [pairSession, setPairSession] = useState<PairModalSession | null>(null);
   const [evolutionSession, setEvolutionSession] =
@@ -286,6 +289,13 @@ const TeamTable: React.FC<TeamTableProps> = ({
                       pokemonId && wikiId
                         ? getWikiUrlById(pokemonId, wikiId as WikiId)
                         : null;
+                    const playCry = () => {
+                      if (!pokemonId || !externalImagesAllowed) return;
+                      void playLatestPokemonCry(pokemonId).catch(() => {
+                        // Missing files and unsupported codecs should not
+                        // interrupt tracker interaction.
+                      });
+                    };
                     return (
                       <React.Fragment
                         key={`player-cell-${pair.id}-${playerIndex}`}
@@ -296,8 +306,26 @@ const TeamTable: React.FC<TeamTableProps> = ({
                               <SpriteImage
                                 src={imgURL}
                                 alt=""
-                                className="block h-full w-full object-contain"
+                                role="button"
+                                tabIndex={0}
+                                title={t("team.playCry", {
+                                  pokemon: displayName,
+                                })}
+                                aria-label={t("team.playCry", {
+                                  pokemon: displayName,
+                                })}
+                                className="block h-full w-full cursor-pointer object-contain"
                                 loading="lazy"
+                                onClick={playCry}
+                                onKeyDown={(event) => {
+                                  if (
+                                    event.key !== "Enter" &&
+                                    event.key !== " "
+                                  )
+                                    return;
+                                  event.preventDefault();
+                                  playCry();
+                                }}
                               />
                             </div>
                           ) : (
