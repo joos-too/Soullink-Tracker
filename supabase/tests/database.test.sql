@@ -3,7 +3,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
 
-select plan(53);
+select plan(55);
 
 select has_table('public', 'profiles', 'profiles table exists');
 select has_table('public', 'trackers', 'trackers table exists');
@@ -91,8 +91,8 @@ select ok(
 );
 select is(
   (select min(schema_version) from public.tracker_states),
-  2,
-  'seeded tracker states use schema version 2'
+  3,
+  'seeded tracker states use schema version 3'
 );
 select ok(
   not exists (
@@ -266,7 +266,8 @@ select lives_ok(
   $$select public.update_tracker_state(
     '30000000-0000-0000-0000-000000000001',
     current_setting('test.tracker_initial_revision')::bigint,
-    (select state || '{"hardcoreModeEnabled":true}'::jsonb
+    (select jsonb_set(state || '{"hardcoreModeEnabled":true}'::jsonb,
+      '{graveyard,0,deathPlayerIndex}', '1'::jsonb)
      from public.tracker_states
      where tracker_id = '30000000-0000-0000-0000-000000000001')
   )$$,
@@ -280,6 +281,18 @@ select is(
   ),
   current_setting('test.tracker_initial_revision')::bigint + 1,
   'state RPC increments the revision'
+);
+select is(
+  (select schema_version from public.tracker_states
+   where tracker_id = '30000000-0000-0000-0000-000000000001'),
+  3,
+  'state RPC writes schema version 3'
+);
+select is(
+  (select state #> '{graveyard,0,deathPlayerIndex}' from public.tracker_states
+   where tracker_id = '30000000-0000-0000-0000-000000000001'),
+  '1'::jsonb,
+  'state RPC preserves the player responsible for a death'
 );
 select throws_ok(
   $$select public.update_tracker_state(

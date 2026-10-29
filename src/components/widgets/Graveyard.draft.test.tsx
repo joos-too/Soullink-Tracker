@@ -21,6 +21,91 @@ describe("Graveyard modal sessions", () => {
     await i18n.changeLanguage("en");
   });
 
+  it("restores dead links directly and keeps deletion for lost encounters", async () => {
+    const user = userEvent.setup();
+    const dead = {
+      ...lostPair(LINK_ID, "Route 1"),
+      isLost: false,
+      deathPlayerIndex: 0,
+    };
+    const lost = lostPair("70000000-0000-4000-8000-000000000008", "Route 2");
+    const onRestoreLink = vi.fn();
+    const onDeleteLink = vi.fn();
+    render(
+      <Graveyard
+        graveyard={[dead, lost]}
+        playerNames={["Red"]}
+        onEditPair={vi.fn()}
+        onRestoreLink={onRestoreLink}
+        onDeleteLink={onDeleteLink}
+      />,
+    );
+
+    expect(
+      screen.getAllByRole("button", { name: "Restore to box" }),
+    ).toHaveLength(1);
+    expect(screen.getAllByRole("button", { name: "Delete link" })).toHaveLength(
+      1,
+    );
+    await user.click(screen.getByRole("button", { name: "Restore to box" }));
+    expect(onRestoreLink).toHaveBeenCalledWith(dead);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Delete link" }));
+    expect(onDeleteLink).toHaveBeenCalledWith(lost);
+  });
+
+  it("asks who caused a legacy death before restoring it", async () => {
+    const user = userEvent.setup();
+    const dead = { ...lostPair(LINK_ID, "Route 1"), isLost: false };
+    const onRestoreLink = vi.fn();
+    render(
+      <Graveyard
+        graveyard={[dead]}
+        playerNames={["Red", "Blue"]}
+        onEditPair={vi.fn()}
+        onRestoreLink={onRestoreLink}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Restore to box" }));
+    expect(screen.getByRole("dialog", { name: "Restore link?" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Restore" })).toBeDisabled();
+    await user.click(screen.getByRole("radio", { name: /Blue/ }));
+    await user.click(screen.getByRole("button", { name: "Restore" }));
+    expect(onRestoreLink).toHaveBeenCalledWith(dead, 1);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("closes legacy restoration if the link is removed remotely", async () => {
+    const user = userEvent.setup();
+    const onRestoreLink = vi.fn();
+    const props = { playerNames: ["Red"], onEditPair: vi.fn(), onRestoreLink };
+    const { rerender } = render(
+      <Graveyard
+        {...props}
+        graveyard={[{ ...lostPair(LINK_ID, "Route 1"), isLost: false }]}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "Restore to box" }));
+    rerender(<Graveyard {...props} graveyard={[]} />);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(onRestoreLink).not.toHaveBeenCalled();
+  });
+
+  it("hides mutation actions for read-only viewers", () => {
+    render(
+      <Graveyard
+        graveyard={[{ ...lostPair(LINK_ID, "Route 1"), isLost: false }]}
+        playerNames={["Red"]}
+        onEditPair={vi.fn()}
+        onRestoreLink={vi.fn()}
+        onDeleteLink={vi.fn()}
+        readOnly
+      />,
+    );
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+  });
+
   it("preserves a lost-link draft and blocks saving after remote removal", async () => {
     const user = userEvent.setup();
     const onEditPair = vi.fn();
