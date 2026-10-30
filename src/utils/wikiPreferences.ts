@@ -13,14 +13,14 @@ export const WIKIS: Wiki[] = [
     id: "pokewiki",
     name: "PokéWiki",
     language: "de",
-    baseUrl: "https://www.pokewiki.de",
+    baseUrl: "https://www.pokewiki.de/Hydropi",
     buildUrl: (name) => `https://www.pokewiki.de/${encodeURIComponent(name)}`,
   },
   {
     id: "bulbapedia",
     name: "Bulbapedia",
     language: "en",
-    baseUrl: "https://bulbapedia.bulbagarden.net",
+    baseUrl: "https://bulbapedia.bulbagarden.net/wiki/Mudkip_(Pokémon)",
     buildUrl: (name) =>
       `https://bulbapedia.bulbagarden.net/wiki/${encodeURIComponent(name)}_(Pok%C3%A9mon)`,
   },
@@ -28,7 +28,7 @@ export const WIKIS: Wiki[] = [
     id: "pokemondb",
     name: "PokémonDB",
     language: "en",
-    baseUrl: "https://pokemondb.net",
+    baseUrl: "https://pokemondb.net/pokedex/mudkip",
     buildUrl: (name) =>
       `https://pokemondb.net/pokedex/${encodeURIComponent(name.toLowerCase())}`,
   },
