@@ -595,13 +595,6 @@ export const de = {
         description:
           "Zeige Pokémon-Sprites im Stil der jeweiligen Generation an.",
       },
-      spritesInTeamTable: {
-        title: "Sprites überall verwenden",
-        tooltipLabel: "Info Sprites überall",
-        tooltip:
-          "Verwende Sprites statt offizieller Artworks überall in der App. Respektiert die anderen Sprite-Einstellungen.",
-        description: "Zeige Sprites statt Artworks in allen Ansichten an.",
-      },
       infiniteFossils: {
         title: "Unendliche Fossile",
         tooltipLabel: "Info Unendliche Fossile",
@@ -711,6 +704,18 @@ export const de = {
     },
     sprites: {
       title: "Sprites",
+      imageStyle: {
+        title: "Pokémon-Bilder",
+        tooltip:
+          "Wähle überall offizielle Artworks, überall klassische Sprites oder die bisherige gemischte Darstellung.",
+        description:
+          "Wähle, wie Pokémon in der gesamten App dargestellt werden.",
+        artwork: "Artwork",
+        mixed: "Gemischt",
+        sprites: "Sprites",
+        saveError:
+          "Die Auswahl ist für diese Sitzung aktiv, konnte aber nicht gespeichert werden.",
+      },
     },
     wiki: {
       title: "Wiki-Anbieter",

@@ -24,6 +24,8 @@ import { useTranslation } from "react-i18next";
 import LanguageToggle from "@/src/components/toggles/LanguageToggle.tsx";
 import Tooltip from "@/src/components/other/Tooltip.tsx";
 import { WIKIS, type WikiId } from "@/src/utils/wikiPreferences";
+import TriStateToggle from "@/src/components/toggles/TriStateToggle.tsx";
+import type { PokemonImageStyle } from "@/types.ts";
 
 interface UserSettingsPageProps {
   allowImageLoading?: boolean | null;
@@ -35,8 +37,8 @@ interface UserSettingsPageProps {
   onLogout: () => void;
   useGenerationSprites?: boolean;
   onGenerationSpritesToggle: (enabled: boolean) => void;
-  useSpritesInTeamTable?: boolean;
-  onSpritesInTeamTableToggle: (enabled: boolean) => void;
+  pokemonImageStyle: PokemonImageStyle;
+  onPokemonImageStyleChange: (style: PokemonImageStyle) => Promise<void>;
   wikiId?: string | null;
   onWikiChange: (id: WikiId) => void;
   multiLocaleSearch?: boolean;
@@ -51,8 +53,8 @@ const UserSettingsPage: React.FC<UserSettingsPageProps> = ({
   onLogout,
   useGenerationSprites,
   onGenerationSpritesToggle,
-  useSpritesInTeamTable,
-  onSpritesInTeamTableToggle,
+  pokemonImageStyle,
+  onPokemonImageStyleChange,
   wikiId,
   onWikiChange,
   multiLocaleSearch,
@@ -68,6 +70,7 @@ const UserSettingsPage: React.FC<UserSettingsPageProps> = ({
   const [displayNameError, setDisplayNameError] = useState<string | null>(null);
   const [imageConsentSaving, setImageConsentSaving] = useState(false);
   const [imageConsentError, setImageConsentError] = useState(false);
+  const [pokemonImageStyleError, setPokemonImageStyleError] = useState(false);
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -366,6 +369,65 @@ const UserSettingsPage: React.FC<UserSettingsPageProps> = ({
               </div>
             )}
 
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <div className="font-medium text-gray-800 dark:text-gray-200">
+                    {t("userSettings.sprites.imageStyle.title")}
+                  </div>
+                  <Tooltip
+                    side="top"
+                    content={t("userSettings.sprites.imageStyle.tooltip")}
+                  >
+                    <span
+                      className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 cursor-help"
+                      aria-label={t("userSettings.sprites.imageStyle.title")}
+                    >
+                      <FiInfo size={16} />
+                    </span>
+                  </Tooltip>
+                </div>
+                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  {t("userSettings.sprites.imageStyle.description")}
+                </div>
+              </div>
+              <div className="flex shrink-0 flex-col items-end gap-1">
+                <TriStateToggle
+                  id="pokemon-image-style-toggle"
+                  value={pokemonImageStyle}
+                  options={[
+                    {
+                      value: "artwork",
+                      label: t("userSettings.sprites.imageStyle.artwork"),
+                    },
+                    {
+                      value: "mixed",
+                      label: t("userSettings.sprites.imageStyle.mixed"),
+                    },
+                    {
+                      value: "sprites",
+                      label: t("userSettings.sprites.imageStyle.sprites"),
+                    },
+                  ]}
+                  onChange={(style) => {
+                    setPokemonImageStyleError(false);
+                    void onPokemonImageStyleChange(style).catch(() =>
+                      setPokemonImageStyleError(true),
+                    );
+                  }}
+                  ariaLabel={t("userSettings.sprites.imageStyle.title")}
+                />
+                {pokemonImageStyleError && (
+                  <span
+                    role="alert"
+                    className="max-w-64 text-right text-xs text-red-600 dark:text-red-400"
+                  >
+                    {t("userSettings.sprites.imageStyle.saveError")}
+                  </span>
+                )}
+              </div>
+            </div>
+
             <div className="flex items-center justify-between">
               <div className="flex-1">
                 <div className="flex items-center gap-2">
@@ -395,38 +457,7 @@ const UserSettingsPage: React.FC<UserSettingsPageProps> = ({
                 checked={useGenerationSprites ?? false}
                 onChange={onGenerationSpritesToggle}
                 ariaLabel={t("settings.features.generationSprites.title")}
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <div className="font-medium text-gray-800 dark:text-gray-200">
-                    {t("settings.features.spritesInTeamTable.title")}
-                  </div>
-                  <Tooltip
-                    side="top"
-                    content={t("settings.features.spritesInTeamTable.tooltip")}
-                  >
-                    <span
-                      className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 cursor-help"
-                      aria-label={t(
-                        "settings.features.spritesInTeamTable.tooltipLabel",
-                      )}
-                    >
-                      <FiInfo size={16} />
-                    </span>
-                  </Tooltip>
-                </div>
-                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  {t("settings.features.spritesInTeamTable.description")}
-                </div>
-              </div>
-              <ToggleSwitch
-                id="sprites-in-team-table-toggle"
-                checked={useSpritesInTeamTable ?? false}
-                onChange={onSpritesInTeamTableToggle}
-                ariaLabel={t("settings.features.spritesInTeamTable.title")}
+                disabled={pokemonImageStyle === "artwork"}
               />
             </div>
           </section>

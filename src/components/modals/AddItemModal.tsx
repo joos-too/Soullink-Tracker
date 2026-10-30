@@ -16,9 +16,10 @@ import {
   getItemSpriteUrl,
   getItemName,
 } from "@/src/services/search/itemSearch.ts";
-import { getSpriteUrlById } from "@/src/services/sprites";
+import { getPokemonImageUrlById } from "@/src/services/sprites";
 import { normalizeLanguage } from "@/src/utils/language";
 import { findLocationByName } from "@/src/services/search/locationSearch.ts";
+import { usePokemonImageStyle } from "@/src/contexts/PokemonImageStyleContext.tsx";
 
 interface AddItemModalProps {
   isOpen: boolean;
@@ -63,6 +64,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
   const [selectedItemSlug, setSelectedItemSlug] = useState("");
 
   const locale = normalizeLanguage(i18n.language);
+  const imageStyle = usePokemonImageStyle();
 
   const availableStones = useMemo(() => {
     return STONES.filter((s) => s.gen <= maxGeneration);
@@ -294,8 +296,9 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
                       <SpriteImage
                         src={
                           megaStoneSpriteStyle === "pokemon"
-                            ? getSpriteUrlById(
+                            ? getPokemonImageUrlById(
                                 m.pokemonId,
+                                imageStyle,
                                 generationSpritePath,
                               )
                             : getItemSpriteUrl(m.id)

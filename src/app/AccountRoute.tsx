@@ -10,8 +10,8 @@ export default function AccountRoute() {
     handleDisplayNameChange,
     userUseGenerationSprites,
     handleGenerationSpritesToggle,
-    userUseSpritesInTeamTable,
-    handleSpritesInTeamTableToggle,
+    userPokemonImageStyle,
+    handlePokemonImageStyleChange,
     effectiveWikiId,
     handleWikiChange,
     userMultiLocaleSearch,
@@ -42,8 +42,8 @@ export default function AccountRoute() {
       onLogout={handleLogout}
       useGenerationSprites={userUseGenerationSprites}
       onGenerationSpritesToggle={handleGenerationSpritesToggle}
-      useSpritesInTeamTable={userUseSpritesInTeamTable}
-      onSpritesInTeamTableToggle={handleSpritesInTeamTableToggle}
+      pokemonImageStyle={userPokemonImageStyle}
+      onPokemonImageStyleChange={handlePokemonImageStyleChange}
       wikiId={effectiveWikiId}
       onWikiChange={handleWikiChange}
       multiLocaleSearch={userMultiLocaleSearch}

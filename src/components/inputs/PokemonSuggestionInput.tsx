@@ -2,10 +2,11 @@ import SpriteImage from "@/src/components/other/SpriteImage.tsx";
 import React, { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { searchPokemonNames } from "@/src/services/search/pokemonSearch.ts";
-import { getSpriteUrlForPokemonName } from "@/src/services/sprites.ts";
+import { getPokemonImageUrlForPokemonName } from "@/src/services/sprites.ts";
 import { normalizeLanguage } from "@/src/utils/language.ts";
 import SuggestionInput from "@/src/components/inputs/SuggestionInput.tsx";
 import { useMultiLocaleSearch } from "@/src/hooks/useMultiLocaleSearch.ts";
+import { usePokemonImageStyle } from "@/src/contexts/PokemonImageStyleContext.tsx";
 
 interface PokemonSuggestionInputProps {
   label?: React.ReactNode;
@@ -33,9 +34,11 @@ const PokemonSuggestionInput: React.FC<PokemonSuggestionInputProps> = ({
   );
   const contextMultiLocaleSearch = useMultiLocaleSearch();
   const multiLocaleSearch = multiLocaleSearchProp ?? contextMultiLocaleSearch;
+  const imageStyle = usePokemonImageStyle();
   const spriteLocale = multiLocaleSearch ? undefined : language;
-  const spriteUrl = getSpriteUrlForPokemonName(
+  const spriteUrl = getPokemonImageUrlForPokemonName(
     value,
+    imageStyle,
     generationSpritePath,
     spriteLocale,
   );
@@ -59,8 +62,9 @@ const PokemonSuggestionInput: React.FC<PokemonSuggestionInputProps> = ({
       placeholder={t("common.pokemonPlaceholder")}
       inputClassName="pr-14"
       renderSuggestion={(suggestion) => {
-        const suggestionSpriteUrl = getSpriteUrlForPokemonName(
+        const suggestionSpriteUrl = getPokemonImageUrlForPokemonName(
           suggestion,
+          imageStyle,
           generationSpritePath,
         );
         return (

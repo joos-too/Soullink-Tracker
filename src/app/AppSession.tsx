@@ -29,7 +29,7 @@ import {
   updateUserDisplayName,
   updateUserGenerationSpritePreference,
   updateUserMultiLocaleSearchPreference,
-  updateUserSpritesInTeamTablePreference,
+  updateUserPokemonImageStylePreference,
   updateUserWikiPreference,
   updateUserImageLoadingPreference,
 } from "@/src/services/repos/profileRepository.ts";
@@ -38,6 +38,8 @@ import { ImageConsentContext } from "@/src/contexts/ImageConsentContext";
 import { setImageCachingAllowed } from "@/src/services/imageCache";
 import ImageConsentModal from "@/src/components/modals/ImageConsentModal";
 import { useLocation } from "react-router-dom";
+import type { PokemonImageStyle } from "@/types.ts";
+import { PokemonImageStyleContext } from "@/src/contexts/PokemonImageStyleContext.tsx";
 
 function useSession() {
   const { user, loading } = useAuthSession();
@@ -62,8 +64,8 @@ function useSession() {
   }, [i18n.language, i18n.resolvedLanguage]);
   const [userUseGenerationSprites, setUserUseGenerationSprites] =
     useState(false);
-  const [userUseSpritesInTeamTable, setUserUseSpritesInTeamTable] =
-    useState(false);
+  const [userPokemonImageStyle, setUserPokemonImageStyle] =
+    useState<PokemonImageStyle>("mixed");
   const [userWikiId, setUserWikiId] = useState<string | null>(null);
   const [userMultiLocaleSearch, setUserMultiLocaleSearch] = useState(false);
   const [userDisplayName, setUserDisplayName] = useState("");
@@ -107,17 +109,15 @@ function useSession() {
     [user],
   );
 
-  const handleSpritesInTeamTableToggle = useCallback(
-    async (enabled: boolean) => {
+  const handlePokemonImageStyleChange = useCallback(
+    async (imageStyle: PokemonImageStyle) => {
       if (!user) return;
+      setUserPokemonImageStyle(imageStyle);
       try {
-        await updateUserSpritesInTeamTablePreference(user.uid, enabled);
-        setUserUseSpritesInTeamTable(enabled);
+        await updateUserPokemonImageStylePreference(user.uid, imageStyle);
       } catch (error) {
-        console.error(
-          "Failed to update sprites in team table preference:",
-          error,
-        );
+        console.error("Failed to update Pokémon image style:", error);
+        throw error;
       }
     },
     [user],
@@ -181,7 +181,7 @@ function useSession() {
     const consentVersion = imageConsentVersion.current;
     if (!user) {
       setUserUseGenerationSprites(false);
-      setUserUseSpritesInTeamTable(false);
+      setUserPokemonImageStyle("mixed");
       setUserWikiId(null);
       setUserMultiLocaleSearch(false);
       setUserDisplayName("");
@@ -195,7 +195,7 @@ function useSession() {
       .then((preferences) => {
         if (cancelled) return;
         setUserUseGenerationSprites(preferences.useGenerationSprites);
-        setUserUseSpritesInTeamTable(preferences.useSpritesInTeamTable);
+        setUserPokemonImageStyle(preferences.pokemonImageStyle);
         setUserWikiId(preferences.wikiId);
         setUserMultiLocaleSearch(preferences.multiLocaleSearch);
         setUserDisplayName(preferences.displayName);
@@ -210,7 +210,7 @@ function useSession() {
       .catch(() => {
         if (cancelled) return;
         setUserUseGenerationSprites(false);
-        setUserUseSpritesInTeamTable(false);
+        setUserPokemonImageStyle("mixed");
         setUserWikiId(null);
         setUserMultiLocaleSearch(false);
         setUserDisplayName(getDefaultDisplayName(user.email));
@@ -238,13 +238,13 @@ function useSession() {
     locale,
     defaultLocaleRulesetId,
     userUseGenerationSprites,
-    userUseSpritesInTeamTable,
+    userPokemonImageStyle,
     userMultiLocaleSearch,
     userDisplayName,
     userDisplayNameRequiresUpdate,
     effectiveWikiId,
     handleGenerationSpritesToggle,
-    handleSpritesInTeamTableToggle,
+    handlePokemonImageStyleChange,
     handleWikiChange,
     handleMultiLocaleSearchToggle,
     handleDisplayNameChange,
@@ -298,41 +298,44 @@ export function AppSessionProvider({
   const openConsent = useCallback(() => setManualActor(actor), [actor]);
   return (
     <AppSessionContext.Provider value={session}>
-      <ImageLoadingContext.Provider value={imagesAllowed}>
-        <ImageConsentContext.Provider
-          value={{
-            decision,
-            isOpen: showConsent,
-            openConsent: inApp && ready ? openConsent : null,
-            showGuestFooterEntry:
-              ready && !session.user && pathname.startsWith("/tracker/"),
-          }}
-        >
-          {children}
-        </ImageConsentContext.Provider>
-        {showConsent && (
-          <ImageConsentModal
-            key={actor}
-            requireDecision={decision === null}
-            onClose={() => setManualActor(null)}
-            onChoose={async (allowed) => {
-              if (session.user) await session.handleImageLoadingChange(allowed);
-              else {
-                try {
-                  sessionStorage.setItem(
-                    "soullink:allowImageLoading",
-                    String(allowed),
-                  );
-                } catch {
-                  /* Keep the choice in memory if storage is unavailable. */
-                }
-                setAnonymousConsent(allowed);
-              }
-              setManualActor(null);
+      <PokemonImageStyleContext.Provider value={session.userPokemonImageStyle}>
+        <ImageLoadingContext.Provider value={imagesAllowed}>
+          <ImageConsentContext.Provider
+            value={{
+              decision,
+              isOpen: showConsent,
+              openConsent: inApp && ready ? openConsent : null,
+              showGuestFooterEntry:
+                ready && !session.user && pathname.startsWith("/tracker/"),
             }}
-          />
-        )}
-      </ImageLoadingContext.Provider>
+          >
+            {children}
+          </ImageConsentContext.Provider>
+          {showConsent && (
+            <ImageConsentModal
+              key={actor}
+              requireDecision={decision === null}
+              onClose={() => setManualActor(null)}
+              onChoose={async (allowed) => {
+                if (session.user)
+                  await session.handleImageLoadingChange(allowed);
+                else {
+                  try {
+                    sessionStorage.setItem(
+                      "soullink:allowImageLoading",
+                      String(allowed),
+                    );
+                  } catch {
+                    /* Keep the choice in memory if storage is unavailable. */
+                  }
+                  setAnonymousConsent(allowed);
+                }
+                setManualActor(null);
+              }}
+            />
+          )}
+        </ImageLoadingContext.Provider>
+      </PokemonImageStyleContext.Provider>
     </AppSessionContext.Provider>
   );
 }

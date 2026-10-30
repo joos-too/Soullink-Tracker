@@ -1,5 +1,6 @@
 import { findPokemonIdByName } from "@/src/services/search/pokemonSearch.ts";
 import type { SupportedLanguage } from "@/src/utils/language";
+import type { PokemonImageStyle } from "@/types.ts";
 
 // Map game version IDs to PokeAPI sprite generation paths
 export function getGenerationSpritePath(gameVersionId: string): string | null {
@@ -133,6 +134,17 @@ export function getOfficialArtworkUrlById(id: number): string {
   return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`;
 }
 
+export function getPokemonImageUrlById(
+  id: number,
+  imageStyle: PokemonImageStyle,
+  generationPath?: string | null,
+  artworkInMixed = false,
+): string {
+  return imageStyle === "artwork" || (imageStyle === "mixed" && artworkInMixed)
+    ? getOfficialArtworkUrlById(id)
+    : getSpriteUrlById(id, generationPath);
+}
+
 // Classic front sprite by numeric id
 export function getSpriteUrlById(
   id: number,
@@ -157,4 +169,21 @@ export function getSpriteUrlForPokemonName(
   const match = findPokemonIdByName(name, locale);
   if (!match) return null;
   return getSpriteUrlById(match.id, generationPath);
+}
+
+export function getPokemonImageUrlForPokemonName(
+  name: string | undefined | null,
+  imageStyle: PokemonImageStyle,
+  generationPath?: string | null,
+  locale?: SupportedLanguage,
+  artworkInMixed = false,
+): string | null {
+  const match = findPokemonIdByName(name, locale);
+  if (!match) return null;
+  return getPokemonImageUrlById(
+    match.id,
+    imageStyle,
+    generationPath,
+    artworkInMixed,
+  );
 }

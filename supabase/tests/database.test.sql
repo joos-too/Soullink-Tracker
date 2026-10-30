@@ -3,7 +3,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
 
-select plan(53);
+select plan(56);
 
 select has_table('public', 'profiles', 'profiles table exists');
 select has_table('public', 'trackers', 'trackers table exists');
@@ -31,6 +31,23 @@ select col_type_is(
   'display_name_requires_update',
   'boolean',
   'display-name onboarding state is explicit profile data'
+);
+select col_type_is(
+  'public',
+  'profiles',
+  'pokemon_image_style',
+  'pokemon_image_style',
+  'Pokemon image style is a typed profile preference'
+);
+select col_not_null(
+  'public',
+  'profiles',
+  'pokemon_image_style',
+  'Pokemon image style is always explicit'
+);
+select ok(
+  has_column_privilege('authenticated', 'public.profiles', 'pokemon_image_style', 'UPDATE'),
+  'authenticated users can update their Pokemon image style'
 );
 
 insert into auth.users (

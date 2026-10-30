@@ -99,7 +99,7 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
     setTrackerMetas,
     removeTrackerLocally,
     userUseGenerationSprites,
-    userUseSpritesInTeamTable,
+    userPokemonImageStyle,
     userMultiLocaleSearch,
     effectiveWikiId,
   } = useAppSession();
@@ -206,11 +206,15 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
 
   const generationSpritePath = useMemo(() => {
     // Use generation-specific sprites if enabled
-    if (userUseGenerationSprites && activeGameVersionId) {
+    if (
+      userPokemonImageStyle !== "artwork" &&
+      userUseGenerationSprites &&
+      activeGameVersionId
+    ) {
       return getGenerationSpritePath(activeGameVersionId);
     }
     return null;
-  }, [userUseGenerationSprites, activeGameVersionId]);
+  }, [userPokemonImageStyle, userUseGenerationSprites, activeGameVersionId]);
 
   // ── Box filters & bad links (local view) ──────────────
   const { hiddenLinkIds, toggleHiddenLink, resetAllHiddenLinks } =
@@ -1832,7 +1836,7 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
             gameVersionId: activeGameVersionId || undefined,
             readOnly: isReadOnly,
             generationSpritePath,
-            useSpritesInTeamTable: userUseSpritesInTeamTable,
+            useSpritesInTeamTable: userPokemonImageStyle === "sprites",
             wikiId: effectiveWikiId,
             badLinkIds: hiddenLinkIds,
             onToggleBadLink: isReadOnly ? undefined : toggleHiddenLink,
@@ -1869,7 +1873,7 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
             gameVersionId: activeGameVersionId || undefined,
             readOnly: isReadOnly,
             generationSpritePath,
-            useSpritesInTeamTable: userUseSpritesInTeamTable,
+            useSpritesInTeamTable: userPokemonImageStyle === "sprites",
             wikiId: effectiveWikiId,
             badLinkIds: hiddenLinkIds,
             onToggleBadLink: isReadOnly ? undefined : toggleHiddenLink,

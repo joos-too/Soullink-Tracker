@@ -6,6 +6,7 @@ import { resolvePokemonDisplay } from "@/src/services/pokemons/pokemonDisplay.ts
 import { resolvePokemonLocationDisplay } from "@/src/services/search/locationSearch.ts";
 import { normalizeLanguage } from "@/src/utils/language.ts";
 import { getWikiUrlById, type WikiId } from "@/src/utils/wiki.ts";
+import { usePokemonImageStyle } from "@/src/contexts/PokemonImageStyleContext.tsx";
 
 interface PokemonPairCardProps {
   pair: PokemonLink;
@@ -33,6 +34,7 @@ const PokemonPairCard: React.FC<PokemonPairCardProps> = ({
 }) => {
   const { t, i18n } = useTranslation();
   const locale = normalizeLanguage(i18n.language);
+  const imageStyle = usePokemonImageStyle();
 
   return (
     <div className="relative p-2 border rounded-md text-xs border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700">
@@ -65,6 +67,7 @@ const PokemonPairCard: React.FC<PokemonPairCardProps> = ({
             member,
             locale,
             generationSpritePath,
+            imageStyle,
           );
           const wikiUrl =
             displayName && member.id && wikiId

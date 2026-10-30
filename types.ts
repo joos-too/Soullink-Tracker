@@ -115,6 +115,8 @@ export type TrackerRole = "owner" | "editor" | "guest";
 
 export type RivalGender = "male" | "female";
 
+export type PokemonImageStyle = "artwork" | "mixed" | "sprites";
+
 export interface UserSettings {
   rivalPreferences?: Record<string, RivalGender>;
   useGenerationSprites?: boolean;

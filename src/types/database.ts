@@ -45,8 +45,8 @@ export type Database = {
           image_consent_updated_at: string | null;
           last_login_at: string;
           multi_locale_search: boolean;
+          pokemon_image_style: Database["public"]["Enums"]["pokemon_image_style"];
           use_generation_sprites: boolean;
-          use_sprites_in_team_table: boolean;
           wiki_id: string | null;
         };
         Insert: {
@@ -59,8 +59,8 @@ export type Database = {
           image_consent_updated_at?: string | null;
           last_login_at?: string;
           multi_locale_search?: boolean;
+          pokemon_image_style?: Database["public"]["Enums"]["pokemon_image_style"];
           use_generation_sprites?: boolean;
-          use_sprites_in_team_table?: boolean;
           wiki_id?: string | null;
         };
         Update: {
@@ -73,8 +73,8 @@ export type Database = {
           image_consent_updated_at?: string | null;
           last_login_at?: string;
           multi_locale_search?: boolean;
+          pokemon_image_style?: Database["public"]["Enums"]["pokemon_image_style"];
           use_generation_sprites?: boolean;
-          use_sprites_in_team_table?: boolean;
           wiki_id?: string | null;
         };
         Relationships: [];
@@ -348,6 +348,7 @@ export type Database = {
       };
     };
     Enums: {
+      pokemon_image_style: "artwork" | "mixed" | "sprites";
       tracker_role: "owner" | "editor" | "guest";
     };
     CompositeTypes: {
@@ -482,6 +483,7 @@ export const Constants = {
   },
   public: {
     Enums: {
+      pokemon_image_style: ["artwork", "mixed", "sprites"],
       tracker_role: ["owner", "editor", "guest"],
     },
   },

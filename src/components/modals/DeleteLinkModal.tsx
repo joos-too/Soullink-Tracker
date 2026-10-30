@@ -9,6 +9,7 @@ import Tooltip from "@/src/components/other/Tooltip.tsx";
 import { resolvePokemonDisplay } from "@/src/services/pokemons/pokemonDisplay.ts";
 import { resolvePokemonLocationDisplay } from "@/src/services/search/locationSearch.ts";
 import { normalizeLanguage } from "@/src/utils/language.ts";
+import { usePokemonImageStyle } from "@/src/contexts/PokemonImageStyleContext.tsx";
 
 interface DeleteLinkModalProps {
   isOpen: boolean;
@@ -33,6 +34,7 @@ const DeleteLinkModal: React.FC<DeleteLinkModalProps> = ({
   const locale = normalizeLanguage(i18n.language);
   const { containerRef } = useFocusTrap(isOpen);
   const titleId = useId();
+  const imageStyle = usePokemonImageStyle();
 
   if (!isOpen || !pair) return null;
   const locationLabel = resolvePokemonLocationDisplay(pair, locale);
@@ -102,6 +104,7 @@ const DeleteLinkModal: React.FC<DeleteLinkModalProps> = ({
                 member,
                 locale,
                 generationSpritePath,
+                imageStyle,
               );
               return (
                 <div
