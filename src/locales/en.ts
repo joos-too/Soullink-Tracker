@@ -698,9 +698,10 @@ export const en = {
       imageStyle: {
         title: "Pokémon images",
         tooltip:
-          "Choose official artwork everywhere, classic sprites everywhere, or the current mixed layout.",
-        description: "Choose how Pokémon are displayed throughout the app.",
-        artwork: "Artwork",
+          "Choose between official artworks, classic sprites, or a mixed layout.",
+        description:
+          "Choose the image style, by which Pokémon are displayed throughout the app.",
+        artwork: "Artworks",
         mixed: "Mixed",
         sprites: "Sprites",
         saveError:

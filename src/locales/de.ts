@@ -707,10 +707,10 @@ export const de = {
       imageStyle: {
         title: "Pokémon-Bilder",
         tooltip:
-          "Wähle überall offizielle Artworks, überall klassische Sprites oder die bisherige gemischte Darstellung.",
+          "Wähle zwischen offiziellen Artworks, klassischen Sprites oder einer gemischten Darstellung.",
         description:
-          "Wähle, wie Pokémon in der gesamten App dargestellt werden.",
-        artwork: "Artwork",
+          "Wähle den Stil, in welchem Pokémon in der gesamten App dargestellt werden.",
+        artwork: "Artworks",
         mixed: "Gemischt",
         sprites: "Sprites",
         saveError:
