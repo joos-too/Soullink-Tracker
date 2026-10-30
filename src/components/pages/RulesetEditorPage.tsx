@@ -1,3 +1,4 @@
+import PageLayout from "@/src/components/layout/PageLayout";
 import React, { useCallback, useEffect, useId, useMemo, useState } from "react";
 import {
   FiCopy,
@@ -201,7 +202,7 @@ const RulesetEditorPage: React.FC<RulesetEditorPageProps> = ({
 
   return (
     <div className="min-h-screen bg-[#f0f0f0] dark:bg-gray-900 text-gray-800 dark:text-gray-100 px-3 py-6 sm:py-10">
-      <div className="max-w-6xl mx-auto space-y-6">
+      <PageLayout width="rulesets" className="space-y-6">
         <header className="flex items-center justify-between gap-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-5 sm:px-6 shadow-[6px_6px_0_0_rgba(31,41,55,0.25)] dark:shadow-[6px_6px_0_0_rgba(0,0,0,0.35)]">
           <div className="flex min-w-0 flex-1 flex-col justify-center min-h-16 sm:min-h-20">
             <h1 className="text-xl sm:text-3xl font-press-start text-gray-900 dark:text-gray-100 mt-2">
@@ -495,7 +496,7 @@ const RulesetEditorPage: React.FC<RulesetEditorPageProps> = ({
             </div>
           </section>
         </div>
-      </div>
+      </PageLayout>
 
       {confirmDeleteOpen && selectedRuleset && !selectedRuleset.isPreset && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-3">

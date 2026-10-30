@@ -13,6 +13,8 @@ export interface UserProfilePreferences {
   useSpritesInTeamTable: boolean;
   wikiId: string | null;
   multiLocaleSearch: boolean;
+  allowImageLoading: boolean | null;
+  imageConsentUpdatedAt: string | null;
 }
 
 const normalizeEmail = (email?: string | null): string =>
@@ -40,7 +42,7 @@ const getSupabaseProfile = async (userId: string) => {
   const { data, error } = await getSupabaseClient()
     .from("profiles")
     .select(
-      "display_name, display_name_requires_update, use_generation_sprites, use_sprites_in_team_table, wiki_id, multi_locale_search",
+      "display_name, display_name_requires_update, use_generation_sprites, use_sprites_in_team_table, wiki_id, multi_locale_search, allow_image_loading, image_consent_updated_at",
     )
     .eq("id", userId)
     .single();
@@ -70,6 +72,8 @@ export const getUserProfilePreferences = async (
     useSpritesInTeamTable: profile.use_sprites_in_team_table,
     wikiId: profile.wiki_id,
     multiLocaleSearch: profile.multi_locale_search,
+    allowImageLoading: profile.allow_image_loading,
+    imageConsentUpdatedAt: profile.image_consent_updated_at,
   };
 };
 
@@ -81,6 +85,19 @@ const updateSupabaseProfile = async (
     .from("profiles")
     .update(values)
     .eq("id", userId);
+  if (error) throw error;
+};
+
+export const updateUserImageLoadingPreference = async (
+  userId: string,
+  allowImageLoading: boolean,
+): Promise<void> => {
+  const { error } = await getSupabaseClient()
+    .from("profiles")
+    .update({ allow_image_loading: allowImageLoading })
+    .eq("id", userId)
+    .select("id")
+    .single();
   if (error) throw error;
 };
 

@@ -1,4 +1,21 @@
 export const en = {
+  legalNotice: {
+    contact: "Contact",
+    phone: "Phone",
+    email: "Email",
+  },
+  footer: {
+    github: "View on GitHub",
+    legalNavigation: "Legal information",
+    legalNotice: "Legal notice",
+    privacyPolicy: "Privacy policy",
+    trademarks:
+      "Pokémon and all related names and characters are trademarks of their respective owners.",
+    copyright:
+      "© 2026 Pokémon. © 1995–2026 Nintendo / Creatures Inc. / GAME FREAK inc.",
+    disclaimer:
+      "This is a fan-made, non-commercial project not affiliated with any of these companies.",
+  },
   common: {
     appName: "Soullink Tracker",
     loading: "Loading…",
@@ -246,9 +263,6 @@ export const en = {
       rulesets: "Edit rulesets",
       resetRun: "Reset run",
       settings: "Settings",
-    },
-    footer: {
-      github: "View on GitHub",
     },
     locations: {
       title: "Cleared areas",
@@ -708,7 +722,29 @@ export const en = {
       languageEN: "EN",
     },
   },
+  privacy: {
+    policy: "Privacy Policy",
+    settings: "Privacy settings",
+    notice: {
+      title: "Privacy and browser storage",
+      description:
+        "We use cookies to provide secure sign-in and browser storage to remember your settings. If you select ‘Stay signed in’, authentication cookies remain for 90 days and are renewed while you use the app. Logging out deletes authentication cookies. For details, see our <privacyLink>Privacy Policy</privacyLink>.",
+      close: "Got it",
+    },
+    images: {
+      placeholder: "Images blocked – open settings",
+      title: "External images from GitHub",
+      description:
+        "Pokémon and item images are downloaded from GitHub. Downloads transmit your IP address and technical request information to GitHub. Images may be stored in your browser’s cache to reduce loading times. For signed-in users, we store the latest choice together with its timestamp. For guests, only the choice is stored for the tab session. You can use the tracker without external images and change your choice afterwards.",
+      withdrawal:
+        "Turning this off stops external image loading and removes the app’s image cache from this browser!",
+      allow: "Allow external images",
+      decline: "Continue without external images",
+      saveError: "Your choice could not be saved. Please try again.",
+    },
+  },
   auth: {
+    staySignedIn: "Stay signed in",
     login: {
       title: "Soullink Tracker",
       headline: "Sign in to continue",
@@ -735,7 +771,7 @@ export const en = {
       displayNameLabel: "Display name",
       displayNamePlaceholder: "Trainer name",
       displayNameInfo:
-        "This name is visible to members of your trackers and does not have to be unique.",
+        "This name is visible to other users and does not have to be unique.",
       displayNameRequired: "Enter a display name.",
       displayNameTooLong: "A display name can contain at most 50 characters.",
       passwordLabel: "Password",

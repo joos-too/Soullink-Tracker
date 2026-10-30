@@ -16,6 +16,9 @@ export default function AccountRoute() {
     handleWikiChange,
     userMultiLocaleSearch,
     handleMultiLocaleSearchToggle,
+    allowImageLoading,
+    imageLoadingAllowed,
+    handleImageLoadingChange,
   } = useAppSession();
   const navigate = useNavigate();
   const handleNavigateHome = () => navigate("/");
@@ -29,6 +32,10 @@ export default function AccountRoute() {
   return (
     <UserSettingsPage
       email={user.email}
+      allowImageLoading={
+        allowImageLoading === null ? null : imageLoadingAllowed
+      }
+      onImageLoadingChange={handleImageLoadingChange}
       displayName={userDisplayName}
       onDisplayNameChange={handleDisplayNameChange}
       onBack={handleNavigateHome}

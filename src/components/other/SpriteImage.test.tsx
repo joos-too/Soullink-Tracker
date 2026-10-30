@@ -3,10 +3,165 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import SpriteImage from "./SpriteImage.tsx";
 import ItemSprite from "./ItemSprite.tsx";
+import { ImageLoadingContext } from "@/src/contexts/ImageLoadingContext";
+import { ImageConsentContext } from "@/src/contexts/ImageConsentContext";
+import userEvent from "@testing-library/user-event";
+import i18n from "@/src/i18n";
+
+const renderWithImages = (ui: React.ReactNode) =>
+  render(ui, {
+    wrapper: ({ children }) => (
+      <ImageLoadingContext.Provider value={true}>
+        {children}
+      </ImageLoadingContext.Provider>
+    ),
+  });
 
 describe("SpriteImage", () => {
-  it("retries only failed images on online, preserving URLs and image props", () => {
+  it("opens settings by mouse and keyboard without triggering the surrounding card", async () => {
+    await i18n.changeLanguage("en");
+    const open = vi.fn();
+    const card = vi.fn();
     render(
+      <ImageConsentContext.Provider
+        value={{
+          decision: false,
+          isOpen: false,
+          openConsent: open,
+          showGuestFooterEntry: false,
+        }}
+      >
+        <div role="option" onClick={card} onKeyDown={card} onContextMenu={card}>
+          <SpriteImage
+            src="https://example.com/pokemon.png"
+            alt=""
+            aria-hidden="true"
+            className="pointer-events-none w-8 h-8"
+          />
+        </div>
+      </ImageConsentContext.Provider>,
+    );
+    const user = userEvent.setup();
+    const button = screen.getByRole("button", {
+      name: "Images blocked – open settings",
+    });
+    expect(button).not.toHaveAttribute("aria-hidden");
+    expect(button).not.toHaveClass("pointer-events-none");
+    await user.click(button);
+    button.focus();
+    await user.keyboard("{Enter} ");
+    fireEvent.contextMenu(button);
+    expect(open).toHaveBeenCalledTimes(3);
+    expect(card).not.toHaveBeenCalled();
+  });
+
+  it("uses the static public PNG for blocked images", () => {
+    render(
+      <ImageConsentContext.Provider
+        value={{
+          decision: false,
+          isOpen: false,
+          openConsent: vi.fn(),
+          showGuestFooterEntry: false,
+        }}
+      >
+        <SpriteImage src="https://example.com/pokemon.png" alt="" />
+      </ImageConsentContext.Provider>,
+    );
+
+    const button = screen.getByRole("button");
+    expect(button).not.toHaveClass("border");
+    expect(button).not.toHaveClass("border-blue-500");
+    const image = button.querySelector("img")!;
+    expect(image).toHaveAttribute("src", "/github-image-blocked.png");
+    expect(image).not.toHaveStyle({ imageRendering: "pixelated" });
+  });
+
+  it("preserves custom fallbacks and does not invent placeholders for missing sources", () => {
+    const { container } = render(
+      <ImageConsentContext.Provider
+        value={{
+          decision: false,
+          isOpen: false,
+          openConsent: vi.fn(),
+          showGuestFooterEntry: false,
+        }}
+      >
+        <SpriteImage
+          src="https://example.com/image.png"
+          fallback={<span>Legacy</span>}
+        />
+        <SpriteImage src={null} />
+      </ImageConsentContext.Provider>,
+    );
+    expect(screen.getByText("Legacy")).toBeInTheDocument();
+    expect(container.querySelector("button")).toBeNull();
+  });
+
+  it("treats absolute same-origin URLs and srcSet as local", () => {
+    render(
+      <SpriteImage
+        src={`${window.location.origin}/local.png`}
+        srcSet={`${window.location.origin}/local@2x.png 2x`}
+        alt="Local absolute"
+      />,
+    );
+    expect(screen.getByAltText("Local absolute")).toBeInTheDocument();
+  });
+  it("blocks external src and srcSet until allowed, and restores placeholders on withdrawal", () => {
+    const image = (
+      <SpriteImage
+        src="https://raw.githubusercontent.com/PokeAPI/sprites/pikachu.png"
+        srcSet="https://raw.githubusercontent.com/PokeAPI/sprites/pikachu@2x.png 2x"
+        alt="Pikachu"
+      />
+    );
+    const { container, rerender } = render(image);
+    expect(container.querySelector("img")).toBeNull();
+    expect(container).toBeEmptyDOMElement();
+    rerender(
+      <ImageLoadingContext.Provider value={true}>
+        {image}
+      </ImageLoadingContext.Provider>,
+    );
+    expect(screen.getByAltText("Pikachu")).toHaveAttribute(
+      "src",
+      "https://raw.githubusercontent.com/PokeAPI/sprites/pikachu.png",
+    );
+    rerender(
+      <ImageLoadingContext.Provider value={false}>
+        {image}
+      </ImageLoadingContext.Provider>,
+    );
+    expect(container.querySelector("img")).toBeNull();
+  });
+
+  it("uses the component-specific item fallback when images are blocked", () => {
+    const { container } = render(
+      <ItemSprite
+        src="https://raw.githubusercontent.com/PokeAPI/sprites/item.png"
+        placeholderClassName="blocked-placeholder"
+      />,
+    );
+    expect(container.querySelector("img")).toBeNull();
+    expect(container.querySelector(".blocked-placeholder")).toBeInTheDocument();
+  });
+  it("shows local sprites without external-image consent", () => {
+    render(
+      <SpriteImage
+        src="/rival-sprites/red.png"
+        alt="Rival"
+        fallback={<div>Custom fallback</div>}
+      />,
+    );
+    expect(screen.getByAltText("Rival")).toHaveAttribute(
+      "src",
+      "/rival-sprites/red.png",
+    );
+    expect(screen.queryByText("Custom fallback")).toBeNull();
+  });
+  it("retries only failed images on online, preserving URLs and image props", () => {
+    renderWithImages(
       <>
         <SpriteImage
           src="/pokemon.png"
@@ -38,7 +193,7 @@ describe("SpriteImage", () => {
   it("does not loop if the retry also fails", () => {
     vi.useFakeTimers();
     try {
-      render(<SpriteImage src="/missing.png" alt="Missing" />);
+      renderWithImages(<SpriteImage src="/missing.png" alt="Missing" />);
       fireEvent.error(screen.getByAltText("Missing"));
       fireEvent(window, new Event("online"));
       fireEvent.error(screen.getByAltText("Missing"));
@@ -52,7 +207,9 @@ describe("SpriteImage", () => {
   });
 
   it("resets failures when the source changes", () => {
-    const { rerender } = render(<SpriteImage src="/old.png" alt="Sprite" />);
+    const { rerender } = renderWithImages(
+      <SpriteImage src="/old.png" alt="Sprite" />,
+    );
     fireEvent.error(screen.getByAltText("Sprite"));
     rerender(<SpriteImage src="/new.png" alt="Sprite" />);
     expect(screen.getByAltText("Sprite")).toHaveAttribute("src", "/new.png");
@@ -60,7 +217,9 @@ describe("SpriteImage", () => {
 
   it("removes the connectivity listener when unmounted", () => {
     const remove = vi.spyOn(window, "removeEventListener");
-    const { unmount } = render(<SpriteImage src="/sprite.png" alt="Sprite" />);
+    const { unmount } = renderWithImages(
+      <SpriteImage src="/sprite.png" alt="Sprite" />,
+    );
     fireEvent.error(screen.getByAltText("Sprite"));
     unmount();
     expect(remove).toHaveBeenCalledWith("online", expect.any(Function));
@@ -68,7 +227,7 @@ describe("SpriteImage", () => {
   });
 
   it("recovers item sprites from their existing placeholder", () => {
-    const { container } = render(
+    const { container } = renderWithImages(
       <ItemSprite
         src="/item.png"
         placeholderClassName="item-placeholder"

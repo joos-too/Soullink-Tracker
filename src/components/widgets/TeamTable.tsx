@@ -296,7 +296,7 @@ const TeamTable: React.FC<TeamTableProps> = ({
                               <SpriteImage
                                 src={imgURL}
                                 alt=""
-                                className="block max-h-full max-w-full object-contain"
+                                className="block h-full w-full object-contain"
                                 loading="lazy"
                               />
                             </div>

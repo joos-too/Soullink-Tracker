@@ -44,7 +44,6 @@ const LegendaryTracker: React.FC<LegendaryTrackerProps> = ({
         if (!readOnly) onlegendaryDecrement();
       }}
       title={t("tracker.infoPanel.legendaryHint")}
-      aria-disabled={readOnly}
       style={{ cursor: readOnly ? "not-allowed" : "pointer" }}
     >
       <h2
@@ -66,6 +65,7 @@ const LegendaryTracker: React.FC<LegendaryTrackerProps> = ({
             />
           </div>
           <div
+            aria-disabled={readOnly}
             className="font-press-start text-gray-800 dark:text-gray-200 leading-none text-right"
             style={{ fontSize: "2.5rem" }}
           >

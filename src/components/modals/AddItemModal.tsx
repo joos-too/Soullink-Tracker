@@ -276,16 +276,21 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
                 {availableMegaStones.map((m) => {
                   const megaName = getItemName(m.id, locale, gameVersionId);
                   return (
-                    <button
+                    <div
                       key={m.id}
-                      type="button"
-                      onClick={() => setSelectedItemId(m.id)}
-                      className={`flex flex-col items-center p-2 rounded-md border transition-all ${focusRingCardClasses} ${
+                      className={`relative flex flex-col items-center p-2 rounded-md border transition-all ${focusRingCardClasses} ${
                         selectedItemId === m.id
                           ? "border-green-500 bg-green-50 dark:bg-green-900/20"
                           : "border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
                       }`}
                     >
+                      <button
+                        type="button"
+                        aria-label={megaName}
+                        aria-pressed={selectedItemId === m.id}
+                        onClick={() => setSelectedItemId(m.id)}
+                        className={`absolute inset-0 rounded-md ${focusRingCardClasses}`}
+                      />
                       <SpriteImage
                         src={
                           megaStoneSpriteStyle === "pokemon"
@@ -296,7 +301,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
                             : getItemSpriteUrl(m.id)
                         }
                         alt=""
-                        className="w-10 h-10 object-contain"
+                        className="relative pointer-events-none w-10 h-10 object-contain"
                         style={
                           megaStoneSpriteStyle !== "pokemon"
                             ? { imageRendering: "pixelated" }
@@ -304,10 +309,10 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
                         }
                         loading="lazy"
                       />
-                      <span className="text-[10px] mt-1 text-center dark:text-gray-200">
+                      <span className="relative pointer-events-none text-[10px] mt-1 text-center dark:text-gray-200">
                         {megaName}
                       </span>
-                    </button>
+                    </div>
                   );
                 })}
               </div>
