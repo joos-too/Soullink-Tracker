@@ -99,6 +99,23 @@ describe("image consent modal", () => {
     );
     expect(choose).toHaveBeenCalledWith(allowed);
   });
+  it("supports an additional confirmation heading without changing the default modal", () => {
+    render(
+      <MemoryRouter>
+        <ImageConsentModal
+          requireDecision
+          confirmationTitle="Are you sure?"
+          onChoose={vi.fn()}
+          onClose={vi.fn()}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole("dialog", { name: "Are you sure?" })).toBeVisible();
+    expect(
+      screen.getByRole("heading", { name: "External images from GitHub" }),
+    ).toBeVisible();
+  });
   it("keeps the choice available after a save failure", async () => {
     const choose = vi.fn().mockRejectedValue(new Error("Offline"));
     const user = userEvent.setup();

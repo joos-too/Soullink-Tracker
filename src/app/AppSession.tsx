@@ -293,8 +293,14 @@ export function AppSessionProvider({
       ? null
       : session.imageLoadingAllowed
     : anonymousConsent;
+  const consentManagedByPage =
+    pathname === "/personalize" ||
+    session.user?.requiresPersonalization === true;
   const showConsent =
-    inApp && ready && (decision === null || manualActor === actor);
+    !consentManagedByPage &&
+    inApp &&
+    ready &&
+    (decision === null || manualActor === actor);
   const openConsent = useCallback(() => setManualActor(actor), [actor]);
   return (
     <AppSessionContext.Provider value={session}>
@@ -304,7 +310,8 @@ export function AppSessionProvider({
             value={{
               decision,
               isOpen: showConsent,
-              openConsent: inApp && ready ? openConsent : null,
+              openConsent:
+                !consentManagedByPage && inApp && ready ? openConsent : null,
               showGuestFooterEntry:
                 ready && !session.user && pathname.startsWith("/tracker/"),
             }}

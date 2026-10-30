@@ -9,6 +9,7 @@ export interface AuthenticatedUser {
   uid: string;
   email: string | null;
   language: SupportedLanguage | null;
+  requiresPersonalization?: boolean;
 }
 
 export type AuthErrorCode =
@@ -29,6 +30,12 @@ const getUserLanguage = (metadata: unknown): SupportedLanguage | null => {
   return language === "de" || language === "en" ? language : null;
 };
 
+const requiresPersonalization = (metadata: unknown): boolean =>
+  typeof metadata === "object" &&
+  metadata !== null &&
+  (metadata as { personalization_completed?: unknown })
+    .personalization_completed === false;
+
 const toAuthenticatedUser = (
   user: {
     id?: string;
@@ -42,6 +49,7 @@ const toAuthenticatedUser = (
         uid: user.id,
         email: user.email ?? null,
         language: getUserLanguage(user.user_metadata),
+        requiresPersonalization: requiresPersonalization(user.user_metadata),
       }
     : null;
 };
@@ -116,7 +124,11 @@ export const signUp = async (
     email: normalizeEmail(email),
     password,
     options: {
-      data: { display_name: displayName, language },
+      data: {
+        display_name: displayName,
+        language,
+        personalization_completed: false,
+      },
     },
   });
   if (error) throw error;
@@ -124,6 +136,13 @@ export const signUp = async (
   const confirmationRequired =
     !!data.user && !data.session && data.user.identities?.length !== 0;
   return { confirmationRequired };
+};
+
+export const completeCurrentUserPersonalization = async (): Promise<void> => {
+  const { error } = await getSupabaseClient().auth.updateUser({
+    data: { personalization_completed: true },
+  });
+  if (error) throw error;
 };
 
 export const synchronizeCurrentUserLanguage = async (

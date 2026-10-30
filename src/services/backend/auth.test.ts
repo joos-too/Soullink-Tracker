@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   onCurrentAuthStateChange,
+  completeCurrentUserPersonalization,
   signIn,
   signOutCurrentUser,
   signUp,
@@ -68,7 +69,11 @@ describe("auth language metadata", () => {
       email: "trainer@example.com",
       password: "password123",
       options: {
-        data: { display_name: "Trainer", language: "en" },
+        data: {
+          display_name: "Trainer",
+          language: "en",
+          personalization_completed: false,
+        },
       },
     });
     expect(authMocks.setAuthPersistence).toHaveBeenCalledWith(false);
@@ -123,6 +128,41 @@ describe("auth language metadata", () => {
       uid: "10000000-0000-4000-8000-000000000001",
       email: "trainer@example.com",
       language: expected,
+      requiresPersonalization: false,
+    });
+  });
+
+  it("requires personalization only when registration explicitly marked it incomplete", () => {
+    let authStateCallback:
+      | ((event: string, session: unknown) => void)
+      | undefined;
+    authMocks.onAuthStateChange.mockImplementation((callback) => {
+      authStateCallback = callback;
+      return { data: { subscription: { unsubscribe: vi.fn() } } };
+    });
+    const listener = vi.fn();
+    onCurrentAuthStateChange(listener);
+
+    authStateCallback?.("SIGNED_IN", {
+      user: {
+        id: "10000000-0000-4000-8000-000000000001",
+        email: "trainer@example.com",
+        user_metadata: { personalization_completed: false },
+      },
+    });
+
+    expect(listener).toHaveBeenCalledWith(
+      expect.objectContaining({ requiresPersonalization: true }),
+    );
+  });
+
+  it("marks personalization as complete", async () => {
+    authMocks.updateUser.mockResolvedValue({ error: null });
+
+    await completeCurrentUserPersonalization();
+
+    expect(authMocks.updateUser).toHaveBeenCalledWith({
+      data: { personalization_completed: true },
     });
   });
 

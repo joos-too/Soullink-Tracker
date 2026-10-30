@@ -278,6 +278,32 @@ describe("tracker exit navigation", () => {
     expect(backend.getState).not.toHaveBeenCalled();
   });
 
+  it("sends newly registered users to personalization before home", async () => {
+    backend.user = {
+      uid: "owner",
+      email: "owner@example.com",
+      language: "en",
+      requiresPersonalization: true,
+    };
+    window.history.replaceState({}, "", "/");
+
+    render(
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>,
+    );
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "Personalize your experience",
+      }),
+    ).toBeVisible();
+    expect(window.location.pathname).toBe("/personalize");
+    expect(
+      screen.queryByRole("heading", { name: "Tracker overview" }),
+    ).not.toBeInTheDocument();
+  });
+
   it("shows not found for an invalid tracker URL without loading tracker state", async () => {
     window.history.replaceState({}, "", "/tracker/not-a-uuid");
     render(

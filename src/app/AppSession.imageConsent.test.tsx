@@ -160,7 +160,7 @@ describe("account image consent", () => {
     "persists the explicit choice %s and gates sprites",
     async (allowed) => {
       mocks.getPreferences.mockResolvedValue(preferences(null));
-      const { container } = render(app());
+      render(app());
       const user = userEvent.setup();
       await user.click(
         await screen.findByRole("button", {
@@ -170,7 +170,7 @@ describe("account image consent", () => {
         }),
       );
       expect(mocks.updateImages).toHaveBeenCalledWith("first-user", allowed);
-      expect(!!container.querySelector("img")).toBe(allowed);
+      expect(!!screen.queryByAltText("External sprite")).toBe(allowed);
       expect(
         screen.queryByRole("button", { name: "Allow external images" }),
       ).toBeNull();
@@ -179,13 +179,13 @@ describe("account image consent", () => {
 
   it("stops images immediately on withdrawal even if the account update fails", async () => {
     mocks.getPreferences.mockResolvedValue(preferences(true));
-    const { container } = render(app());
+    render(app());
     await screen.findByAltText("External sprite");
     mocks.updateImages.mockRejectedValue(new Error("Offline"));
     await userEvent
       .setup()
       .click(screen.getByRole("button", { name: "Withdraw" }));
-    expect(container.querySelector("img")).toBeNull();
+    expect(screen.queryByAltText("External sprite")).toBeNull();
     expect(mocks.setCaching).toHaveBeenLastCalledWith(false);
   });
 
@@ -236,11 +236,11 @@ describe("account image consent", () => {
         String(allowed),
       );
       unmount();
-      const { container } = render(app("/tracker/public-tracker"));
+      render(app("/tracker/public-tracker"));
       expect(
         screen.queryByRole("button", { name: "Allow external images" }),
       ).toBeNull();
-      expect(!!container.querySelector("img")).toBe(allowed);
+      expect(!!screen.queryByAltText("External sprite")).toBe(allowed);
       expect(mocks.updateImages).not.toHaveBeenCalled();
     },
   );
@@ -251,5 +251,20 @@ describe("account image consent", () => {
     const { container } = render(app());
     await screen.findByRole("button", { name: "Allow external images" });
     expect(container.querySelector("img")).toBeNull();
+  });
+
+  it("leaves the initial image decision to personalization", async () => {
+    mocks.user = {
+      uid: "first-user",
+      email: "first@example.com",
+      language: "en",
+      requiresPersonalization: true,
+    };
+    mocks.getPreferences.mockResolvedValue(preferences(null));
+
+    render(app("/"));
+
+    await waitFor(() => expect(mocks.getPreferences).toHaveBeenCalled());
+    expect(screen.queryByRole("dialog")).toBeNull();
   });
 });

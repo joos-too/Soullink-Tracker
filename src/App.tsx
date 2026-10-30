@@ -16,6 +16,9 @@ import LegalPage from "@/src/components/pages/LegalPage";
 const HomeRoute = lazy(() => import("@/src/app/HomeRoute"));
 const TrackerRoute = lazy(() => import("@/src/app/TrackerRoute"));
 const AccountRoute = lazy(() => import("@/src/app/AccountRoute"));
+const PersonalizationRoute = lazy(
+  () => import("@/src/app/PersonalizationRoute"),
+);
 const RulesetsRoute = lazy(() => import("@/src/app/RulesetsRoute"));
 const PasswordResetPage = lazy(
   () => import("@/src/components/pages/PasswordResetPage"),
@@ -49,13 +52,21 @@ function PasswordResetRoute() {
 }
 
 function AppRoutes() {
-  const { authLoading } = useAppSession();
+  const { authLoading, user } = useAppSession();
   const { pathname } = useLocation();
   if (
     authLoading &&
     !["/reset", "/legalnotice", "/privacypolicy"].includes(pathname)
   )
     return <LoadingScreen />;
+  if (
+    user?.requiresPersonalization === true &&
+    !["/personalize", "/reset", "/legalnotice", "/privacypolicy"].includes(
+      pathname,
+    )
+  ) {
+    return <Navigate to="/personalize" replace />;
+  }
   return (
     <Suspense fallback={<LoadingScreen />}>
       <Routes>
@@ -74,6 +85,18 @@ function AppRoutes() {
         />
         <Route path="/tracker/:trackerId" element={<TrackerRoute />} />
         <Route path="/tracker" element={<LastTrackerRoute />} />
+        <Route
+          path="/personalize"
+          element={
+            <RequireUser>
+              {user?.requiresPersonalization === true ? (
+                <PersonalizationRoute />
+              ) : (
+                <Navigate to="/" replace />
+              )}
+            </RequireUser>
+          }
+        />
         <Route
           path="/account"
           element={

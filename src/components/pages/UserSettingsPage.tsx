@@ -27,14 +27,9 @@ import { WIKIS, type WikiId } from "@/src/utils/wikiPreferences";
 import TriStateToggle from "@/src/components/toggles/TriStateToggle.tsx";
 import type { PokemonImageStyle } from "@/types.ts";
 
-interface UserSettingsPageProps {
+export interface UserPreferenceSectionsProps {
   allowImageLoading?: boolean | null;
   onImageLoadingChange?: (allowed: boolean) => Promise<void>;
-  email?: string | null;
-  displayName: string;
-  onDisplayNameChange: (displayName: string) => Promise<void>;
-  onBack: () => void;
-  onLogout: () => void;
   useGenerationSprites?: boolean;
   onGenerationSpritesToggle: (enabled: boolean) => void;
   pokemonImageStyle: PokemonImageStyle;
@@ -43,14 +38,14 @@ interface UserSettingsPageProps {
   onWikiChange: (id: WikiId) => void;
   multiLocaleSearch?: boolean;
   onMultiLocaleSearchToggle: (enabled: boolean) => void;
+  showTopDivider?: boolean;
+  showImageLoadingSetting?: boolean;
 }
 
-const UserSettingsPage: React.FC<UserSettingsPageProps> = ({
-  email,
-  displayName,
-  onDisplayNameChange,
-  onBack,
-  onLogout,
+/** The preference sections shared by account settings and personalization. */
+export function UserPreferenceSections({
+  allowImageLoading,
+  onImageLoadingChange,
   useGenerationSprites,
   onGenerationSpritesToggle,
   pokemonImageStyle,
@@ -59,8 +54,269 @@ const UserSettingsPage: React.FC<UserSettingsPageProps> = ({
   onWikiChange,
   multiLocaleSearch,
   onMultiLocaleSearchToggle,
-  allowImageLoading,
-  onImageLoadingChange,
+  showTopDivider = true,
+  showImageLoadingSetting = true,
+}: UserPreferenceSectionsProps) {
+  const [imageConsentSaving, setImageConsentSaving] = useState(false);
+  const [imageConsentError, setImageConsentError] = useState(false);
+  const [pokemonImageStyleError, setPokemonImageStyleError] = useState(false);
+  const { t } = useTranslation();
+
+  return (
+    <>
+      <section
+        className={`${showTopDivider ? "mt-6 border-t border-gray-200 pt-6 dark:border-gray-700" : "mt-6"} space-y-3`}
+      >
+        <h2 className={sectionHeadingClasses}>
+          {t("userSettings.language.title")}
+        </h2>
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          {t("userSettings.language.description")}
+        </p>
+        <div className="flex justify-start">
+          <LanguageToggle />
+        </div>
+
+        <div className="flex items-center justify-between pt-3">
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <div className="font-medium text-gray-800 dark:text-gray-200">
+                {t("userSettings.language.multiLocaleSearch.title")}
+              </div>
+              <Tooltip
+                side="top"
+                content={t("userSettings.language.multiLocaleSearch.tooltip")}
+              >
+                <span
+                  className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 cursor-help"
+                  aria-label={t(
+                    "userSettings.language.multiLocaleSearch.title",
+                  )}
+                >
+                  <FiInfo size={16} />
+                </span>
+              </Tooltip>
+            </div>
+            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              {t("userSettings.language.multiLocaleSearch.description")}
+            </div>
+          </div>
+          <ToggleSwitch
+            id="multi-locale-search-toggle"
+            checked={multiLocaleSearch ?? false}
+            onChange={onMultiLocaleSearchToggle}
+            ariaLabel={t("userSettings.language.multiLocaleSearch.title")}
+          />
+        </div>
+      </section>
+
+      <section className="pt-6 border-t border-gray-200 dark:border-gray-700 mt-6 space-y-4">
+        <h2 className={sectionHeadingClasses}>
+          {t("userSettings.sprites.title")}
+        </h2>
+
+        {showImageLoadingSetting && onImageLoadingChange && (
+          <div>
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-medium text-gray-800 dark:text-gray-200">
+                    {t("privacy.images.title")}
+                  </h3>
+                  <Tooltip side="top" content={t("privacy.images.description")}>
+                    <span
+                      className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 cursor-help"
+                      aria-label={t("privacy.images.title")}
+                    >
+                      <FiInfo size={16} />
+                    </span>
+                  </Tooltip>
+                </div>
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  {t("privacy.images.withdrawal")}
+                </p>
+              </div>
+              <ToggleSwitch
+                id="allow-image-loading"
+                checked={allowImageLoading === true}
+                disabled={imageConsentSaving}
+                ariaLabel={t("privacy.images.title")}
+                onChange={(allowed) => {
+                  setImageConsentSaving(true);
+                  setImageConsentError(false);
+                  void onImageLoadingChange(allowed)
+                    .catch(() => setImageConsentError(true))
+                    .finally(() => setImageConsentSaving(false));
+                }}
+              />
+            </div>
+            {imageConsentError && (
+              <p
+                role="alert"
+                className="mt-2 text-sm text-red-600 dark:text-red-400"
+              >
+                {t("privacy.images.saveError")}
+              </p>
+            )}
+          </div>
+        )}
+
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <div className="font-medium text-gray-800 dark:text-gray-200">
+                {t("userSettings.sprites.imageStyle.title")}
+              </div>
+              <Tooltip
+                side="top"
+                content={t("userSettings.sprites.imageStyle.tooltip")}
+              >
+                <span
+                  className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 cursor-help"
+                  aria-label={t("userSettings.sprites.imageStyle.title")}
+                >
+                  <FiInfo size={16} />
+                </span>
+              </Tooltip>
+            </div>
+            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              {t("userSettings.sprites.imageStyle.description")}
+            </div>
+          </div>
+          <div className="flex shrink-0 flex-col items-end gap-1">
+            <TriStateToggle
+              id="pokemon-image-style-toggle"
+              value={pokemonImageStyle}
+              options={[
+                {
+                  value: "artwork",
+                  label: t("userSettings.sprites.imageStyle.artwork"),
+                },
+                {
+                  value: "mixed",
+                  label: t("userSettings.sprites.imageStyle.mixed"),
+                },
+                {
+                  value: "sprites",
+                  label: t("userSettings.sprites.imageStyle.sprites"),
+                },
+              ]}
+              onChange={(style) => {
+                setPokemonImageStyleError(false);
+                void onPokemonImageStyleChange(style).catch(() =>
+                  setPokemonImageStyleError(true),
+                );
+              }}
+              ariaLabel={t("userSettings.sprites.imageStyle.title")}
+            />
+            {pokemonImageStyleError && (
+              <span
+                role="alert"
+                className="max-w-64 text-right text-xs text-red-600 dark:text-red-400"
+              >
+                {t("userSettings.sprites.imageStyle.saveError")}
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <div className="font-medium text-gray-800 dark:text-gray-200">
+                {t("settings.features.generationSprites.title")}
+              </div>
+              <Tooltip
+                side="top"
+                content={t("settings.features.generationSprites.tooltip")}
+              >
+                <span
+                  className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 cursor-help"
+                  aria-label={t(
+                    "settings.features.generationSprites.tooltipLabel",
+                  )}
+                >
+                  <FiInfo size={16} />
+                </span>
+              </Tooltip>
+            </div>
+            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              {t("settings.features.generationSprites.description")}
+            </div>
+          </div>
+          <ToggleSwitch
+            id="generation-sprites-toggle"
+            checked={useGenerationSprites ?? false}
+            onChange={onGenerationSpritesToggle}
+            ariaLabel={t("settings.features.generationSprites.title")}
+            disabled={pokemonImageStyle === "artwork"}
+          />
+        </div>
+      </section>
+
+      <section className="pt-6 border-t border-gray-200 dark:border-gray-700 mt-6 space-y-4">
+        <h2 className={sectionHeadingClasses}>
+          {t("userSettings.wiki.title")}
+        </h2>
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          {t("userSettings.wiki.description")}
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {WIKIS.map((wiki) => {
+            const isActive = wikiId === wiki.id;
+            return (
+              <button
+                key={wiki.id}
+                type="button"
+                onClick={() => onWikiChange(wiki.id)}
+                className={`flex-1 min-w-35 flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all shadow-sm outline-none ${
+                  isActive
+                    ? "border-green-500 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300"
+                    : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-md"
+                }`}
+              >
+                <span className="font-bold flex items-center gap-1.5">
+                  {wiki.name}
+                  <a
+                    href={wiki.baseUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(event) => event.stopPropagation()}
+                    className="opacity-60 hover:opacity-100"
+                    tabIndex={-1}
+                  >
+                    <FiExternalLink size={13} />
+                  </a>
+                </span>
+                <span className="text-xs uppercase tracking-wider opacity-70">
+                  {wiki.language === "de"
+                    ? t("userSettings.wiki.languageDE")
+                    : t("userSettings.wiki.languageEN")}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </section>
+    </>
+  );
+}
+
+interface UserSettingsPageProps extends UserPreferenceSectionsProps {
+  email?: string | null;
+  displayName: string;
+  onDisplayNameChange: (displayName: string) => Promise<void>;
+  onBack: () => void;
+  onLogout: () => void;
+}
+
+const UserSettingsPage: React.FC<UserSettingsPageProps> = ({
+  email,
+  displayName,
+  onDisplayNameChange,
+  onBack,
+  onLogout,
+  ...preferenceProps
 }) => {
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
   const [message, setMessage] = useState<string | null>(null);
@@ -68,9 +324,6 @@ const UserSettingsPage: React.FC<UserSettingsPageProps> = ({
   const [displayNameDraft, setDisplayNameDraft] = useState(displayName);
   const [displayNameSaving, setDisplayNameSaving] = useState(false);
   const [displayNameError, setDisplayNameError] = useState<string | null>(null);
-  const [imageConsentSaving, setImageConsentSaving] = useState(false);
-  const [imageConsentError, setImageConsentError] = useState(false);
-  const [pokemonImageStyleError, setPokemonImageStyleError] = useState(false);
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -269,243 +522,7 @@ const UserSettingsPage: React.FC<UserSettingsPageProps> = ({
             </div>
           </section>
 
-          <section className="pt-6 border-t border-gray-200 dark:border-gray-700 mt-6 space-y-3">
-            <h2 className={sectionHeadingClasses}>
-              {t("userSettings.language.title")}
-            </h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              {t("userSettings.language.description")}
-            </p>
-            <div className="flex justify-start">
-              <LanguageToggle />
-            </div>
-
-            <div className="flex items-center justify-between pt-3">
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <div className="font-medium text-gray-800 dark:text-gray-200">
-                    {t("userSettings.language.multiLocaleSearch.title")}
-                  </div>
-                  <Tooltip
-                    side="top"
-                    content={t(
-                      "userSettings.language.multiLocaleSearch.tooltip",
-                    )}
-                  >
-                    <span
-                      className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 cursor-help"
-                      aria-label={t(
-                        "userSettings.language.multiLocaleSearch.title",
-                      )}
-                    >
-                      <FiInfo size={16} />
-                    </span>
-                  </Tooltip>
-                </div>
-                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  {t("userSettings.language.multiLocaleSearch.description")}
-                </div>
-              </div>
-              <ToggleSwitch
-                id="multi-locale-search-toggle"
-                checked={multiLocaleSearch ?? false}
-                onChange={onMultiLocaleSearchToggle}
-                ariaLabel={t("userSettings.language.multiLocaleSearch.title")}
-              />
-            </div>
-          </section>
-
-          <section className="pt-6 border-t border-gray-200 dark:border-gray-700 mt-6 space-y-4">
-            <h2 className={sectionHeadingClasses}>
-              {t("userSettings.sprites.title")}
-            </h2>
-
-            {onImageLoadingChange && (
-              <div>
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-medium text-gray-800 dark:text-gray-200">
-                        {t("privacy.images.title")}
-                      </h3>
-                      <Tooltip
-                        side="top"
-                        content={t("privacy.images.description")}
-                      >
-                        <span
-                          className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 cursor-help"
-                          aria-label={t("privacy.images.title")}
-                        >
-                          <FiInfo size={16} />
-                        </span>
-                      </Tooltip>
-                    </div>
-                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                      {t("privacy.images.withdrawal")}
-                    </p>
-                  </div>
-                  <ToggleSwitch
-                    id="allow-image-loading"
-                    checked={allowImageLoading === true}
-                    disabled={imageConsentSaving}
-                    ariaLabel={t("privacy.images.title")}
-                    onChange={(allowed) => {
-                      setImageConsentSaving(true);
-                      setImageConsentError(false);
-                      void onImageLoadingChange(allowed)
-                        .catch(() => setImageConsentError(true))
-                        .finally(() => setImageConsentSaving(false));
-                    }}
-                  />
-                </div>
-                {imageConsentError && (
-                  <p
-                    role="alert"
-                    className="mt-2 text-sm text-red-600 dark:text-red-400"
-                  >
-                    {t("privacy.images.saveError")}
-                  </p>
-                )}
-              </div>
-            )}
-
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <div className="font-medium text-gray-800 dark:text-gray-200">
-                    {t("userSettings.sprites.imageStyle.title")}
-                  </div>
-                  <Tooltip
-                    side="top"
-                    content={t("userSettings.sprites.imageStyle.tooltip")}
-                  >
-                    <span
-                      className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 cursor-help"
-                      aria-label={t("userSettings.sprites.imageStyle.title")}
-                    >
-                      <FiInfo size={16} />
-                    </span>
-                  </Tooltip>
-                </div>
-                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  {t("userSettings.sprites.imageStyle.description")}
-                </div>
-              </div>
-              <div className="flex shrink-0 flex-col items-end gap-1">
-                <TriStateToggle
-                  id="pokemon-image-style-toggle"
-                  value={pokemonImageStyle}
-                  options={[
-                    {
-                      value: "artwork",
-                      label: t("userSettings.sprites.imageStyle.artwork"),
-                    },
-                    {
-                      value: "mixed",
-                      label: t("userSettings.sprites.imageStyle.mixed"),
-                    },
-                    {
-                      value: "sprites",
-                      label: t("userSettings.sprites.imageStyle.sprites"),
-                    },
-                  ]}
-                  onChange={(style) => {
-                    setPokemonImageStyleError(false);
-                    void onPokemonImageStyleChange(style).catch(() =>
-                      setPokemonImageStyleError(true),
-                    );
-                  }}
-                  ariaLabel={t("userSettings.sprites.imageStyle.title")}
-                />
-                {pokemonImageStyleError && (
-                  <span
-                    role="alert"
-                    className="max-w-64 text-right text-xs text-red-600 dark:text-red-400"
-                  >
-                    {t("userSettings.sprites.imageStyle.saveError")}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <div className="font-medium text-gray-800 dark:text-gray-200">
-                    {t("settings.features.generationSprites.title")}
-                  </div>
-                  <Tooltip
-                    side="top"
-                    content={t("settings.features.generationSprites.tooltip")}
-                  >
-                    <span
-                      className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 cursor-help"
-                      aria-label={t(
-                        "settings.features.generationSprites.tooltipLabel",
-                      )}
-                    >
-                      <FiInfo size={16} />
-                    </span>
-                  </Tooltip>
-                </div>
-                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  {t("settings.features.generationSprites.description")}
-                </div>
-              </div>
-              <ToggleSwitch
-                id="generation-sprites-toggle"
-                checked={useGenerationSprites ?? false}
-                onChange={onGenerationSpritesToggle}
-                ariaLabel={t("settings.features.generationSprites.title")}
-                disabled={pokemonImageStyle === "artwork"}
-              />
-            </div>
-          </section>
-
-          <section className="pt-6 border-t border-gray-200 dark:border-gray-700 mt-6 space-y-4">
-            <h2 className={sectionHeadingClasses}>
-              {t("userSettings.wiki.title")}
-            </h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              {t("userSettings.wiki.description")}
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {WIKIS.map((wiki) => {
-                const isActive = wikiId === wiki.id;
-                return (
-                  <button
-                    key={wiki.id}
-                    type="button"
-                    onClick={() => onWikiChange(wiki.id)}
-                    className={`flex-1 min-w-35 flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all shadow-sm outline-none ${
-                      isActive
-                        ? "border-green-500 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300"
-                        : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-md"
-                    }`}
-                  >
-                    <span className="font-bold flex items-center gap-1.5">
-                      {wiki.name}
-                      <a
-                        href={wiki.baseUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        className="opacity-60 hover:opacity-100"
-                        tabIndex={-1}
-                      >
-                        <FiExternalLink size={13} />
-                      </a>
-                    </span>
-                    <span className="text-xs uppercase tracking-wider opacity-70">
-                      {wiki.language === "de"
-                        ? t("userSettings.wiki.languageDE")
-                        : t("userSettings.wiki.languageEN")}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </section>
+          <UserPreferenceSections {...preferenceProps} />
 
           <section className="pt-6 border-t border-gray-200 dark:border-gray-700 mt-6">
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">

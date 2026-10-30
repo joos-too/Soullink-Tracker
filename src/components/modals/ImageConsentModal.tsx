@@ -9,6 +9,7 @@ interface ImageConsentModalProps {
   requireDecision: boolean;
   onChoose: (allowed: boolean) => Promise<void>;
   onClose: () => void;
+  confirmationTitle?: string;
 }
 
 /** Mounted only while open. A separate portal keeps underlying drafts intact. */
@@ -16,6 +17,7 @@ export default function ImageConsentModal({
   requireDecision,
   onChoose,
   onClose,
+  confirmationTitle,
 }: ImageConsentModalProps) {
   const { t } = useTranslation();
   const titleId = useId();
@@ -79,9 +81,17 @@ export default function ImageConsentModal({
         tabIndex={-1}
         className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-lg bg-white p-6 shadow-xl dark:bg-gray-800"
       >
+        {confirmationTitle && (
+          <h2
+            id={titleId}
+            className="text-xl font-bold text-gray-900 dark:text-gray-100"
+          >
+            {confirmationTitle}
+          </h2>
+        )}
         <h2
-          id={titleId}
-          className="text-xl font-bold text-gray-900 dark:text-gray-100"
+          id={confirmationTitle ? undefined : titleId}
+          className={`${confirmationTitle ? "mt-3 text-base" : "text-xl"} font-bold text-gray-900 dark:text-gray-100`}
         >
           {t("privacy.images.title")}
         </h2>

@@ -725,6 +725,16 @@ export const de = {
       languageEN: "EN",
     },
   },
+  personalization: {
+    title: "Personalisiere deine Erfahrung",
+    description:
+      "Wähle aus, wie der Soullink Tracker aussehen und sich verhalten soll. Du kannst diese Einstellungen jederzeit wieder ändern.",
+    allowImages: "Ich möchte externe Bilder von GitHub erlauben.",
+    imageConfirmationTitle: "Bist du sicher?",
+    continue: "Weiter zum Tracker",
+    saveError:
+      "Die Personalisierung konnte nicht abgeschlossen werden. Bitte versuche es erneut.",
+  },
   privacy: {
     policy: "Datenschutzerklärung",
     settings: "Datenschutzeinstellungen",
