@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useImageLoading } from "@/src/contexts/ImageLoadingContext";
 import { useImageConsent } from "@/src/contexts/ImageConsentContext";
 import { useTranslation } from "react-i18next";
-import { FiImage, FiSettings } from "react-icons/fi";
 
 interface SpriteImageProps
   extends Omit<React.ImgHTMLAttributes<HTMLImageElement>, "src"> {
@@ -10,40 +9,14 @@ interface SpriteImageProps
   fallback?: React.ReactNode;
 }
 
-// Files in public are served from the site root. Prefer an animated
-// placeholder when present, then fall back to the static PNG.
-const BLOCKED_IMAGE_PLACEHOLDER_SOURCES = [
-  "/github-image-blocked.gif",
-  "/github-image-blocked.png",
-] as const;
-
-const BlockedImagePlaceholder: React.FC = () => {
-  const [sourceIndex, setSourceIndex] = useState(0);
-  const source = BLOCKED_IMAGE_PLACEHOLDER_SOURCES[sourceIndex];
-
-  if (!source) {
-    return (
-      <span
-        className="relative flex h-full w-full items-center justify-center"
-        aria-hidden="true"
-      >
-        <FiImage className="h-2/3 w-2/3" />
-        <FiSettings className="absolute bottom-0 right-0 h-1/2 w-1/2 rounded-full bg-blue-50 dark:bg-gray-800" />
-      </span>
-    );
-  }
-
-  return (
-    <img
-      src={source}
-      alt=""
-      aria-hidden="true"
-      className="h-full w-full object-contain"
-      style={{ imageRendering: "pixelated" }}
-      onError={() => setSourceIndex((current) => current + 1)}
-    />
-  );
-};
+const BlockedImagePlaceholder: React.FC = () => (
+  <img
+    src="/github-image-blocked.png"
+    alt=""
+    aria-hidden="true"
+    className="h-full w-full object-contain"
+  />
+);
 
 const SpriteImageAttempt: React.FC<SpriteImageProps> = ({
   src,
