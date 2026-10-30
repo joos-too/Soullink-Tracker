@@ -221,8 +221,8 @@ values
       "locationSlug": "kanto-route-2",
       "members": [
         {
-          "id": 10,
-          "nickname": "Crawler"
+          "id": 15,
+          "nickname": "Driller"
         },
         {
           "id": 13,
@@ -239,8 +239,8 @@ values
           "nickname": "Sparky"
         },
         {
-          "id": 27,
-          "nickname": "Sandy"
+          "id": 75,
+          "nickname": "Roller"
         }
       ]
     }
