@@ -77,10 +77,12 @@ The local seed accounts all use password `testpassword123`:
 | `guest@example.com`     | Guest on the public Gen 1 tracker  |
 | `unrelated@example.com` | No memberships                     |
 
-The four tracker IDs and all user IDs are fixed UUIDs so database and frontend
-tests remain deterministic. The fixtures may be loaded locally or through the
-staging deployment workflow. They must never be included in a normal
-hosted database push or applied to production.
+The five tracker IDs and all user IDs are fixed UUIDs so database and frontend
+tests remain deterministic. Tracker `30000000-0000-0000-0000-000000000005`
+is a deliberately full three-player fixture for testing dense tracker and search
+layouts. The fixtures may be loaded locally or through the staging deployment
+workflow. They must never be included in a normal hosted database push or
+applied to production.
 
 ## Automated tests
 
