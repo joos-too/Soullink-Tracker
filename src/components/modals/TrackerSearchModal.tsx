@@ -318,7 +318,12 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
 
   if (!isOpen) return null;
 
-  const modalWidthClass = playerNames.length >= 3 ? "max-w-5xl" : "max-w-3xl";
+  const modalWidthClass =
+    playerNames.length >= 3
+      ? "max-w-4xl"
+      : playerNames.length === 2
+        ? "max-w-2xl"
+        : "max-w-xl";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-2 sm:p-4">
