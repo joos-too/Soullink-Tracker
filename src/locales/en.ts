@@ -162,6 +162,16 @@ export const en = {
       selectHint: "Select the player whose Pokémon died.",
       confirm: "Confirm",
     },
+    restoreLink: {
+      title: "Restore link?",
+      description:
+        "Moves the link back to the box and subtracts one death from the selected player.",
+      tooltipLabel: "Info about restoring a link",
+      autoAssign: "One death will be removed from <strong>{{player}}</strong>.",
+      selectHint:
+        "This older link has no saved death attribution. Select the player whose death count should decrease by one.",
+      confirm: "Restore",
+    },
     deleteLink: {
       title: "Delete Link?",
       description:
@@ -443,6 +453,7 @@ export const en = {
     title: "Lost Pokémon",
     manualAddTitle: "Add lost Pokémon",
     titleEdit: "Edit",
+    titleRestore: "Restore to box",
     statusDead: "Dead",
     statusLost: "Lost",
     areaLabel: "Area: {{location}}",

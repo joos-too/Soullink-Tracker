@@ -856,7 +856,7 @@ export const GAME_VERSIONS: Record<string, GameVersion> = {
   },
   gen4_dp: {
     id: "gen4_dp",
-    badgeSet: "gen4/dppt",
+    badgeSet: "gen4/dp",
     badge: {
       segments: [
         {
@@ -987,7 +987,7 @@ export const GAME_VERSIONS: Record<string, GameVersion> = {
   },
   gen4_pt: {
     id: "gen4_pt",
-    badgeSet: "gen4/dppt",
+    badgeSet: "gen4/pt",
     badge: {
       segments: [
         {

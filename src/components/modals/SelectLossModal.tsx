@@ -18,6 +18,7 @@ interface SelectLossModalProps {
   playerNames: string[];
   generationSpritePath: string;
   nicknamesEnabled?: boolean;
+  mode?: "kill" | "restore";
 }
 
 const SelectLossModal: React.FC<SelectLossModalProps> = ({
@@ -28,12 +29,15 @@ const SelectLossModal: React.FC<SelectLossModalProps> = ({
   playerNames,
   generationSpritePath,
   nicknamesEnabled = true,
+  mode = "kill",
 }) => {
   const [selected, setSelected] = useState<number | null>(null);
   const { t, i18n } = useTranslation();
   const locale = normalizeLanguage(i18n.language);
   const { containerRef } = useFocusTrap(isOpen);
   const titleId = useId();
+  const translationPrefix =
+    mode === "restore" ? "modals.restoreLink" : "modals.selectLoss";
 
   useEffect(() => {
     if (isOpen) {
@@ -63,12 +67,12 @@ const SelectLossModal: React.FC<SelectLossModalProps> = ({
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center gap-2">
             <h2 id={titleId} className="text-lg font-bold dark:text-gray-100">
-              {t("modals.selectLoss.title")}
+              {t(`${translationPrefix}.title`)}
             </h2>
-            <Tooltip side="top" content={t("modals.selectLoss.description")}>
+            <Tooltip side="top" content={t(`${translationPrefix}.description`)}>
               <span
                 className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 cursor-help"
-                aria-label={t("modals.selectLoss.tooltipLabel")}
+                aria-label={t(`${translationPrefix}.tooltipLabel`)}
               >
                 <FiInfo size={16} />
               </span>
@@ -163,7 +167,9 @@ const SelectLossModal: React.FC<SelectLossModalProps> = ({
                         key={`loss-preview-${index}`}
                         className={`flex items-center justify-between cursor-pointer rounded-md px-2.5 py-1.5 border-2 transition-colors ${
                           isSelected
-                            ? "border-red-500 bg-red-50 dark:bg-red-900/30"
+                            ? mode === "restore"
+                              ? "border-orange-500 bg-orange-50 dark:bg-orange-900/30"
+                              : "border-red-500 bg-red-50 dark:bg-red-900/30"
                             : "border-transparent bg-gray-50 dark:bg-gray-700/50 hover:border-gray-300 dark:hover:border-gray-500"
                         } ${focusRingClasses}`}
                       >
@@ -173,7 +179,7 @@ const SelectLossModal: React.FC<SelectLossModalProps> = ({
                             name="lost-player"
                             checked={isSelected}
                             onChange={() => setSelected(index)}
-                            className="h-4 w-4 accent-red-600"
+                            className={`h-4 w-4 ${mode === "restore" ? "accent-orange-600" : "accent-red-600"}`}
                           />
                           <span className="font-semibold text-xs dark:text-gray-200">
                             {name}
@@ -203,12 +209,12 @@ const SelectLossModal: React.FC<SelectLossModalProps> = ({
               <p className="mt-3 text-xs font-semibold">
                 {playerNames.length === 1 ? (
                   <Trans
-                    i18nKey="modals.selectLoss.autoAssign"
+                    i18nKey={`${translationPrefix}.autoAssign`}
                     values={{ player: playerNames[0] }}
                     components={{ strong: <span className="font-semibold" /> }}
                   />
                 ) : (
-                  t("modals.selectLoss.selectHint")
+                  t(`${translationPrefix}.selectHint`)
                 )}
               </p>
             </div>
@@ -225,9 +231,9 @@ const SelectLossModal: React.FC<SelectLossModalProps> = ({
             <button
               type="submit"
               disabled={selected === null}
-              className={`px-4 py-2 text-sm font-semibold rounded-md shadow ${focusRingClasses} ${selected !== null ? "bg-red-600 text-white hover:bg-red-700 dark:hover:bg-red-500" : "bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"}`}
+              className={`px-4 py-2 text-sm font-semibold rounded-md shadow ${focusRingClasses} ${selected !== null ? (mode === "restore" ? "bg-orange-600 text-white hover:bg-orange-700 dark:hover:bg-orange-500" : "bg-red-600 text-white hover:bg-red-700 dark:hover:bg-red-500") : "bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"}`}
             >
-              {t("modals.selectLoss.confirm")}
+              {t(`${translationPrefix}.confirm`)}
             </button>
           </div>
         </form>

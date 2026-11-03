@@ -4,7 +4,8 @@ import type { LinkEditPayload, LinkId, PokemonLink } from "@/types.ts";
 import { PLAYER_COLORS } from "@/src/services/init.ts";
 import { useTranslation } from "react-i18next";
 import { focusRingClasses } from "@/src/styles/focusRing.ts";
-import { FiEdit, FiTrash } from "react-icons/fi";
+import { FiEdit, FiRotateCcw, FiTrash } from "react-icons/fi";
+import SelectLossModal from "@/src/components/modals/SelectLossModal.tsx";
 import AddLostPokemonModal from "@/src/components/modals/AddLostPokemonModal.tsx";
 import EditPairModal from "@/src/components/modals/EditPairModal.tsx";
 import type { WikiId } from "@/src/utils/wiki.ts";
@@ -18,6 +19,7 @@ interface GraveyardProps {
   onManualAddClick?: () => void;
   onEditPair: (pairId: LinkId, payload: LinkEditPayload) => void;
   onDeleteLink?: (pair: PokemonLink) => void;
+  onRestoreLink?: (pair: PokemonLink, legacyPlayerIndex?: number) => void;
   readOnly?: boolean;
   generationSpritePath?: string | null;
   pokemonGenerationLimit?: number;
@@ -41,6 +43,7 @@ const Graveyard: React.FC<GraveyardProps> = ({
   onManualAddClick,
   onEditPair,
   onDeleteLink,
+  onRestoreLink,
   generationSpritePath,
   pokemonGenerationLimit,
   gameVersionId,
@@ -67,10 +70,15 @@ const Graveyard: React.FC<GraveyardProps> = ({
   const [editSession, setEditSession] = useState<GraveyardEditSession | null>(
     null,
   );
+  const [restorePairId, setRestorePairId] = useState<LinkId | null>(null);
+  const restorePair = graveyard.find(
+    (pair) => pair.id === restorePairId && !pair.isLost,
+  );
 
   useEffect(() => {
     if (readOnly) {
       setEditSession(null);
+      setRestorePairId(null);
     }
   }, [readOnly]);
 
@@ -125,7 +133,8 @@ const Graveyard: React.FC<GraveyardProps> = ({
                     (member) =>
                       typeof member?.id === "number" || Boolean(member?.name),
                   ));
-              const canDelete = !readOnly && onDeleteLink;
+              const canDelete = !readOnly && pair.isLost && onDeleteLink;
+              const canRestore = !readOnly && !pair.isLost && onRestoreLink;
               return (
                 <PokemonPairCard
                   key={pair.id}
@@ -137,7 +146,7 @@ const Graveyard: React.FC<GraveyardProps> = ({
                   wikiId={wikiId}
                   nicknamesEnabled={nicknamesEnabled}
                 >
-                  {(canEdit || canDelete) && (
+                  {(canEdit || canDelete || canRestore) && (
                     <div className="absolute right-2 top-2 flex items-center gap-1">
                       {canEdit && (
                         <button
@@ -170,6 +179,23 @@ const Graveyard: React.FC<GraveyardProps> = ({
                           <FiEdit size={14} />
                         </button>
                       )}
+                      {canRestore && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (pair.deathPlayerIndex == null) {
+                              setRestorePairId(pair.id);
+                            } else {
+                              onRestoreLink(pair);
+                            }
+                          }}
+                          className={`p-1 rounded-full text-red-600 hover:text-red-700 dark:text-red-500 dark:hover:text-red-400 hover:bg-gray-200 dark:hover:bg-gray-600 ${focusRingClasses}`}
+                          title={t("graveyard.titleRestore")}
+                          aria-label={t("graveyard.titleRestore")}
+                        >
+                          <FiRotateCcw size={14} />
+                        </button>
+                      )}
                       {canDelete && (
                         <button
                           type="button"
@@ -193,6 +219,22 @@ const Graveyard: React.FC<GraveyardProps> = ({
           </p>
         )}
       </div>
+      {!readOnly && restorePair && onRestoreLink && (
+        <SelectLossModal
+          key={restorePair.id}
+          isOpen
+          mode="restore"
+          onClose={() => setRestorePairId(null)}
+          onConfirm={(playerIndex) => {
+            onRestoreLink(restorePair, playerIndex);
+            setRestorePairId(null);
+          }}
+          pair={restorePair}
+          playerNames={names}
+          generationSpritePath={generationSpritePath ?? ""}
+          nicknamesEnabled={nicknamesEnabled}
+        />
+      )}
       {!readOnly && editSession && !editSession.isLost && (
         <EditPairModal
           onClose={() => setEditSession(null)}
