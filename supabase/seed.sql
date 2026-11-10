@@ -184,6 +184,17 @@ values
     false,
     true,
     'default_trio_ruleset'
+  ),
+  (
+    '30000000-0000-0000-0000-000000000006',
+    'Pokémon FireRed & LeafGreen Solo',
+    array['Red'],
+    '10000000-0000-0000-0000-000000000001',
+    '2026-11-01T00:00:00.000Z',
+    'gen3_frlg',
+    false,
+    false,
+    'default_solo_ruleset_en'
   );
 
 -- The additional editor/guest rows and public Gen 1 tracker are Supabase-only
@@ -197,7 +208,8 @@ values
   ('30000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000001', 'owner', '{}'),
   ('30000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000001', 'owner', '{}'),
   ('30000000-0000-0000-0000-000000000004', '10000000-0000-0000-0000-000000000001', 'owner', '{}'),
-  ('30000000-0000-0000-0000-000000000005', '10000000-0000-0000-0000-000000000001', 'owner', '{}');
+  ('30000000-0000-0000-0000-000000000005', '10000000-0000-0000-0000-000000000001', 'owner', '{}'),
+  ('30000000-0000-0000-0000-000000000006', '10000000-0000-0000-0000-000000000001', 'owner', '{"rivalPreferences":{"blue":"male"}}');
 
 insert into public.tracker_states (
   tracker_id,
@@ -2048,6 +2060,327 @@ values
     12,
     '10000000-0000-0000-0000-000000000001'
   );
+
+-- Solo fixture: one member per encounter and one column for player data.
+insert into public.tracker_states (tracker_id, state, schema_version, revision, updated_by)
+values (
+  '30000000-0000-0000-0000-000000000006',
+  private.migrate_tracker_link_ids('30000000-0000-0000-0000-000000000006', $state${
+  "team": [
+    {
+      "id": 1,
+      "locationSlug": "kanto-route-1",
+      "members": [
+        {
+          "id": 16,
+          "nickname": "Gust"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "locationSlug": "kanto-route-2",
+      "members": [
+        {
+          "id": 10,
+          "nickname": "Crawler"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "locationSlug": "viridian-forest",
+      "members": [
+        {
+          "id": 25,
+          "nickname": "Sparky"
+        }
+      ]
+    }
+  ],
+  "box": [
+    {
+      "id": 4,
+      "locationSlug": "kanto-route-3",
+      "members": [
+        {
+          "id": 12,
+          "nickname": "Flutter"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "locationSlug": "kanto-route-4",
+      "members": [
+        {
+          "id": 129,
+          "nickname": "Splashy"
+        }
+      ]
+    }
+  ],
+  "graveyard": [
+    {
+      "id": 6,
+      "locationSlug": "mt-moon",
+      "members": [
+        {
+          "id": 74,
+          "nickname": "Boulder"
+        }
+      ],
+      "deathPlayerIndex": 0
+    },
+    {
+      "id": 7,
+      "locationSlug": "rock-tunnel",
+      "members": [
+        {
+          "id": 66,
+          "nickname": "Flex"
+        }
+      ],
+      "deathPlayerIndex": 0
+    },
+    {
+      "id": 8,
+      "locationSlug": "pokemon-tower",
+      "members": [
+        {
+          "id": 92,
+          "nickname": ""
+        }
+      ],
+      "isLost": true
+    }
+  ],
+  "rules": [
+    "Only the first Pokémon encountered on each route/area may be caught.",
+    "Pokémon that have already been caught/encountered (or are in the same evolution line) do not count as route Pokémon and may be rerolled. Maximum 2 additional attempts.",
+    "Gift/static Pokémon and fossils do not count as area Pokémon and may be used. Identical statics and fossils may only be used once.",
+    "If a Pokémon flees or faints during the catch attempt, the area is lost.",
+    "Every Pokémon receives a nickname.",
+    "Defeated Pokémon are considered dead and must be placed in a grave box.",
+    "Pokémon, items, and trainers are randomized.",
+    "The bonus shop is randomized; each item may only be purchased once.",
+    "The level cap must not be exceeded (1 Pokémon may match the upper level, the rest must match the lower if existing). Overleveled Pokémon may not be used until the level cap increases again.",
+    "Rare Candy may be used directly BEFORE Gym Leader/Elite Four/Champion/Rival fights. They may also be used to bring Pokémon up to the level cap of the last gym.",
+    "Battle style is set to 'Shift'.",
+    "Items in battle may only be used if the opponent also uses one. In the Pokémon League, a maximum of 20 items may be used outside of battles.",
+    "Shiny Pokémon may always be caught.",
+    "The challenge is lost when the entire team of one player is defeated.",
+    "The challenge is completed when the Champion of the region has been defeated.",
+    "The challenge starts as soon as you receive your first Poké Balls.",
+    "No Googling during Gym/Elite Four/Rival/Boss fights.",
+    "Maximum of 2 legendary Pokémon in your team."
+  ],
+  "levelCaps": [
+    {
+      "id": 1,
+      "arena": "gym_1",
+      "level": "14/12",
+      "done": true
+    },
+    {
+      "id": 2,
+      "arena": "gym_2",
+      "level": "21/18",
+      "done": true
+    },
+    {
+      "id": 3,
+      "arena": "gym_3",
+      "level": "24/21",
+      "done": true
+    },
+    {
+      "id": 4,
+      "arena": "gym_4",
+      "level": "29/24",
+      "done": false
+    },
+    {
+      "id": 5,
+      "arena": "gym_5",
+      "level": "43/39",
+      "done": false
+    },
+    {
+      "id": 6,
+      "arena": "gym_6",
+      "level": "43/38",
+      "done": false
+    },
+    {
+      "id": 7,
+      "arena": "gym_7",
+      "level": "47/42",
+      "done": false
+    },
+    {
+      "id": 8,
+      "arena": "gym_8",
+      "level": "50/45",
+      "done": false
+    },
+    {
+      "id": 9,
+      "arena": "elite_four_lorelei",
+      "level": "54/52",
+      "done": false
+    },
+    {
+      "id": 10,
+      "arena": "elite_four_bruno",
+      "level": "56/54",
+      "done": false
+    },
+    {
+      "id": 11,
+      "arena": "elite_four_agatha",
+      "level": "58/56",
+      "done": false
+    },
+    {
+      "id": 12,
+      "arena": "elite_four_lance",
+      "level": "60/58",
+      "done": false
+    },
+    {
+      "id": 13,
+      "arena": "champion_blue",
+      "level": "63/61",
+      "done": false
+    }
+  ],
+  "rivalCaps": [
+    {
+      "id": 1,
+      "location": "route_22",
+      "rival": "blue",
+      "level": "9/8",
+      "done": true,
+      "revealed": true
+    },
+    {
+      "id": 2,
+      "location": "cerulean_city",
+      "rival": "blue",
+      "level": "18/17",
+      "done": true,
+      "revealed": true
+    },
+    {
+      "id": 3,
+      "location": "s_s_anne",
+      "rival": "blue",
+      "level": "20/19",
+      "done": true,
+      "revealed": true
+    },
+    {
+      "id": 4,
+      "location": "pokemon_tower",
+      "rival": "blue",
+      "level": "25/23",
+      "done": false,
+      "revealed": false
+    },
+    {
+      "id": 5,
+      "location": "silph_co",
+      "rival": "blue",
+      "level": "40/38",
+      "done": false,
+      "revealed": false
+    },
+    {
+      "id": 6,
+      "location": "route_22",
+      "rival": "blue",
+      "level": "53/47",
+      "done": false,
+      "revealed": false
+    }
+  ],
+  "stats": {
+    "runs": 2,
+    "best": 3,
+    "top4Items": [
+      0
+    ],
+    "deaths": [
+      2
+    ],
+    "sumDeaths": [
+      5
+    ],
+    "legendaryEncounters": 0
+  },
+  "legendaryTrackerEnabled": true,
+  "rivalCensorMode": "off",
+  "hardcoreModeEnabled": false,
+  "nicknamesEnabled": true,
+  "infiniteFossilsEnabled": false,
+  "megaStoneSpriteStyle": "item",
+  "fossils": [
+    [
+      {
+        "fossilId": "old-amber",
+        "location": "",
+        "locationSlug": "",
+        "inBag": true,
+        "revived": false
+      },
+      {
+        "fossilId": "helix-fossil",
+        "location": "",
+        "locationSlug": "",
+        "inBag": true,
+        "revived": false
+      }
+    ]
+  ],
+  "items": [
+    [
+      {
+        "id": "fire-stone",
+        "location": "",
+        "locationSlug": "celadon-city",
+        "inBag": true,
+        "used": true
+      },
+      {
+        "id": "water-stone",
+        "location": "",
+        "locationSlug": "celadon-city",
+        "inBag": true,
+        "used": false
+      },
+      {
+        "id": "thunder-stone",
+        "location": "",
+        "locationSlug": "celadon-city",
+        "inBag": true,
+        "used": true
+      },
+      {
+        "id": "moon-stone",
+        "location": "",
+        "locationSlug": "pewter-city",
+        "inBag": true,
+        "used": false
+      }
+    ]
+  ],
+  "runStartedAt": 1793491200000
+}$state$::jsonb),
+  3,
+  1,
+  '10000000-0000-0000-0000-000000000001'
+);
 
 insert into public.rulesets (
   owner_id,
