@@ -33,6 +33,7 @@ const PokemonPairCard: React.FC<PokemonPairCardProps> = ({
 }) => {
   const { t, i18n } = useTranslation();
   const locale = normalizeLanguage(i18n.language);
+  const hasThreePlayers = playerNames.length >= 3;
 
   return (
     <div className="relative p-2 border rounded-md text-xs border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700">
@@ -54,9 +55,9 @@ const PokemonPairCard: React.FC<PokemonPairCardProps> = ({
         })}
       </p>
       <div
-        className="grid gap-2 justify-items-center"
+        className="grid justify-items-center gap-2"
         style={{
-          gridTemplateColumns: `repeat(${playerNames.length}, minmax(max-content, 1fr))`,
+          gridTemplateColumns: `repeat(${playerNames.length}, minmax(0, 1fr))`,
         }}
       >
         {playerNames.map((name, index) => {
@@ -74,20 +75,32 @@ const PokemonPairCard: React.FC<PokemonPairCardProps> = ({
           return (
             <div
               key={`${pair.id}-player-${index}`}
-              className="flex justify-center w-full"
+              className="flex w-full min-w-0 justify-center"
             >
-              <div className="inline-flex items-center gap-2 text-left mb-2">
+              <div
+                className={`mb-2 flex min-w-0 items-center gap-2 ${
+                  hasThreePlayers
+                    ? "flex-col text-center lg:flex-row lg:text-left"
+                    : "text-left"
+                }`}
+              >
                 {spriteUrl && (
                   <SpriteImage
                     src={spriteUrl}
                     alt=""
-                    className="w-16 h-16 -my-3"
+                    className="h-16 w-16 shrink-0 -my-3"
                     loading="lazy"
                   />
                 )}
-                <div className="flex flex-col items-start">
+                <div
+                  className={`flex min-w-0 flex-col ${
+                    hasThreePlayers
+                      ? "items-center lg:items-start"
+                      : "items-start"
+                  }`}
+                >
                   <p
-                    className="font-bold"
+                    className="max-w-full break-words font-bold"
                     style={{ color: playerColors[index] ?? "#4b5563" }}
                   >
                     <Trans
@@ -111,7 +124,7 @@ const PokemonPairCard: React.FC<PokemonPairCardProps> = ({
                     />
                   </p>
                   {nicknamesEnabled && (
-                    <p className="text-gray-700 dark:text-gray-400">
+                    <p className="max-w-full break-words text-gray-700 dark:text-gray-400">
                       {t("graveyard.nicknameLabel", {
                         nickname: member.nickname || t("graveyard.noNickname"),
                       })}
