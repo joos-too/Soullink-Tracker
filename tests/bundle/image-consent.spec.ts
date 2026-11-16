@@ -39,9 +39,31 @@ test("anonymous image consent gates requests and clears the service-worker cache
         ? {
             tracker_id: trackerId,
             revision: 1,
-            schema_version: 2,
+            schema_version: 3,
             updated_at: "2026-01-01T00:00:00Z",
             state: {
+              box: [],
+              graveyard: [],
+              rules: [],
+              levelCaps: [],
+              rivalCaps: [],
+              stats: {
+                runs: 1,
+                best: 0,
+                top4Items: [0, 0],
+                deaths: [0, 0],
+                sumDeaths: [0, 0],
+                legendaryEncounters: 0,
+              },
+              fossils: [[], []],
+              items: [[], []],
+              runStartedAt: 1,
+              legendaryTrackerEnabled: true,
+              nicknamesEnabled: true,
+              hardcoreModeEnabled: false,
+              infiniteFossilsEnabled: false,
+              megaStoneSpriteStyle: "item",
+              rivalCensorMode: "on",
               team: [
                 {
                   id: "40000000-0000-4000-8000-000000000001",

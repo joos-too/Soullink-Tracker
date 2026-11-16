@@ -86,6 +86,7 @@ describe("groupFossilEntries", () => {
     locationSlug: null,
     inBag: true,
     revived: false,
+    pokemonId: null,
     ...state,
   });
 

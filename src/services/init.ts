@@ -31,23 +31,18 @@ export const ensureStatsForPlayers = (
     sumDeaths: [],
     legendaryEncounters: 0,
   };
-  const normalizeArray = (values?: number[]) => {
-    const arr = Array.isArray(values) ? values.slice(0, playerCount) : [];
+  const resizeArray = (values: number[]) => {
+    const arr = values.slice(0, playerCount);
     while (arr.length < playerCount) {
       arr.push(0);
     }
     return arr;
   };
   return {
-    runs: typeof base.runs === "number" ? base.runs : 1,
-    best: typeof base.best === "number" ? base.best : 0,
-    top4Items: normalizeArray(base.top4Items),
-    deaths: normalizeArray(base.deaths),
-    sumDeaths: normalizeArray(base.sumDeaths),
-    legendaryEncounters:
-      typeof base.legendaryEncounters === "number"
-        ? base.legendaryEncounters
-        : 0,
+    ...base,
+    top4Items: resizeArray(base.top4Items),
+    deaths: resizeArray(base.deaths),
+    sumDeaths: resizeArray(base.sumDeaths),
   };
 };
 
@@ -89,7 +84,6 @@ export const INITIAL_STATE: AppState = {
   rivalCaps: [],
   stats: ensureStatsForPlayers(undefined, DEFAULT_PLAYER_NAME_SET.length),
   legendaryTrackerEnabled: true,
-  rivalCensorEnabled: true,
   rivalCensorMode: "on",
   hardcoreModeEnabled: false,
   nicknamesEnabled: true,
@@ -130,4 +124,41 @@ export const createInitialState = (
   base.items = normalizedNames.map(() => []);
   base.runStartedAt = Date.now();
   return base;
+};
+
+/** Starts another run while retaining rules, settings and cumulative progress. */
+export const resetTrackerState = (
+  previous: AppState,
+  gameVersionId: string,
+): AppState => {
+  const base = createInitialState(gameVersionId, previous.playerNames);
+  return {
+    ...previous,
+    team: base.team,
+    box: base.box,
+    graveyard: base.graveyard,
+    fossils: base.fossils,
+    items: base.items,
+    levelCaps: base.levelCaps,
+    rivalCaps: base.rivalCaps.map((cap) => ({
+      ...cap,
+      revealed:
+        previous.rivalCaps.find((saved) => saved.id === cap.id)?.revealed ??
+        false,
+    })),
+    stats: {
+      ...previous.stats,
+      runs: previous.stats.runs + 1,
+      best: Math.max(
+        previous.stats.best,
+        previous.levelCaps.filter((cap) => cap.done).length,
+      ),
+      top4Items: base.stats.top4Items,
+      deaths: base.stats.deaths,
+      sumDeaths: previous.stats.sumDeaths.map(
+        (count, index) => count + previous.stats.deaths[index],
+      ),
+    },
+    runStartedAt: base.runStartedAt,
+  };
 };
