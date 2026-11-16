@@ -47,12 +47,12 @@ const ItemSuggestionInput: React.FC<ItemSuggestionInputProps> = ({
   const multiLocaleSearch = multiLocaleSearchProp ?? contextMultiLocaleSearch;
   const typedItemMatch = useMemo(
     () =>
-      findItemByName(
-        value,
-        language,
-        allPokemonAndItems ? undefined : gameVersionId,
+      findItemByName(value, {
+        locale: language,
+        gameVersionId,
+        allVersions: allPokemonAndItems,
         multiLocaleSearch,
-      ),
+      }),
     [allPokemonAndItems, gameVersionId, language, multiLocaleSearch, value],
   );
   const resolvedSlug = selectedSlug || typedItemMatch?.slug || "";
@@ -63,10 +63,13 @@ const ItemSuggestionInput: React.FC<ItemSuggestionInputProps> = ({
       Promise.resolve(
         searchItems(
           term,
-          language,
-          allPokemonAndItems ? undefined : gameVersionId,
+          {
+            locale: language,
+            gameVersionId,
+            allVersions: allPokemonAndItems,
+            multiLocaleSearch,
+          },
           20,
-          multiLocaleSearch,
         ),
       ),
     [allPokemonAndItems, gameVersionId, language, multiLocaleSearch],

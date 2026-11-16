@@ -16,6 +16,8 @@ export interface PokemonLink {
 
 export interface GraveyardPokemonLink extends PokemonLink {
   isLost: boolean;
+  /** Player charged for this death; null/absent on legacy links. */
+  deathPlayerIndex?: number | null;
 }
 
 export interface LinkEditPayload {

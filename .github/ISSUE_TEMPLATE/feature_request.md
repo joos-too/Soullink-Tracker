@@ -8,7 +8,8 @@ assignees: ""
 
 ## Problem / Motivation
 
-<!-- What problem does this feature solve? Why is it needed? -->
+<!-- What problem does this feature solve or how does it improve
+the user experience? Why is it needed? -->
 
 ## Proposed Solution
 

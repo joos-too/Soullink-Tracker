@@ -173,6 +173,28 @@ values
     false,
     false,
     'default_duo_ruleset'
+  ),
+  (
+    '30000000-0000-0000-0000-000000000005',
+    'Full Hoenn Trio Layout Test',
+    array['Alexandria', 'Bartholomew', 'Cassandra'],
+    '10000000-0000-0000-0000-000000000001',
+    '2026-10-30T00:00:00.000Z',
+    'gen6_oras',
+    false,
+    true,
+    'default_trio_ruleset'
+  ),
+  (
+    '30000000-0000-0000-0000-000000000006',
+    'Pokémon FireRed & LeafGreen Solo',
+    array['Red'],
+    '10000000-0000-0000-0000-000000000001',
+    '2026-11-01T00:00:00.000Z',
+    'gen3_frlg',
+    false,
+    false,
+    'default_solo_ruleset_en'
   );
 
 -- The additional editor/guest rows and public Gen 1 tracker are Supabase-only
@@ -185,7 +207,9 @@ values
   ('30000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000003', 'guest', '{}'),
   ('30000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000001', 'owner', '{}'),
   ('30000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000001', 'owner', '{}'),
-  ('30000000-0000-0000-0000-000000000004', '10000000-0000-0000-0000-000000000001', 'owner', '{}');
+  ('30000000-0000-0000-0000-000000000004', '10000000-0000-0000-0000-000000000001', 'owner', '{}'),
+  ('30000000-0000-0000-0000-000000000005', '10000000-0000-0000-0000-000000000001', 'owner', '{}'),
+  ('30000000-0000-0000-0000-000000000006', '10000000-0000-0000-0000-000000000001', 'owner', '{"rivalPreferences":{"blue":"male"}}');
 
 insert into public.tracker_states (
   tracker_id,
@@ -1910,7 +1934,1533 @@ values
     3,
     3,
     '10000000-0000-0000-0000-000000000001'
+  ),
+  (
+    '30000000-0000-0000-0000-000000000005',
+    $state${
+  "team": [
+    {
+      "id": "19b35b9e-2640-541f-8a8d-b94fbabb3e1b",
+      "locationSlug": "hoenn-route-101",
+      "members": [
+        {
+          "id": 252,
+          "nickname": "Canopy"
+        },
+        {
+          "id": 255,
+          "nickname": "Kindling"
+        },
+        {
+          "id": 258,
+          "nickname": "Puddles"
+        }
+      ]
+    },
+    {
+      "id": "afbe2e3a-b810-5355-8074-21368e2a996d",
+      "locationSlug": "hoenn-route-102",
+      "members": [
+        {
+          "id": 263,
+          "nickname": "Longstripe"
+        },
+        {
+          "id": 270,
+          "nickname": "Lily Dancer"
+        },
+        {
+          "id": 273,
+          "nickname": "Acorn Knight"
+        }
+      ]
+    },
+    {
+      "id": "e2f9eb1e-4a78-5ec0-83e0-3770419a4692",
+      "locationSlug": "hoenn-route-104",
+      "members": [
+        {
+          "id": 276,
+          "nickname": "Swiftwing"
+        },
+        {
+          "id": 278,
+          "nickname": "Harbor Gull"
+        },
+        {
+          "id": 280,
+          "nickname": "Daydream"
+        }
+      ]
+    },
+    {
+      "id": "99bc214a-9712-5316-8add-7511119695b8",
+      "locationSlug": "petalburg-woods",
+      "members": [
+        {
+          "id": 285,
+          "nickname": "Portobello"
+        },
+        {
+          "id": 290,
+          "nickname": "Cicada"
+        },
+        {
+          "id": 293,
+          "nickname": "Whisper"
+        }
+      ]
+    },
+    {
+      "id": "7c1dd229-9773-5430-8d3a-4d53c5f63290",
+      "locationSlug": "hoenn-route-116",
+      "members": [
+        {
+          "id": 296,
+          "nickname": "Haymaker"
+        },
+        {
+          "id": 299,
+          "nickname": "True North"
+        },
+        {
+          "id": 300,
+          "nickname": "Moonbeam"
+        }
+      ]
+    },
+    {
+      "id": "c9dad5f7-0d27-5c59-89fa-f62b287bdc3f",
+      "locationSlug": "granite-cave",
+      "members": [
+        {
+          "id": 304,
+          "nickname": "Ironclad"
+        },
+        {
+          "id": 307,
+          "nickname": "Meditator"
+        },
+        {
+          "id": 309,
+          "nickname": "High Voltage"
+        }
+      ]
+    }
+  ],
+  "box": [
+    {
+      "id": "7531e917-de65-5017-8189-6c29d67fe8f8",
+      "locationSlug": "dewford-town",
+      "members": [
+        {
+          "id": 129,
+          "nickname": "Splashdown"
+        },
+        {
+          "id": 72,
+          "nickname": "Jelly"
+        },
+        {
+          "id": 320,
+          "nickname": "Big Blue"
+        }
+      ]
+    },
+    {
+      "id": "2174eb92-c584-5fd9-8e9e-677fb52227ae",
+      "locationSlug": "hoenn-route-106",
+      "members": [
+        {
+          "id": 74,
+          "nickname": "Pebble"
+        },
+        {
+          "id": 66,
+          "nickname": "Flexington"
+        },
+        {
+          "id": 41,
+          "nickname": "Echo"
+        }
+      ]
+    },
+    {
+      "id": "d56a32c5-6283-5ba0-8463-fb8c14729caa",
+      "locationSlug": "hoenn-route-109",
+      "members": [
+        {
+          "id": 116,
+          "nickname": "Seabiscuit"
+        },
+        {
+          "id": 120,
+          "nickname": "Starlight"
+        },
+        {
+          "id": 98,
+          "nickname": "Pincers"
+        }
+      ]
+    },
+    {
+      "id": "c59f8f70-f553-5aa0-8f47-c852be134907",
+      "locationSlug": "slateport-city",
+      "members": [
+        {
+          "id": 88,
+          "nickname": "Sludge"
+        },
+        {
+          "id": 100,
+          "nickname": "Boombox"
+        },
+        {
+          "id": 81,
+          "nickname": "Polarity"
+        }
+      ]
+    },
+    {
+      "id": "d8bce136-4e4e-5ff5-8157-96912d8ded93",
+      "locationSlug": "hoenn-route-110",
+      "members": [
+        {
+          "id": 311,
+          "nickname": "Positive"
+        },
+        {
+          "id": 312,
+          "nickname": "Negative"
+        },
+        {
+          "id": 316,
+          "nickname": "Gummy"
+        }
+      ]
+    },
+    {
+      "id": "ac7128af-8bfd-5835-8ce5-80a063effea3",
+      "locationSlug": "new-mauville",
+      "members": [
+        {
+          "id": 82,
+          "nickname": "Magnetron"
+        },
+        {
+          "id": 101,
+          "nickname": "Countdown"
+        },
+        {
+          "id": 125,
+          "nickname": "Livewire"
+        }
+      ]
+    },
+    {
+      "id": "f73db451-1229-5c52-8099-4a75067d73c0",
+      "locationSlug": "hoenn-route-111",
+      "members": [
+        {
+          "id": 322,
+          "nickname": "Cinderback"
+        },
+        {
+          "id": 328,
+          "nickname": "Trapdoor"
+        },
+        {
+          "id": 331,
+          "nickname": "Prickles"
+        }
+      ]
+    },
+    {
+      "id": "94b71ef6-090b-5d3f-8b6a-50658582663d",
+      "locationSlug": "fiery-path",
+      "members": [
+        {
+          "id": 218,
+          "nickname": "Molten"
+        },
+        {
+          "id": 324,
+          "nickname": "Smokestack"
+        },
+        {
+          "id": 109,
+          "nickname": "Fumes"
+        }
+      ]
+    },
+    {
+      "id": "ee0ec6fb-9835-5706-821f-93542024f136",
+      "locationSlug": "hoenn-route-113",
+      "members": [
+        {
+          "id": 327,
+          "nickname": "Dizzy"
+        },
+        {
+          "id": 227,
+          "nickname": "Steelwing"
+        },
+        {
+          "id": 333,
+          "nickname": "Cloud Nine"
+        }
+      ]
+    },
+    {
+      "id": "a98be7f4-3bf2-5082-805a-e64cd71e6b12",
+      "locationSlug": "meteor-falls",
+      "members": [
+        {
+          "id": 337,
+          "nickname": "Lunatone Prime"
+        },
+        {
+          "id": 338,
+          "nickname": "Solrock Prime"
+        },
+        {
+          "id": 35,
+          "nickname": "Moonstone"
+        }
+      ]
+    },
+    {
+      "id": "9f5e2417-1265-5a36-8460-0c1110a2cd52",
+      "locationSlug": "hoenn-route-114",
+      "members": [
+        {
+          "id": 183,
+          "nickname": "Bubblegum"
+        },
+        {
+          "id": 270,
+          "nickname": "Waterlily"
+        },
+        {
+          "id": 335,
+          "nickname": "Viper"
+        }
+      ]
+    },
+    {
+      "id": "d04967f0-0e86-527b-8b3d-7c689613ba52",
+      "locationSlug": "hoenn-route-117",
+      "members": [
+        {
+          "id": 315,
+          "nickname": "Roselia"
+        },
+        {
+          "id": 313,
+          "nickname": "Firefly"
+        },
+        {
+          "id": 314,
+          "nickname": "Glowworm"
+        }
+      ]
+    },
+    {
+      "id": "818cb284-10cf-59fe-8f9c-228536e0de45",
+      "locationSlug": "safari-zone",
+      "members": [
+        {
+          "id": 214,
+          "nickname": "Hercules"
+        },
+        {
+          "id": 127,
+          "nickname": "Vicegrip"
+        },
+        {
+          "id": 111,
+          "nickname": "Rhino"
+        }
+      ]
+    },
+    {
+      "id": "76c83160-1256-58d2-8172-dad6312f319f",
+      "locationSlug": "hoenn-route-119",
+      "members": [
+        {
+          "id": 352,
+          "nickname": "Camouflage"
+        },
+        {
+          "id": 357,
+          "nickname": "Banana Tree"
+        },
+        {
+          "id": 351,
+          "nickname": "Forecast"
+        }
+      ]
+    },
+    {
+      "id": "61bbe677-ca7a-541e-894b-dd54f1b8604b",
+      "locationSlug": "hoenn-route-120",
+      "members": [
+        {
+          "id": 359,
+          "nickname": "Nightfall"
+        },
+        {
+          "id": 343,
+          "nickname": "Clay Doll"
+        },
+        {
+          "id": 352,
+          "nickname": "Invisible"
+        }
+      ]
+    },
+    {
+      "id": "5c2dc018-6a9d-5360-8fcf-c92411daf8cf",
+      "locationSlug": "mt-pyre",
+      "members": [
+        {
+          "id": 353,
+          "nickname": "Marionette"
+        },
+        {
+          "id": 355,
+          "nickname": "Nightlight"
+        },
+        {
+          "id": 37,
+          "nickname": "Foxfire"
+        }
+      ]
+    },
+    {
+      "id": "d7ec06fd-1d15-5ec0-8e37-710ce7186cb8",
+      "locationSlug": "shoal-cave",
+      "members": [
+        {
+          "id": 363,
+          "nickname": "Snowball"
+        },
+        {
+          "id": 361,
+          "nickname": "Shiver"
+        },
+        {
+          "id": 225,
+          "nickname": "Delivery"
+        }
+      ]
+    },
+    {
+      "id": "b3dbf4f6-1457-5269-8f33-a648bbcaa76b",
+      "locationSlug": "victory-road",
+      "members": [
+        {
+          "id": 371,
+          "nickname": "Comet"
+        },
+        {
+          "id": 304,
+          "nickname": "Plate Mail"
+        },
+        {
+          "id": 302,
+          "nickname": "Gemstone"
+        }
+      ]
+    }
+  ],
+  "graveyard": [
+    {
+      "id": "a4097d0f-444f-54ba-8ce4-3ff34137367f",
+      "locationSlug": "rusturf-tunnel",
+      "deathPlayerIndex": 0,
+      "members": [
+        {
+          "id": 293,
+          "nickname": "Loudmouth"
+        },
+        {
+          "id": 41,
+          "nickname": "Sonar"
+        },
+        {
+          "id": 74,
+          "nickname": "Rocky"
+        }
+      ],
+      "isLost": false
+    },
+    {
+      "id": "584808cf-854b-5c65-8c55-c73ed7d3a408",
+      "locationSlug": "hoenn-route-112",
+      "deathPlayerIndex": 1,
+      "members": [
+        {
+          "id": 66,
+          "nickname": "Uppercut"
+        },
+        {
+          "id": 236,
+          "nickname": "Spinner"
+        },
+        {
+          "id": 307,
+          "nickname": "Zen"
+        }
+      ],
+      "isLost": false
+    },
+    {
+      "id": "d57699bb-8488-598f-8b9a-45c8907152f3",
+      "locationSlug": "jagged-pass",
+      "deathPlayerIndex": 2,
+      "members": [
+        {
+          "id": 325,
+          "nickname": "Bouncer"
+        },
+        {
+          "id": 322,
+          "nickname": "Ember"
+        },
+        {
+          "id": 327,
+          "nickname": "Spiral"
+        }
+      ],
+      "isLost": false
+    },
+    {
+      "id": "1894b150-fa71-52f3-8fc9-57bea7555f57",
+      "locationSlug": "hoenn-route-115",
+      "deathPlayerIndex": 0,
+      "members": [
+        {
+          "id": 333,
+          "nickname": "Cotton"
+        },
+        {
+          "id": 279,
+          "nickname": "Scoop"
+        },
+        {
+          "id": 227,
+          "nickname": "Razor"
+        }
+      ],
+      "isLost": false
+    },
+    {
+      "id": "d4089150-df2f-5de8-8332-e0c2a2dd10a8",
+      "locationSlug": "desert-underpass",
+      "deathPlayerIndex": 1,
+      "members": [
+        {
+          "id": 328,
+          "nickname": "Sandsnare"
+        },
+        {
+          "id": 343,
+          "nickname": "Ancient"
+        },
+        {
+          "id": 51,
+          "nickname": "Triplets"
+        }
+      ],
+      "isLost": false
+    },
+    {
+      "id": "48fac44e-c145-5f41-849a-20007de23c5a",
+      "locationSlug": "abandoned-ship",
+      "deathPlayerIndex": 2,
+      "members": [
+        {
+          "id": 170,
+          "nickname": "Lantern"
+        },
+        {
+          "id": 90,
+          "nickname": "Pearl"
+        },
+        {
+          "id": 116,
+          "nickname": "Drifter"
+        }
+      ],
+      "isLost": false
+    },
+    {
+      "id": "322c4365-5a2c-5646-8c97-c889601f9869",
+      "locationSlug": "seafloor-cavern",
+      "deathPlayerIndex": 0,
+      "members": [
+        {
+          "id": 369,
+          "nickname": "Relic"
+        },
+        {
+          "id": 222,
+          "nickname": "Coral"
+        },
+        {
+          "id": 366,
+          "nickname": "Clam"
+        }
+      ],
+      "isLost": false
+    },
+    {
+      "id": "29524407-2bab-5c14-8ab1-6da0e3e9a7e9",
+      "locationSlug": "sky-pillar",
+      "deathPlayerIndex": 1,
+      "members": [
+        {
+          "id": 334,
+          "nickname": "Nimbus"
+        },
+        {
+          "id": 344,
+          "nickname": "Totem"
+        },
+        {
+          "id": 356,
+          "nickname": "Cyclops"
+        }
+      ],
+      "isLost": false
+    },
+    {
+      "id": "aa7922cc-41cb-5c92-8fce-08f57113fd7a",
+      "locationSlug": "mossdeep-city",
+      "isLost": true,
+      "members": [
+        {
+          "id": 337,
+          "nickname": ""
+        },
+        {
+          "id": 338,
+          "nickname": ""
+        },
+        {
+          "id": 121,
+          "nickname": ""
+        }
+      ]
+    },
+    {
+      "id": "8566838b-e346-5211-8c36-42f32b31dd4d",
+      "locationSlug": "ever-grande-city",
+      "isLost": true,
+      "members": [
+        {
+          "id": 374,
+          "nickname": ""
+        },
+        {
+          "id": 371,
+          "nickname": ""
+        },
+        {
+          "id": 304,
+          "nickname": ""
+        }
+      ]
+    }
+  ],
+  "rules": [
+    "Only the first encounter in each area may be caught.",
+    "Every encounter is linked across all three players.",
+    "A fainted Pokémon sends the complete trio to the graveyard.",
+    "No player may exceed the current level cap."
+  ],
+  "levelCaps": [
+    {
+      "id": 1,
+      "arena": "gym_1",
+      "level": "14/12",
+      "done": true
+    },
+    {
+      "id": 2,
+      "arena": "gym_2",
+      "level": "16/14",
+      "done": true
+    },
+    {
+      "id": 3,
+      "arena": "gym_3",
+      "level": "21/19",
+      "done": true
+    },
+    {
+      "id": 4,
+      "arena": "gym_4",
+      "level": "28/26",
+      "done": true
+    },
+    {
+      "id": 5,
+      "arena": "gym_5",
+      "level": "30/28",
+      "done": true
+    },
+    {
+      "id": 6,
+      "arena": "gym_6",
+      "level": "35/33",
+      "done": true
+    },
+    {
+      "id": 7,
+      "arena": "gym_7",
+      "level": "45",
+      "done": false
+    },
+    {
+      "id": 8,
+      "arena": "gym_8",
+      "level": "46/44",
+      "done": false
+    },
+    {
+      "id": 9,
+      "arena": "elite_four_sidney",
+      "level": "52/50",
+      "done": false
+    },
+    {
+      "id": 10,
+      "arena": "elite_four_phoebe",
+      "level": "53/51",
+      "done": false
+    },
+    {
+      "id": 11,
+      "arena": "elite_four_glacia",
+      "level": "54/52",
+      "done": false
+    },
+    {
+      "id": 12,
+      "arena": "elite_four_drake",
+      "level": "55/53",
+      "done": false
+    },
+    {
+      "id": 13,
+      "arena": "champion_steven",
+      "level": "59/57",
+      "done": false
+    }
+  ],
+  "rivalCaps": [
+    {
+      "id": 1,
+      "location": "route_110",
+      "rival": {
+        "key": "brendan_may",
+        "options": {
+          "male": "brendan",
+          "female": "may"
+        }
+      },
+      "level": "20/18",
+      "done": true,
+      "revealed": true
+    },
+    {
+      "id": 2,
+      "location": "mauville_city",
+      "rival": "wally",
+      "level": "17",
+      "done": true,
+      "revealed": true
+    },
+    {
+      "id": 3,
+      "location": "route_119",
+      "rival": {
+        "key": "brendan_may",
+        "options": {
+          "male": "brendan",
+          "female": "may"
+        }
+      },
+      "level": "33/31",
+      "done": false,
+      "revealed": false
+    },
+    {
+      "id": 4,
+      "location": "lilycove_city",
+      "rival": {
+        "key": "brendan_may",
+        "options": {
+          "male": "brendan",
+          "female": "may"
+        }
+      },
+      "level": "38/37",
+      "done": false,
+      "revealed": false
+    },
+    {
+      "id": 5,
+      "location": "victory_road",
+      "rival": "wally",
+      "level": "48/46",
+      "done": false,
+      "revealed": false
+    },
+    {
+      "id": 6,
+      "location": "route_103",
+      "rival": {
+        "key": "brendan_may",
+        "options": {
+          "male": "brendan",
+          "female": "may"
+        }
+      },
+      "level": "50/48",
+      "done": false,
+      "revealed": false
+    }
+  ],
+  "stats": {
+    "runs": 12,
+    "best": 6,
+    "top4Items": [
+      7,
+      5,
+      8
+    ],
+    "deaths": [
+      3,
+      3,
+      2
+    ],
+    "sumDeaths": [
+      18,
+      21,
+      16
+    ],
+    "legendaryEncounters": 24
+  },
+  "legendaryTrackerEnabled": true,
+  "rivalCensorMode": "showLevels",
+  "hardcoreModeEnabled": true,
+  "nicknamesEnabled": true,
+  "infiniteFossilsEnabled": true,
+  "megaStoneSpriteStyle": "item",
+  "fossils": [
+    [
+      {
+        "fossilId": "root-fossil",
+        "location": "",
+        "locationSlug": "rustboro-city",
+        "inBag": true,
+        "revived": false,
+        "pokemonId": null
+      },
+      {
+        "fossilId": "root-fossil",
+        "location": "",
+        "locationSlug": "meteor-falls",
+        "inBag": true,
+        "revived": false,
+        "pokemonId": null
+      },
+      {
+        "fossilId": "claw-fossil",
+        "location": "",
+        "locationSlug": "mirage-tower",
+        "inBag": false,
+        "revived": false,
+        "pokemonId": null
+      },
+      {
+        "fossilId": "old-amber",
+        "location": "",
+        "locationSlug": "devon-corporation",
+        "inBag": true,
+        "revived": true,
+        "pokemonId": 142
+      },
+      {
+        "fossilId": "skull-fossil",
+        "location": "",
+        "locationSlug": "granite-cave",
+        "inBag": true,
+        "revived": false,
+        "pokemonId": null
+      },
+      {
+        "fossilId": "cover-fossil",
+        "location": "",
+        "locationSlug": "shoal-cave",
+        "inBag": true,
+        "revived": false,
+        "pokemonId": null
+      }
+    ],
+    [
+      {
+        "fossilId": "claw-fossil",
+        "location": "",
+        "locationSlug": "rustboro-city",
+        "inBag": true,
+        "revived": false,
+        "pokemonId": null
+      },
+      {
+        "fossilId": "claw-fossil",
+        "location": "",
+        "locationSlug": "desert-underpass",
+        "inBag": true,
+        "revived": false,
+        "pokemonId": null
+      },
+      {
+        "fossilId": "root-fossil",
+        "location": "",
+        "locationSlug": "mirage-tower",
+        "inBag": false,
+        "revived": false,
+        "pokemonId": null
+      },
+      {
+        "fossilId": "dome-fossil",
+        "location": "",
+        "locationSlug": "devon-corporation",
+        "inBag": true,
+        "revived": true,
+        "pokemonId": 140
+      },
+      {
+        "fossilId": "plume-fossil",
+        "location": "",
+        "locationSlug": "granite-cave",
+        "inBag": true,
+        "revived": false,
+        "pokemonId": null
+      },
+      {
+        "fossilId": "jaw-fossil",
+        "location": "",
+        "locationSlug": "shoal-cave",
+        "inBag": true,
+        "revived": false,
+        "pokemonId": null
+      }
+    ],
+    [
+      {
+        "fossilId": "helix-fossil",
+        "location": "",
+        "locationSlug": "rustboro-city",
+        "inBag": true,
+        "revived": false,
+        "pokemonId": null
+      },
+      {
+        "fossilId": "helix-fossil",
+        "location": "",
+        "locationSlug": "meteor-falls",
+        "inBag": true,
+        "revived": false,
+        "pokemonId": null
+      },
+      {
+        "fossilId": "old-amber",
+        "location": "",
+        "locationSlug": "mirage-tower",
+        "inBag": false,
+        "revived": false,
+        "pokemonId": null
+      },
+      {
+        "fossilId": "sail-fossil",
+        "location": "",
+        "locationSlug": "devon-corporation",
+        "inBag": true,
+        "revived": true,
+        "pokemonId": 698
+      },
+      {
+        "fossilId": "armor-fossil",
+        "location": "",
+        "locationSlug": "granite-cave",
+        "inBag": true,
+        "revived": false,
+        "pokemonId": null
+      },
+      {
+        "fossilId": "cover-fossil",
+        "location": "",
+        "locationSlug": "shoal-cave",
+        "inBag": true,
+        "revived": false,
+        "pokemonId": null
+      }
+    ]
+  ],
+  "items": [
+    [
+      {
+        "id": "fire-stone",
+        "location": "",
+        "locationSlug": "lavaridge-town",
+        "inBag": true,
+        "used": false
+      },
+      {
+        "id": "fire-stone",
+        "location": "",
+        "locationSlug": "fiery-path",
+        "inBag": true,
+        "used": false
+      },
+      {
+        "id": "water-stone",
+        "location": "",
+        "locationSlug": "slateport-city",
+        "inBag": true,
+        "used": true
+      },
+      {
+        "id": "thunder-stone",
+        "location": "",
+        "locationSlug": "new-mauville",
+        "inBag": true,
+        "used": false
+      },
+      {
+        "id": "leaf-stone",
+        "location": "",
+        "locationSlug": "fortree-city",
+        "inBag": false,
+        "used": false
+      },
+      {
+        "id": "moon-stone",
+        "location": "",
+        "locationSlug": "meteor-falls",
+        "inBag": true,
+        "used": false
+      },
+      {
+        "id": "sun-stone",
+        "location": "",
+        "locationSlug": "mossdeep-city",
+        "inBag": true,
+        "used": false
+      },
+      {
+        "id": "dusk-stone",
+        "location": "",
+        "locationSlug": "mt-pyre",
+        "inBag": true,
+        "used": false
+      },
+      {
+        "id": "item:sceptilite",
+        "location": "",
+        "locationSlug": "route-120",
+        "inBag": true,
+        "used": false
+      },
+      {
+        "id": "item:absolite",
+        "location": "",
+        "locationSlug": "safari-zone",
+        "inBag": false,
+        "used": false
+      }
+    ],
+    [
+      {
+        "id": "fire-stone",
+        "location": "",
+        "locationSlug": "fiery-path",
+        "inBag": false,
+        "used": true
+      },
+      {
+        "id": "water-stone",
+        "location": "",
+        "locationSlug": "sootopolis-city",
+        "inBag": true,
+        "used": false
+      },
+      {
+        "id": "water-stone",
+        "location": "",
+        "locationSlug": "abandoned-ship",
+        "inBag": true,
+        "used": false
+      },
+      {
+        "id": "thunder-stone",
+        "location": "",
+        "locationSlug": "new-mauville",
+        "inBag": true,
+        "used": true
+      },
+      {
+        "id": "leaf-stone",
+        "location": "",
+        "locationSlug": "fortree-city",
+        "inBag": true,
+        "used": false
+      },
+      {
+        "id": "shiny-stone",
+        "location": "",
+        "locationSlug": "shoal-cave",
+        "inBag": true,
+        "used": false
+      },
+      {
+        "id": "dawn-stone",
+        "location": "",
+        "locationSlug": "victory-road",
+        "inBag": false,
+        "used": false
+      },
+      {
+        "id": "item:kings-rock",
+        "location": "",
+        "locationSlug": "mossdeep-city",
+        "inBag": true,
+        "used": false
+      },
+      {
+        "id": "item:blazikenite",
+        "location": "",
+        "locationSlug": "fallarbor-town",
+        "inBag": true,
+        "used": false
+      },
+      {
+        "id": "item:manectite",
+        "location": "",
+        "locationSlug": "route-110",
+        "inBag": true,
+        "used": false
+      }
+    ],
+    [
+      {
+        "id": "fire-stone",
+        "location": "",
+        "locationSlug": "lavaridge-town",
+        "inBag": true,
+        "used": false
+      },
+      {
+        "id": "water-stone",
+        "location": "",
+        "locationSlug": "slateport-city",
+        "inBag": false,
+        "used": true
+      },
+      {
+        "id": "thunder-stone",
+        "location": "",
+        "locationSlug": "new-mauville",
+        "inBag": true,
+        "used": false
+      },
+      {
+        "id": "leaf-stone",
+        "location": "",
+        "locationSlug": "fortree-city",
+        "inBag": true,
+        "used": false
+      },
+      {
+        "id": "moon-stone",
+        "location": "",
+        "locationSlug": "meteor-falls",
+        "inBag": true,
+        "used": true
+      },
+      {
+        "id": "sun-stone",
+        "location": "",
+        "locationSlug": "mossdeep-city",
+        "inBag": true,
+        "used": false
+      },
+      {
+        "id": "item:oval-stone",
+        "location": "",
+        "locationSlug": "day-care",
+        "inBag": true,
+        "used": false
+      },
+      {
+        "id": "item:metal-coat",
+        "location": "",
+        "locationSlug": "new-mauville",
+        "inBag": false,
+        "used": false
+      },
+      {
+        "id": "item:swampertite",
+        "location": "",
+        "locationSlug": "route-123",
+        "inBag": true,
+        "used": false
+      },
+      {
+        "id": "item:altarianite",
+        "location": "",
+        "locationSlug": "lilycove-city",
+        "inBag": true,
+        "used": false
+      }
+    ]
+  ],
+  "runStartedAt": 1793318400000
+}$state$::jsonb,
+    3,
+    12,
+    '10000000-0000-0000-0000-000000000001'
   );
+
+-- Solo fixture: one member per encounter and one column for player data.
+insert into public.tracker_states (tracker_id, state, schema_version, revision, updated_by)
+values (
+  '30000000-0000-0000-0000-000000000006',
+  $state${
+  "team": [
+    {
+      "id": "f3b6dd44-0b8a-5b8b-887a-17671ebba4d2",
+      "locationSlug": "kanto-route-1",
+      "members": [
+        {
+          "id": 16,
+          "nickname": "Gust"
+        }
+      ]
+    },
+    {
+      "id": "78623b02-fc35-51a3-8e77-d6e17077c8b1",
+      "locationSlug": "kanto-route-2",
+      "members": [
+        {
+          "id": 10,
+          "nickname": "Crawler"
+        }
+      ]
+    },
+    {
+      "id": "c0ef44aa-6ace-5089-8ad3-099ff11c1baa",
+      "locationSlug": "viridian-forest",
+      "members": [
+        {
+          "id": 25,
+          "nickname": "Sparky"
+        }
+      ]
+    }
+  ],
+  "box": [
+    {
+      "id": "9397b583-b0e7-5d84-8689-98630c76312e",
+      "locationSlug": "kanto-route-3",
+      "members": [
+        {
+          "id": 12,
+          "nickname": "Flutter"
+        }
+      ]
+    },
+    {
+      "id": "41883814-eecd-558d-8b34-5452a9f344b9",
+      "locationSlug": "kanto-route-4",
+      "members": [
+        {
+          "id": 129,
+          "nickname": "Splashy"
+        }
+      ]
+    }
+  ],
+  "graveyard": [
+    {
+      "id": "9b669404-dcff-53e9-812c-9b341ab123f1",
+      "locationSlug": "mt-moon",
+      "members": [
+        {
+          "id": 74,
+          "nickname": "Boulder"
+        }
+      ],
+      "deathPlayerIndex": 0,
+      "isLost": false
+    },
+    {
+      "id": "2647dff7-1cf4-5556-87b2-cefa9c6cf249",
+      "locationSlug": "rock-tunnel",
+      "members": [
+        {
+          "id": 66,
+          "nickname": "Flex"
+        }
+      ],
+      "deathPlayerIndex": 0,
+      "isLost": false
+    },
+    {
+      "id": "f6ebde97-570c-5ed3-8e54-40a17b5278f8",
+      "locationSlug": "pokemon-tower",
+      "members": [
+        {
+          "id": 92,
+          "nickname": ""
+        }
+      ],
+      "isLost": true
+    }
+  ],
+  "rules": [
+    "Only the first Pokémon encountered on each route/area may be caught.",
+    "Pokémon that have already been caught/encountered (or are in the same evolution line) do not count as route Pokémon and may be rerolled. Maximum 2 additional attempts.",
+    "Gift/static Pokémon and fossils do not count as area Pokémon and may be used. Identical statics and fossils may only be used once.",
+    "If a Pokémon flees or faints during the catch attempt, the area is lost.",
+    "Every Pokémon receives a nickname.",
+    "Defeated Pokémon are considered dead and must be placed in a grave box.",
+    "Pokémon, items, and trainers are randomized.",
+    "The bonus shop is randomized; each item may only be purchased once.",
+    "The level cap must not be exceeded (1 Pokémon may match the upper level, the rest must match the lower if existing). Overleveled Pokémon may not be used until the level cap increases again.",
+    "Rare Candy may be used directly BEFORE Gym Leader/Elite Four/Champion/Rival fights. They may also be used to bring Pokémon up to the level cap of the last gym.",
+    "Battle style is set to 'Shift'.",
+    "Items in battle may only be used if the opponent also uses one. In the Pokémon League, a maximum of 20 items may be used outside of battles.",
+    "Shiny Pokémon may always be caught.",
+    "The challenge is lost when the entire team of one player is defeated.",
+    "The challenge is completed when the Champion of the region has been defeated.",
+    "The challenge starts as soon as you receive your first Poké Balls.",
+    "No Googling during Gym/Elite Four/Rival/Boss fights.",
+    "Maximum of 2 legendary Pokémon in your team."
+  ],
+  "levelCaps": [
+    {
+      "id": 1,
+      "arena": "gym_1",
+      "level": "14/12",
+      "done": true
+    },
+    {
+      "id": 2,
+      "arena": "gym_2",
+      "level": "21/18",
+      "done": true
+    },
+    {
+      "id": 3,
+      "arena": "gym_3",
+      "level": "24/21",
+      "done": true
+    },
+    {
+      "id": 4,
+      "arena": "gym_4",
+      "level": "29/24",
+      "done": false
+    },
+    {
+      "id": 5,
+      "arena": "gym_5",
+      "level": "43/39",
+      "done": false
+    },
+    {
+      "id": 6,
+      "arena": "gym_6",
+      "level": "43/38",
+      "done": false
+    },
+    {
+      "id": 7,
+      "arena": "gym_7",
+      "level": "47/42",
+      "done": false
+    },
+    {
+      "id": 8,
+      "arena": "gym_8",
+      "level": "50/45",
+      "done": false
+    },
+    {
+      "id": 9,
+      "arena": "elite_four_lorelei",
+      "level": "54/52",
+      "done": false
+    },
+    {
+      "id": 10,
+      "arena": "elite_four_bruno",
+      "level": "56/54",
+      "done": false
+    },
+    {
+      "id": 11,
+      "arena": "elite_four_agatha",
+      "level": "58/56",
+      "done": false
+    },
+    {
+      "id": 12,
+      "arena": "elite_four_lance",
+      "level": "60/58",
+      "done": false
+    },
+    {
+      "id": 13,
+      "arena": "champion_blue",
+      "level": "63/61",
+      "done": false
+    }
+  ],
+  "rivalCaps": [
+    {
+      "id": 1,
+      "location": "route_22",
+      "rival": "blue",
+      "level": "9/8",
+      "done": true,
+      "revealed": true
+    },
+    {
+      "id": 2,
+      "location": "cerulean_city",
+      "rival": "blue",
+      "level": "18/17",
+      "done": true,
+      "revealed": true
+    },
+    {
+      "id": 3,
+      "location": "s_s_anne",
+      "rival": "blue",
+      "level": "20/19",
+      "done": true,
+      "revealed": true
+    },
+    {
+      "id": 4,
+      "location": "pokemon_tower",
+      "rival": "blue",
+      "level": "25/23",
+      "done": false,
+      "revealed": false
+    },
+    {
+      "id": 5,
+      "location": "silph_co",
+      "rival": "blue",
+      "level": "40/38",
+      "done": false,
+      "revealed": false
+    },
+    {
+      "id": 6,
+      "location": "route_22",
+      "rival": "blue",
+      "level": "53/47",
+      "done": false,
+      "revealed": false
+    }
+  ],
+  "stats": {
+    "runs": 2,
+    "best": 3,
+    "top4Items": [
+      0
+    ],
+    "deaths": [
+      2
+    ],
+    "sumDeaths": [
+      5
+    ],
+    "legendaryEncounters": 0
+  },
+  "legendaryTrackerEnabled": true,
+  "rivalCensorMode": "off",
+  "hardcoreModeEnabled": false,
+  "nicknamesEnabled": true,
+  "infiniteFossilsEnabled": false,
+  "megaStoneSpriteStyle": "item",
+  "fossils": [
+    [
+      {
+        "fossilId": "old-amber",
+        "location": "",
+        "locationSlug": "",
+        "inBag": true,
+        "revived": false,
+        "pokemonId": null
+      },
+      {
+        "fossilId": "helix-fossil",
+        "location": "",
+        "locationSlug": "",
+        "inBag": true,
+        "revived": false,
+        "pokemonId": null
+      }
+    ]
+  ],
+  "items": [
+    [
+      {
+        "id": "fire-stone",
+        "location": "",
+        "locationSlug": "celadon-city",
+        "inBag": true,
+        "used": true
+      },
+      {
+        "id": "water-stone",
+        "location": "",
+        "locationSlug": "celadon-city",
+        "inBag": true,
+        "used": false
+      },
+      {
+        "id": "thunder-stone",
+        "location": "",
+        "locationSlug": "celadon-city",
+        "inBag": true,
+        "used": true
+      },
+      {
+        "id": "moon-stone",
+        "location": "",
+        "locationSlug": "pewter-city",
+        "inBag": true,
+        "used": false
+      }
+    ]
+  ],
+  "runStartedAt": 1793491200000
+}$state$::jsonb,
+  3,
+  1,
+  '10000000-0000-0000-0000-000000000001'
+);
 
 insert into public.rulesets (
   owner_id,

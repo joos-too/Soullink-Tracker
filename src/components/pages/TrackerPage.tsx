@@ -17,6 +17,7 @@ import type {
   TrackerMeta,
 } from "@/types";
 import { createLinkId } from "@/src/services/linkIds.ts";
+import { killLink, restoreLink } from "@/src/services/linkLifecycle.ts";
 import {
   createInitialState,
   resetTrackerState,
@@ -466,7 +467,8 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
           ...prev,
           [currentKey]: prev[currentKey].map((pair) => {
             if (pair.id !== pairId) return pair;
-            const isLost = currentKey === "graveyard" && Boolean(pair.isLost);
+            const isLost =
+              currentKey === "graveyard" && "isLost" in pair && pair.isLost;
             return {
               ...pair,
               location: payload.location?.trim() || "",
@@ -626,22 +628,14 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
 
   const handleConfirmLoss = (playerIndex: number) => {
     if (isReadOnly || !pendingLossPair) return;
-    if (!pendingLossPair) return;
-    const pair = { ...pendingLossPair, isLost: false };
-    setData((prev) => ({
-      ...prev,
-      graveyard: [...prev.graveyard, pair],
-      team: prev.team.filter((p) => p.id !== pair.id),
-      box: prev.box.filter((p) => p.id !== pair.id),
-      stats: {
-        ...prev.stats,
-        deaths: prev.stats.deaths.map((count, index) =>
-          index === playerIndex ? Number(count || 0) + 1 : count,
-        ),
-      },
-    }));
+    setData((prev) => killLink(prev, pendingLossPair.id, playerIndex));
     setShowLossModal(false);
     setPendingLossPair(null);
+  };
+
+  const handleRestoreLink = (pair: PokemonLink, legacyPlayerIndex?: number) => {
+    if (isReadOnly) return;
+    setData((prev) => restoreLink(prev, pair.id, legacyPlayerIndex));
   };
 
   const handleManualAddToGraveyard = (pair: AppState["graveyard"][number]) => {
@@ -1691,6 +1685,7 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
             },
             onEditPair: handleEditGraveyardPair,
             onDeleteLink: handleDeleteLink,
+            onRestoreLink: handleRestoreLink,
             readOnly: isReadOnly,
             generationSpritePath,
             pokemonGenerationLimit,

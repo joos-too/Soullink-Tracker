@@ -238,16 +238,22 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
           entry,
           locale,
           t,
+          gameVersionId,
         );
         rows.push({
           category,
           id: entry.id || entry.name?.trim() || "",
           name,
           searchNames: toSearchNames(
-            localeTs.map(
-              ({ lang, t: localeT }) =>
-                resolveItemDisplay(entry, lang, localeT).name,
-            ),
+            localeTs.flatMap(({ lang, t: localeT }) => {
+              const display = resolveItemDisplay(
+                entry,
+                lang,
+                localeT,
+                gameVersionId,
+              );
+              return [display.name, ...display.aliases];
+            }),
           ),
           spriteUrl,
           playerIndex: pIdx,
@@ -266,7 +272,7 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
     });
 
     return rows;
-  }, [fossils, items, t, i18n, locale, multiLocaleSearch]);
+  }, [fossils, items, t, i18n, locale, multiLocaleSearch, gameVersionId]);
 
   const itemSections = useMemo(() => {
     const categories: { key: ItemCategory; titleKey: string }[] = [
@@ -317,17 +323,24 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
 
   if (!isOpen) return null;
 
+  const modalWidthClass =
+    playerNames.length >= 3
+      ? "max-w-4xl"
+      : playerNames.length === 2
+        ? "max-w-2xl"
+        : "max-w-xl";
+
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4 custom-scrollbar">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-2 sm:p-4">
       <div
         ref={containerRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-160 max-h-[85vh] overflow-hidden flex flex-col"
+        className={`flex max-h-[calc(100dvh-1rem)] w-full flex-col overflow-hidden rounded-lg bg-white shadow-xl dark:bg-gray-800 sm:max-h-[85dvh] ${modalWidthClass}`}
       >
-        <div className="shrink-0 px-6 py-4 flex justify-between items-center border-b border-gray-100 dark:border-gray-700">
+        <div className="flex shrink-0 items-center justify-between border-b border-gray-100 px-4 py-3 dark:border-gray-700 sm:px-6 sm:py-4">
           <h2 id={titleId} className="text-lg font-bold dark:text-gray-100">
             {t("tracker.search.title")}
           </h2>
@@ -353,7 +366,7 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
           </button>
         </div>
 
-        <div className="shrink-0 px-6 py-4 border-b border-gray-100 dark:border-gray-700 space-y-4">
+        <div className="shrink-0 space-y-3 border-b border-gray-100 px-4 py-3 dark:border-gray-700 sm:space-y-4 sm:px-6 sm:py-4">
           <div className="flex flex-wrap gap-2">
             <button
               type="button"

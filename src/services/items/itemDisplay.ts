@@ -3,6 +3,7 @@ import type { FossilEntry, ItemEntry } from "@/types";
 import { FOSSILS, MEGA_STONES, STONES } from "@/src/data/special-items.ts";
 import {
   getItemName,
+  getItemSearchNames,
   getItemSpriteUrl,
 } from "@/src/services/search/itemSearch.ts";
 import { resolveLocationDisplay } from "@/src/services/search/locationSearch.ts";
@@ -18,7 +19,10 @@ export type ItemCategory = "fossils" | "stones" | "megaStones" | "items";
 
 export interface ItemDisplay {
   category: ItemCategory;
+  /** Name in the tracker's game */
   name: string;
+  /** Further names the entry can be searched by */
+  aliases: string[];
   spriteUrl: string | null;
 }
 
@@ -28,6 +32,7 @@ export const resolveItemDisplay = (
   entry: ItemEntry,
   locale: SupportedLanguage,
   t: TFunction,
+  gameVersionId?: string,
 ): ItemDisplay => {
   const itemId = entry.id ?? "";
   const customName = entry.name?.trim() ?? "";
@@ -39,19 +44,22 @@ export const resolveItemDisplay = (
     return {
       category: "stones",
       name: customName || t(`stones.${itemId}`),
+      aliases: [],
       spriteUrl: `/stone-sprites/${stoneDef.sprite}`,
     };
   }
   if (itemSlug) {
     return {
       category: MEGA_STONE_IDS.has(itemSlug) ? "megaStones" : "items",
-      name: customName || getItemName(itemSlug, locale),
+      name: customName || getItemName(itemSlug, locale, gameVersionId),
+      aliases: customName ? [] : getItemSearchNames(itemSlug, locale),
       spriteUrl: getItemSpriteUrl(itemSlug),
     };
   }
   return {
     category: "items",
     name: customName || itemId,
+    aliases: [],
     spriteUrl: null,
   };
 };
