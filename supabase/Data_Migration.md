@@ -228,8 +228,9 @@ counts, hashes, warnings, disk usage, backup reference, manual decisions, and
 test evidence outside Git.
 
 After a successful staging import, manually run the `Deploy staging` GitHub
-Actions workflow with the rehearsed branch. It verifies the staging marker,
-clears managed Auth data left by a remote CLI reset, reapplies migrations and
+Actions workflow with the rehearsed branch and explicitly select `"true"` in
+the `reset_database` dropdown to restore seeded fixtures. It verifies the staging
+marker, clears managed Auth data left by a remote CLI reset, reapplies migrations and
 `seed.sql`, verifies fixture counts, and deploys the frontend. Repeat the
 migration from the same inputs; both rehearsals must match.
 

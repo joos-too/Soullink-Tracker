@@ -6,6 +6,15 @@ on:
     branches:
       - staging
   workflow_dispatch:
+    inputs:
+      reset_database:
+        description: 'Reset staging database? Selecting "true" deletes staging data and reloads the seed.'
+        required: true
+        type: choice
+        default: "false"
+        options:
+          - "false"
+          - "true"
 
 concurrency:
   group: deploy-staging
@@ -73,8 +82,22 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Reset staging database and load seed
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.reset_database == 'true' }}
         uses: ./.github/actions/reset-staging-database
         with:
+          ssh-host: ${{ secrets.SSH_HOST }}
+          ssh-username: ${{ secrets.SSH_USERNAME }}
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          ssh-known-hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
+          remote-db-port: ${{ vars.SUPABASE_DB_REMOTE_PORT }}
+          database-url: ${{ secrets.SUPABASE_MIGRATION_DB_URL }}
+          github-token: ${{ github.token }}
+
+      - name: Deploy staging database migrations
+        if: ${{ github.event_name != 'workflow_dispatch' || inputs.reset_database != 'true' }}
+        uses: ./.github/actions/deploy-supabase-migrations
+        with:
+          environment: staging
           ssh-host: ${{ secrets.SSH_HOST }}
           ssh-username: ${{ secrets.SSH_USERNAME }}
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
