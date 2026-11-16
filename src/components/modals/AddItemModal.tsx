@@ -276,7 +276,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
               </div>
               <div className="grid grid-cols-3 gap-2 p-1 max-h-64 overflow-y-auto custom-scrollbar">
                 {availableMegaStones.map((m) => {
-                  const megaName = getItemName(m.id, locale);
+                  const megaName = getItemName(m.id, locale, gameVersionId);
                   return (
                     <div
                       key={m.id}

@@ -42,10 +42,10 @@ const DeathCounter: React.FC<DeathCounterProps> = ({
         {deathStats.map((entry, index) => (
           <div
             key={`death-column-${index}`}
-            className="px-2 py-2 text-center flex flex-col items-center gap-3"
+            className="min-w-0 px-2 py-2 text-center flex flex-col items-center gap-3"
           >
             <h3
-              className="font-press-start text-xs whitespace-normal wrap-break-word leading-tight"
+              className="w-full min-w-0 font-press-start text-xs whitespace-normal wrap-anywhere leading-tight"
               style={{ color: entry.color }}
             >
               {entry.name}

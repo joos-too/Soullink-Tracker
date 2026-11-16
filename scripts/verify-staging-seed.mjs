@@ -11,9 +11,9 @@ const EXPECTED_COUNTS = {
   users: 4,
   identities: 4,
   profiles: 4,
-  trackers: 4,
-  memberships: 6,
-  states: 4,
+  trackers: 6,
+  memberships: 8,
+  states: 6,
   rulesets: 1,
 };
 

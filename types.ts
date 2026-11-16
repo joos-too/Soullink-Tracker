@@ -13,6 +13,8 @@ export interface PokemonLink {
   fossilSlugs?: string[];
   members: Pokemon[];
   isLost?: boolean;
+  /** Player charged for this death; null/absent on legacy links. */
+  deathPlayerIndex?: number | null;
 }
 
 export interface LinkEditPayload {
