@@ -28,7 +28,7 @@ begin
   end if;
   if jsonb_typeof(p_state) <> 'object'
     or p_state ?| array['playerNames', 'rulesetId']
-    or not private.tracker_state_v3_is_valid(p_state)
+    or not private.tracker_link_ids_are_valid(p_state)
   then
     raise exception using errcode = '22023', message = 'invalid_tracker_state';
   end if;

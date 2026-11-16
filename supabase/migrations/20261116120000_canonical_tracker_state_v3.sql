@@ -327,8 +327,12 @@ begin
   -- Prevent a concurrent old-client save from being overwritten by an earlier
   -- snapshot while upgrading. Metadata fixes and state conversion are atomic.
   lock table public.trackers, public.tracker_states in share row exclusive mode;
+  -- The earlier death-attribution migration already marked legacy documents
+  -- as v3 without canonicalizing them. Upgrade those too; canonical v3 rows
+  -- remain untouched so repeating this conversion does not bump revisions.
   for row in select s.*, cardinality(t.player_names) as player_count, extract(epoch from t.created_at) * 1000 as created_ms
     from public.tracker_states s join public.trackers t on t.id = s.tracker_id where s.schema_version < 3
+      or (s.schema_version = 3 and not private.tracker_state_v3_is_valid(s.state))
   loop
     begin
       migrated := private.canonical_tracker_state_v3(row.state, row.player_count, row.created_ms);

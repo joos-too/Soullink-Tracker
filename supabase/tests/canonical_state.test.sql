@@ -73,6 +73,19 @@ select is(s.state -> 'runStartedAt', to_jsonb(extract(epoch from t.created_at) *
 create temporary table after_upgrade as select * from public.tracker_states;
 select lives_ok('select private.migrate_tracker_states_v3()', 'repeat upgrade succeeds');
 select results_eq('select * from public.tracker_states order by tracker_id', 'select * from after_upgrade order by tracker_id', 'repeat upgrade leaves all columns unchanged');
+-- Staging already has v3 from death attribution, but still stores legacy fields.
+update public.tracker_states set state = '{"rules":[],"rivalCensorEnabled":false,"graveyard":[{"id":"10000000-0000-4000-8000-000000000095","members":[{"id":25,"nickname":"Named"}],"deathPlayerIndex":1}],"extension":"legacy-v3"}', schema_version = 3
+where tracker_id = '30000000-0000-0000-0000-000000000001';
+create temporary table before_v3_upgrade as select revision from public.tracker_states where tracker_id = '30000000-0000-0000-0000-000000000001';
+select lives_ok('select private.migrate_tracker_states_v3()', 'upgrades existing death-attribution v3 rows');
+select ok(private.tracker_state_v3_is_valid(state), 'legacy v3 receives all canonical fields') from public.tracker_states where tracker_id = '30000000-0000-0000-0000-000000000001';
+select is(revision, (select revision + 1 from before_v3_upgrade), 'legacy v3 upgrade increments revision once') from public.tracker_states where tracker_id = '30000000-0000-0000-0000-000000000001';
+select is(state ->> 'rivalCensorMode', 'off', 'legacy v3 censor preference survives') from public.tracker_states where tracker_id = '30000000-0000-0000-0000-000000000001';
+select is(state #> '{graveyard,0,deathPlayerIndex}', '1'::jsonb, 'existing death attribution survives canonicalization') from public.tracker_states where tracker_id = '30000000-0000-0000-0000-000000000001';
+select is(state ->> 'extension', 'legacy-v3', 'legacy v3 extensions survive') from public.tracker_states where tracker_id = '30000000-0000-0000-0000-000000000001';
+create temporary table after_v3_upgrade as select * from public.tracker_states;
+select lives_ok('select private.migrate_tracker_states_v3()', 'repeat legacy v3 upgrade succeeds');
+select results_eq('select * from public.tracker_states order by tracker_id', 'select * from after_v3_upgrade order by tracker_id', 'repeat legacy v3 upgrade leaves all columns unchanged');
 update public.tracker_states set state = '{"runStartedAt":"bad"}', schema_version = 2 where tracker_id = '30000000-0000-0000-0000-000000000001';
 select throws_ok('select private.migrate_tracker_states_v3()', '22023', 'Tracker 30000000-0000-0000-0000-000000000001: invalid_tracker_state at $.runStartedAt', 'unsafe upgrades include tracker ID and path');
 update public.tracker_states s set state = a.state, schema_version = a.schema_version from after_upgrade a where s.tracker_id = a.tracker_id;
