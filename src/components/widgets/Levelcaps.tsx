@@ -27,8 +27,7 @@ interface LevelcapsProps {
   onLevelCapToggle: (index: number) => void;
   onRivalCapToggleDone: (index: number) => void;
   onRivalCapReveal: (index: number) => void;
-  rivalCensorEnabled: boolean;
-  rivalCensorMode?: RivalCensorMode;
+  rivalCensorMode: RivalCensorMode;
   hardcoreModeEnabled: boolean;
   gameVersion?: GameVersion;
   rivalPreferences: UserSettings["rivalPreferences"];
@@ -51,7 +50,6 @@ const Levelcaps: React.FC<LevelcapsProps> = ({
   onLevelCapToggle,
   onRivalCapToggleDone,
   onRivalCapReveal,
-  rivalCensorEnabled,
   rivalCensorMode,
   hardcoreModeEnabled,
   gameVersion,
@@ -67,8 +65,7 @@ const Levelcaps: React.FC<LevelcapsProps> = ({
     readStoredCapsView(trackerViewStorageKey),
   );
   const [isMobile, setIsMobile] = useState(false);
-  const effectiveCensorMode: RivalCensorMode =
-    rivalCensorMode ?? (rivalCensorEnabled ? "on" : "off");
+  const effectiveCensorMode: RivalCensorMode = rivalCensorMode;
   const isCensored = effectiveCensorMode !== "off";
   const showLevelsWhileCensored = effectiveCensorMode === "showLevels";
   const nextRivalToRevealIndex = isCensored

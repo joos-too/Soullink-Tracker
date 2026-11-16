@@ -2,7 +2,12 @@ import PokemonPairCard from "@/src/components/other/PokemonPairCard.tsx";
 import ItemGroupCard from "@/src/components/other/ItemGroupCard.tsx";
 import PlayerColumnHeader from "@/src/components/other/PlayerColumnHeader.tsx";
 import React, { useEffect, useId, useMemo, useState } from "react";
-import type { FossilEntry, PokemonLink, ItemEntry } from "@/types";
+import type {
+  FossilEntry,
+  GraveyardPokemonLink,
+  PokemonLink,
+  ItemEntry,
+} from "@/types";
 import { useTranslation } from "react-i18next";
 import { useFocusTrap } from "@/src/hooks/useFocusTrap.ts";
 import {
@@ -45,7 +50,7 @@ interface TrackerSearchModalProps {
   playerColors: string[];
   team: PokemonLink[];
   box: PokemonLink[];
-  graveyard: PokemonLink[];
+  graveyard: GraveyardPokemonLink[];
   fossils: FossilEntry[][];
   items: ItemEntry[][];
   generationSpritePath?: string | null;
@@ -398,91 +403,33 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
           />
         </div>
 
-        <div className="m-2 min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-sm [scrollbar-gutter:stable] custom-scrollbar">
-          <div className="px-2 py-2 sm:px-4 sm:py-3">
-            {mode === "pokemon" ? (
-              hasPokemonResults ? (
-                <div className="space-y-6">
-                  {pokemonSections.map((section) => (
-                    <div key={section.key} className="space-y-3">
-                      <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200">
-                        {section.title}
-                      </h3>
-                      <div className="min-w-0 space-y-3">
-                        {section.pairs.map((pair) => (
-                          <PokemonPairCard
-                            key={`${section.key}-${pair.id}`}
-                            pair={pair}
-                            playerNames={playerNames}
-                            playerColors={playerColors}
-                            status={
-                              section.key !== "graveyard"
-                                ? undefined
-                                : pair.isLost
-                                  ? "lost"
-                                  : "dead"
-                            }
-                            generationSpritePath={generationSpritePath}
-                            wikiId={wikiId}
-                            nicknamesEnabled={nicknamesEnabled}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-center text-gray-500 dark:text-gray-400 text-sm py-8">
-                  {normalizedQuery
-                    ? t("modals.common.noMatches")
-                    : t("tracker.search.emptyPokemon")}
-                </p>
-              )
-            ) : hasItemResults ? (
-              <div className="space-y-6">
-                {itemSections.map((section) => (
+        <div className="flex-1 min-h-0 mb-2 px-6 pb-6 pt-4 overflow-y-auto overscroll-contain custom-scrollbar">
+          {mode === "pokemon" ? (
+            hasPokemonResults ? (
+              <div className="space-y-6 pb-2">
+                {pokemonSections.map((section) => (
                   <div key={section.key} className="space-y-3">
                     <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200">
                       {section.title}
                     </h3>
-                    <div
-                      className="grid gap-3 p-3 rounded-lg shadow-md border border-gray-300 dark:border-gray-700"
-                      style={playerGridStyle}
-                    >
-                      {section.itemsByPlayer.map((playerItems, pIdx) => (
-                        <div
-                          key={`${section.key}-player-${pIdx}`}
-                          className="space-y-2 min-w-0"
-                        >
-                          <PlayerColumnHeader
-                            name={playerNames[pIdx]}
-                            color={playerColors[pIdx] ?? "#4b5563"}
-                            pixelFont={false}
-                          />
-                          <div className="space-y-1 px-1">
-                            {playerItems.map(
-                              ({ id, name, spriteUrl, summary }, idx) => (
-                                <ItemGroupCard
-                                  key={`${section.key}-${id}-${pIdx}-${idx}`}
-                                  name={name}
-                                  spriteUrl={spriteUrl}
-                                  status={summary.status}
-                                  badgeCount={
-                                    summary.isGrouped ? summary.bagCount : 0
-                                  }
-                                  used={summary.usedUp}
-                                  dimmed={summary.bagCount === 0}
-                                  extraRows={summary.extraPending.map(
-                                    ({ index, status }) => ({
-                                      key: index,
-                                      status,
-                                    }),
-                                  )}
-                                />
-                              ),
-                            )}
-                          </div>
-                        </div>
+                    <div className="space-y-3 min-w-min">
+                      {section.pairs.map((pair) => (
+                        <PokemonPairCard
+                          key={`${section.key}-${pair.id}`}
+                          pair={pair}
+                          playerNames={playerNames}
+                          playerColors={playerColors}
+                          status={
+                            section.key !== "graveyard"
+                              ? undefined
+                              : "isLost" in pair && pair.isLost
+                                ? "lost"
+                                : "dead"
+                          }
+                          generationSpritePath={generationSpritePath}
+                          wikiId={wikiId}
+                          nicknamesEnabled={nicknamesEnabled}
+                        />
                       ))}
                     </div>
                   </div>
@@ -492,10 +439,66 @@ const TrackerSearchModal: React.FC<TrackerSearchModalProps> = ({
               <p className="text-center text-gray-500 dark:text-gray-400 text-sm py-8">
                 {normalizedQuery
                   ? t("modals.common.noMatches")
-                  : t("tracker.search.emptyItems")}
+                  : t("tracker.search.emptyPokemon")}
               </p>
-            )}
-          </div>
+            )
+          ) : hasItemResults ? (
+            <div className="space-y-6 pb-2">
+              {itemSections.map((section) => (
+                <div key={section.key} className="space-y-3">
+                  <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200">
+                    {section.title}
+                  </h3>
+                  <div
+                    className="grid gap-3 p-3 rounded-lg shadow-md border border-gray-300 dark:border-gray-700"
+                    style={playerGridStyle}
+                  >
+                    {section.itemsByPlayer.map((playerItems, pIdx) => (
+                      <div
+                        key={`${section.key}-player-${pIdx}`}
+                        className="space-y-2 min-w-0"
+                      >
+                        <PlayerColumnHeader
+                          name={playerNames[pIdx]}
+                          color={playerColors[pIdx] ?? "#4b5563"}
+                          pixelFont={false}
+                        />
+                        <div className="space-y-1 px-1">
+                          {playerItems.map(
+                            ({ id, name, spriteUrl, summary }, idx) => (
+                              <ItemGroupCard
+                                key={`${section.key}-${id}-${pIdx}-${idx}`}
+                                name={name}
+                                spriteUrl={spriteUrl}
+                                status={summary.status}
+                                badgeCount={
+                                  summary.isGrouped ? summary.bagCount : 0
+                                }
+                                used={summary.usedUp}
+                                dimmed={summary.bagCount === 0}
+                                extraRows={summary.extraPending.map(
+                                  ({ index, status }) => ({
+                                    key: index,
+                                    status,
+                                  }),
+                                )}
+                              />
+                            ),
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-center text-gray-500 dark:text-gray-400 text-sm py-8">
+              {normalizedQuery
+                ? t("modals.common.noMatches")
+                : t("tracker.search.emptyItems")}
+            </p>
+          )}
         </div>
       </div>
     </div>

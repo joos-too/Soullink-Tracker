@@ -205,7 +205,7 @@ export const getSupabaseTrackerState = async (
     .eq("tracker_id", trackerId);
   const trackerQuery = supabase
     .from("trackers")
-    .select("player_names, ruleset_id")
+    .select("player_names, ruleset_id, game_version_id")
     .eq("id", trackerId);
   if (signal) {
     stateQuery.abortSignal(signal);

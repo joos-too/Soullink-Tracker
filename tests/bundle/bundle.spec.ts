@@ -1,5 +1,31 @@
 import { expect, test } from "@playwright/test";
 
+const canonicalState = {
+  team: [],
+  box: [],
+  graveyard: [],
+  rules: [],
+  levelCaps: [],
+  rivalCaps: [],
+  stats: {
+    runs: 1,
+    best: 0,
+    top4Items: [0, 0],
+    deaths: [0, 0],
+    sumDeaths: [0, 0],
+    legendaryEncounters: 0,
+  },
+  fossils: [[], []],
+  items: [[], []],
+  runStartedAt: 1,
+  legendaryTrackerEnabled: true,
+  nicknamesEnabled: true,
+  hardcoreModeEnabled: false,
+  infiniteFossilsEnabled: false,
+  megaStoneSpriteStyle: "item",
+  rivalCensorMode: "on",
+};
+
 const trackerId = "30000000-0000-0000-0000-000000000001";
 const ownerId = "10000000-0000-0000-0000-000000000001";
 const tracker = {
@@ -64,9 +90,9 @@ test("production tracker creation and settings need no extra JavaScript", async 
         : url.pathname.endsWith("/tracker_states")
           ? {
               tracker_id: trackerId,
-              state: { runStartedAt: 1 },
+              state: canonicalState,
               revision: 1,
-              schema_version: 2,
+              schema_version: 3,
               updated_at: tracker.created_at,
             }
           : url.pathname.endsWith("/tracker_members")
@@ -168,9 +194,9 @@ test("production tracker includes search without another JavaScript download", a
       : pathname.endsWith("/tracker_states")
         ? {
             tracker_id: trackerId,
-            state: {},
+            state: canonicalState,
             revision: 1,
-            schema_version: 2,
+            schema_version: 3,
             updated_at: "2026-01-01T00:00:00Z",
           }
         : [];
