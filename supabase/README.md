@@ -142,9 +142,10 @@ Hosted releases use two independent branch workflows:
 Both workflows run on a push to their branch and through `workflow_dispatch`.
 A manual staging deployment may use any selected branch; a manual production
 deployment must use `master`. Each release builds the frontend before changing
-the hosted environment. Staging then resets and seeds its database, while
-production applies only pending migrations. Database and frontend deployment
-run in one environment-bound release job. The production release job uses the
+the hosted environment. Both environments apply only pending migrations by
+default; manual staging deployments can optionally reset and seed the database.
+Database and frontend deployment run in one environment-bound release job.
+The production release job uses the
 protected `production` GitHub environment as its approval gate and records the
 complete release in GitHub's deployment history.
 
@@ -201,20 +202,29 @@ alter database postgres set app.environment = 'production';
 
 Run only the matching statement against each database, then reconnect. The
 pipelines refuse to change a database whose marker does not match their target.
-Production also rejects migration-history divergence and verifies exact history
-after `supabase db push`. Production deployments never apply seeds.
+Migration deployments in both environments also reject migration-history
+divergence and verify exact history after `supabase db push`. Production
+deployments never apply seeds.
 
 ### Staging deployment reset
 
-The `Deploy staging` workflow destroys all data in the isolated staging
-database, reapplies every migration, loads `supabase/seed.sql`, and then deploys
-the frontend. It runs automatically for pushes to `staging` and can be started
-manually from any branch. For a manual run, select the branch whose application,
-migrations, and seed should be deployed.
+The `Deploy staging` workflow runs automatically for pushes to `staging` and can
+be started manually from any branch. Push deployments preserve existing data
+and apply pending migrations before deploying the frontend. For a manual run,
+select the branch to deploy and use the `reset_database` dropdown:
+
+- `"false"` (default): preserve existing data and apply pending migrations.
+- `"true"`: destroy all staging data, reapply every migration, and load
+  `supabase/seed.sql` before deploying the frontend.
+
+Only an explicit manual selection of `"true"` runs the reset. Both database
+paths verify the staging environment marker, and a database failure prevents
+frontend deployment. The migration path verifies migration history before and
+after applying pending migrations and does not load the seed.
 
 Before changing any data, the workflow verifies the persistent
-`app.environment=staging` marker. It clears the managed Auth users because a
-remote Supabase CLI reset preserves the `auth` schema, then runs
+`app.environment=staging` marker. When resetting, it clears the managed Auth
+users because a remote Supabase CLI reset preserves the `auth` schema, then runs
 `supabase db reset --db-url`. Afterward it verifies migration history, fixture
 counts, and the exact seeded Auth email list before deploying the frontend. The
 workflow uses the protected `staging` environment and cannot target production
