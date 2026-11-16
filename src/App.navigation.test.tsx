@@ -3,7 +3,8 @@ import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { BrowserRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { TrackerMeta } from "@/types";
+import type { AppState, TrackerMeta } from "@/types";
+import { createInitialState } from "@/src/services/init";
 import type { AuthenticatedUser } from "@/src/services/backend/auth";
 import type { TrackerListEntry } from "@/src/services/repos/trackerRepository";
 import i18n from "@/src/i18n";
@@ -15,7 +16,7 @@ const backend = vi.hoisted(() => ({
   onList: undefined as ((entries: TrackerListEntry[]) => void) | undefined,
   deleteTracker: vi.fn(async () => {}),
   removeMember: vi.fn(async () => {}),
-  getState: vi.fn(async () => null),
+  getState: vi.fn<() => Promise<AppState | null>>(),
   unsubscribeState: vi.fn(),
   saveState: vi.fn(async () => {}),
 }));
@@ -109,6 +110,9 @@ const tracker: TrackerMeta = {
 };
 
 async function openSettings(meta = tracker) {
+  backend.getState.mockResolvedValue(
+    createInitialState(meta.gameVersionId, meta.playerNames),
+  );
   window.history.replaceState({}, "", `/tracker/${meta.id}?panel=settings`);
   render(
     <React.StrictMode>

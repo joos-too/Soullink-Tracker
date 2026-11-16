@@ -33,12 +33,12 @@ export interface UseActiveTrackerOptions {
   canWrite: boolean;
   data: AppState;
   setData: Dispatch<SetStateAction<AppState>>;
-  coerceState: (incoming: unknown, base: AppState) => AppState;
   debounceMs: number;
 }
 
 export interface ActiveTrackerController {
   dataLoaded: boolean;
+  loadError: boolean;
   stateConflict: boolean;
   realtimeStatus: TrackerRealtimeStatus;
   reloadAfterConflict: () => Promise<void>;
@@ -54,10 +54,10 @@ export const useActiveTracker = ({
   canWrite,
   data,
   setData,
-  coerceState,
   debounceMs,
 }: UseActiveTrackerOptions): ActiveTrackerController => {
   const [dataLoaded, setDataLoaded] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [stateConflict, setStateConflict] = useState(false);
   const [realtimeStatus, setRealtimeStatus] =
     useState<TrackerRealtimeStatus>("idle");
@@ -155,7 +155,7 @@ export const useActiveTracker = ({
         skipNextWriteRef.current = true;
         dirtyRef.current = false;
         saveFailedRef.current = false;
-        setData((previous) => coerceState(snapshot.state, previous));
+        setData(snapshot.state);
       } else {
         throw new Error("Tracker state was not found.");
       }
@@ -164,7 +164,7 @@ export const useActiveTracker = ({
     } catch (error) {
       console.error("Failed to reload tracker after state conflict", error);
     }
-  }, [activeTrackerId, coerceState, setData]);
+  }, [activeTrackerId, setData]);
 
   const reconcileTracker = useCallback(
     async (trackerId: string, session: number, attempt: number) => {
@@ -230,7 +230,12 @@ export const useActiveTracker = ({
         if (snapshot) {
           acceptTrackerStateSnapshot(trackerId, snapshot);
           skipNextWriteRef.current = true;
-          setData((previous) => coerceState(snapshot.state, previous));
+          setData(snapshot.state);
+          isHydratingRef.current = false;
+          setDataLoaded(true);
+          setLoadError(false);
+        } else {
+          throw new Error("Tracker state was not found.");
         }
         setRealtimeStatus("connected");
       } catch (error) {
@@ -240,16 +245,11 @@ export const useActiveTracker = ({
         )
           return;
         console.error("Failed to resynchronize tracker", error);
+        setLoadError(true);
         setRealtimeStatus("resync-error");
       }
     },
-    [
-      coerceState,
-      flushPendingWrite,
-      clearPendingWriteTimer,
-      enqueueSave,
-      setData,
-    ],
+    [flushPendingWrite, clearPendingWriteTimer, enqueueSave, setData],
   );
 
   const retryRealtimeSync = useCallback(() => {
@@ -264,6 +264,7 @@ export const useActiveTracker = ({
 
   useEffect(() => {
     isHydratingRef.current = true;
+    setLoadError(false);
 
     if (!canLoad) {
       setData(createInitialState());
@@ -288,7 +289,6 @@ export const useActiveTracker = ({
     let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
     let subscriptionGeneration = 0;
     let retryCount = 0;
-    let initialSnapshotApplied = false;
     const clearReconnectTimer = () => {
       if (reconnectTimer !== null) clearTimeout(reconnectTimer);
       reconnectTimer = null;
@@ -320,7 +320,12 @@ export const useActiveTracker = ({
             if (dirtyRef.current || stateConflictRef.current) return false;
             if (liveState) {
               skipNextWriteRef.current = true;
-              setData((previous) => coerceState(liveState, previous));
+              setData(liveState);
+            } else {
+              setLoadError(true);
+              setDataLoaded(false);
+              isHydratingRef.current = true;
+              return false;
             }
             markInitialSnapshot();
             return true;
@@ -328,6 +333,8 @@ export const useActiveTracker = ({
           (error) => {
             if (cancelled || generation !== subscriptionGeneration) return;
             console.error("Tracker state listener error", error);
+            setLoadError(true);
+            setRealtimeStatus("resync-error");
           },
           (status, error) => {
             if (cancelled || generation !== subscriptionGeneration) return;
@@ -360,10 +367,10 @@ export const useActiveTracker = ({
       startSubscription();
     };
     const markInitialSnapshot = () => {
-      if (initialSnapshotApplied || cancelled) return;
-      initialSnapshotApplied = true;
+      if (cancelled) return;
       isHydratingRef.current = false;
       setDataLoaded(true);
+      setLoadError(false);
     };
 
     void (async () => {
@@ -373,16 +380,16 @@ export const useActiveTracker = ({
         if (storedState) {
           skipNextWriteRef.current = true;
           dirtyRef.current = false;
-          setData((previous) => coerceState(storedState, previous));
+          setData(storedState);
         } else {
-          setData(createInitialState(gameVersionId));
+          throw new Error("Tracker state was not found.");
         }
         markInitialSnapshot();
       } catch (error) {
         if (cancelled) return;
         console.error("Tracker state fetch failed", error);
-        setData(createInitialState(gameVersionId));
-        markInitialSnapshot();
+        setLoadError(true);
+        setRealtimeStatus("resync-error");
       } finally {
         if (!cancelled) {
           restartRealtimeRef.current = restartSubscription;
@@ -401,14 +408,7 @@ export const useActiveTracker = ({
       isHydratingRef.current = true;
       setDataLoaded(false);
     };
-  }, [
-    activeTrackerId,
-    canLoad,
-    coerceState,
-    gameVersionId,
-    reconcileTracker,
-    setData,
-  ]);
+  }, [activeTrackerId, canLoad, gameVersionId, reconcileTracker, setData]);
 
   useEffect(() => {
     writeSessionRef.current += 1;
@@ -472,6 +472,7 @@ export const useActiveTracker = ({
 
   return {
     dataLoaded,
+    loadError,
     realtimeStatus,
     stateConflict,
     reloadAfterConflict,

@@ -22,6 +22,7 @@ const initialState = (): AppState => ({
     top4Items: [1, 2],
     deaths: [3, 4],
     sumDeaths: [5, 6],
+    legendaryEncounters: 0,
   },
 });
 
@@ -75,7 +76,10 @@ describe("link lifecycle", () => {
   });
 
   it("does not restore lost encounters or accept invalid player indices", () => {
-    const state = { ...initialState(), graveyard: [{ ...pair, isLost: true }] };
+    const state: AppState = {
+      ...initialState(),
+      graveyard: [{ ...pair, isLost: true }],
+    };
     expect(restoreLink(state, pair.id, 0)).toBe(state);
     expect(killLink(state, pair.id, -1)).toBe(state);
     expect(killLink(state, pair.id, 2)).toBe(state);
