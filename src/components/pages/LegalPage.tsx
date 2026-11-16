@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { useLayoutEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { FiArrowLeft } from "react-icons/fi";
 import { useTranslation } from "react-i18next";
 import PageLayout from "@/src/components/layout/PageLayout";
@@ -12,15 +13,29 @@ export default function LegalPage({
   kind: "legalNotice" | "privacyPolicy";
 }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  useLayoutEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }, [kind]);
+
+  const goBack = () => {
+    // React Router tracks entries within this tab; direct visits start at zero.
+    if (window.history.state?.idx > 0) {
+      navigate(-1);
+    } else {
+      navigate("/", { replace: true });
+    }
+  };
   return (
     <div className="min-h-screen bg-[#f0f0f0] px-3 py-6 text-gray-800 dark:bg-gray-900 dark:text-gray-100 sm:py-10">
       <PageLayout width="account" className="space-y-4" showFooter={false}>
-        <Link
-          to="/"
+        <button
+          type="button"
+          onClick={goBack}
           className={`inline-flex items-center gap-2 rounded-sm text-sm font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white ${focusRingClasses}`}
         >
           <FiArrowLeft aria-hidden="true" /> {t("common.back")}
-        </Link>
+        </button>
         <main className="rounded-lg border border-gray-200 bg-white px-6 py-8 shadow-[6px_6px_0_0_rgba(31,41,55,0.25)] dark:border-gray-700 dark:bg-gray-800 dark:shadow-[6px_6px_0_0_rgba(0,0,0,0.35)]">
           <h1
             lang={kind === "privacyPolicy" ? "de" : undefined}

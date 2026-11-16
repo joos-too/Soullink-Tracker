@@ -55,7 +55,7 @@ describe("SpriteImage", () => {
     expect(card).not.toHaveBeenCalled();
   });
 
-  it("uses the static public PNG for blocked images", () => {
+  it("uses a image icon for blocked images", () => {
     render(
       <ImageConsentContext.Provider
         value={{
@@ -72,9 +72,8 @@ describe("SpriteImage", () => {
     const button = screen.getByRole("button");
     expect(button).not.toHaveClass("border");
     expect(button).not.toHaveClass("border-blue-500");
-    const image = button.querySelector("img")!;
-    expect(image).toHaveAttribute("src", "/github-image-blocked.png");
-    expect(image).not.toHaveStyle({ imageRendering: "pixelated" });
+    expect(button.querySelector("img")).toBeNull();
+    expect(button.querySelector("svg")).toHaveAttribute("aria-hidden", "true");
   });
 
   it("preserves custom fallbacks and does not invent placeholders for missing sources", () => {

@@ -2,21 +2,13 @@ import React, { useEffect, useState } from "react";
 import { useImageLoading } from "@/src/contexts/ImageLoadingContext";
 import { useImageConsent } from "@/src/contexts/ImageConsentContext";
 import { useTranslation } from "react-i18next";
+import { FiImage } from "react-icons/fi";
 
 interface SpriteImageProps
   extends Omit<React.ImgHTMLAttributes<HTMLImageElement>, "src"> {
   src?: string | null;
   fallback?: React.ReactNode;
 }
-
-const BlockedImagePlaceholder: React.FC = () => (
-  <img
-    src="/github-image-blocked.png"
-    alt=""
-    aria-hidden="true"
-    className="h-full w-full object-contain"
-  />
-);
 
 const SpriteImageAttempt: React.FC<SpriteImageProps> = ({
   src,
@@ -86,7 +78,7 @@ const SpriteImage: React.FC<SpriteImageProps> = (props) => {
             .split(/\s+/)
             .filter((name) => name !== "pointer-events-none")
             .join(" ") ?? ""
-        } inline-flex shrink-0 cursor-pointer items-center justify-center rounded bg-blue-50 text-blue-700 hover:bg-blue-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:bg-gray-800 dark:text-blue-300 dark:hover:bg-gray-700`}
+        } inline-flex shrink-0 cursor-pointer items-center justify-center rounded text-gray-600 hover:bg-blue-100 hover:text-gray-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white`}
         style={{
           width: props.width,
           height: props.height,
@@ -109,7 +101,7 @@ const SpriteImage: React.FC<SpriteImageProps> = (props) => {
           event.preventDefault();
         }}
       >
-        <BlockedImagePlaceholder />
+        <FiImage aria-hidden="true" className="h-2/3 w-2/3" />
       </button>
     );
   }
