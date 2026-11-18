@@ -1,7 +1,8 @@
 import SpriteImage from "@/src/components/other/SpriteImage.tsx";
 import React from "react";
 import type { UserSettings, VariableRival } from "@/types.ts";
-import { getSpriteUrlForPokemonName } from "@/src/services/sprites.ts";
+import { getPokemonImageUrlForPokemonName } from "@/src/services/sprites.ts";
+import { usePokemonImageStyle } from "@/src/contexts/PokemonImageStyleContext.tsx";
 
 // RivalImage component for displaying rival sprites
 export const RivalImage: React.FC<{
@@ -93,9 +94,14 @@ export const LegendaryImage: React.FC<{
   className?: string;
   generationSpritePath?: string | null;
 }> = ({ pokemonName, className = "w-16 h-16", generationSpritePath }) => {
+  const imageStyle = usePokemonImageStyle();
   return (
     <SpriteImage
-      src={getSpriteUrlForPokemonName(pokemonName, generationSpritePath)}
+      src={getPokemonImageUrlForPokemonName(
+        pokemonName,
+        imageStyle,
+        generationSpritePath,
+      )}
       alt=""
       className={className}
     />

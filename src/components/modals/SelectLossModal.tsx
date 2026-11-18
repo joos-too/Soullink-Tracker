@@ -9,6 +9,7 @@ import Tooltip from "@/src/components/other/Tooltip.tsx";
 import { resolvePokemonDisplay } from "@/src/services/pokemons/pokemonDisplay.ts";
 import { resolvePokemonLocationDisplay } from "@/src/services/search/locationSearch.ts";
 import { normalizeLanguage } from "@/src/utils/language.ts";
+import { usePokemonImageStyle } from "@/src/contexts/PokemonImageStyleContext.tsx";
 
 interface SelectLossModalProps {
   isOpen: boolean;
@@ -36,6 +37,7 @@ const SelectLossModal: React.FC<SelectLossModalProps> = ({
   const locale = normalizeLanguage(i18n.language);
   const { containerRef } = useFocusTrap(isOpen);
   const titleId = useId();
+  const imageStyle = usePokemonImageStyle();
   const translationPrefix =
     mode === "restore" ? "modals.restoreLink" : "modals.selectLoss";
 
@@ -122,6 +124,7 @@ const SelectLossModal: React.FC<SelectLossModalProps> = ({
                       member,
                       locale,
                       generationSpritePath,
+                      imageStyle,
                     );
 
                     return (
@@ -160,6 +163,7 @@ const SelectLossModal: React.FC<SelectLossModalProps> = ({
                       member,
                       locale,
                       generationSpritePath,
+                      imageStyle,
                     );
                     const isSelected = selected === index;
                     return (

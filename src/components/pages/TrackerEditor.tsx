@@ -1,5 +1,5 @@
+import PageLayout from "@/src/components/layout/PageLayout";
 import React, { useEffect, useState, type ComponentProps } from "react";
-import { FaGithub } from "react-icons/fa";
 import {
   FiHome,
   FiMenu,
@@ -150,7 +150,7 @@ const TrackerEditor: React.FC<TrackerEditorProps> = ({
           notice={readOnlyNotice}
         />
       )}
-      <div className="max-w-480 mx-auto space-y-4 sm:space-y-4">
+      <PageLayout width="tracker" className="space-y-4">
         <header className="relative bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-[6px_6px_0_0_rgba(31,41,55,0.25)] dark:shadow-[6px_6px_0_0_rgba(0,0,0,0.35)] px-4 py-5">
           <div className="mx-auto max-w-full px-2 pr-14 sm:pr-16 xl:px-0 xl:pr-0 text-center">
             <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-3xl xl:text-3xl 2xl:text-4xl font-bold font-press-start tracking-tighter dark:text-gray-100">
@@ -316,20 +316,8 @@ const TrackerEditor: React.FC<TrackerEditorProps> = ({
               <ClearedLocations {...clearedLocationsProps} />
             </div>
           </main>
-          <footer className="text-center mt-8 py-4 border-t-2 border-gray-200 dark:border-gray-700">
-            <a
-              href="https://github.com/joos-too/soullink-tracker"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-              title={t("tracker.footer.github")}
-            >
-              <FaGithub size={18} aria-hidden="true" />
-              <span className="text-sm">Coded by joos-too & FreakMediaLP</span>
-            </a>
-          </footer>
         </div>
-      </div>
+      </PageLayout>
       {reviveModalProps && <EditPairModal {...reviveModalProps} />}
     </div>
   );

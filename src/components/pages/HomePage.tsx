@@ -1,3 +1,5 @@
+import { useImageConsent } from "@/src/contexts/ImageConsentContext";
+import PageLayout from "@/src/components/layout/PageLayout";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   FiAward,
@@ -66,6 +68,7 @@ const HomePage: React.FC<HomePageProps> = ({
   onDisplayNameChange,
 }) => {
   const { t, i18n } = useTranslation();
+  const { decision } = useImageConsent();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isDark, setIsDark] = useState(getDarkMode());
   const [filterOpen, setFilterOpen] = useState(false);
@@ -185,7 +188,11 @@ const HomePage: React.FC<HomePageProps> = ({
   return (
     <div className="min-h-screen bg-[#f0f0f0] dark:bg-gray-900 text-gray-800 dark:text-gray-100 px-3 py-6 sm:py-10">
       <MigrationDisplayNameModal
-        isOpen={displayNameRequiresUpdate && !displayNamePromptDismissed}
+        isOpen={
+          displayNameRequiresUpdate &&
+          !displayNamePromptDismissed &&
+          decision !== null
+        }
         initialDisplayName={displayName}
         onClose={() => setDisplayNamePromptDismissed(true)}
         onSave={async (nextDisplayName) => {
@@ -193,7 +200,7 @@ const HomePage: React.FC<HomePageProps> = ({
           setDisplayNamePromptDismissed(true);
         }}
       />
-      <div className="max-w-5xl mx-auto space-y-6">
+      <PageLayout width="home" className="space-y-6">
         <header className="relative bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-5 sm:px-6 shadow-[6px_6px_0_0_rgba(31,41,55,0.25)] dark:shadow-[6px_6px_0_0_rgba(0,0,0,0.35)]">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-4 flex-1">
@@ -738,7 +745,7 @@ const HomePage: React.FC<HomePageProps> = ({
             </div>
           )}
         </section>
-      </div>
+      </PageLayout>
     </div>
   );
 };

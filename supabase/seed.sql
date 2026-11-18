@@ -113,7 +113,10 @@ set
     '10000000-0000-0000-0000-000000000002'::uuid
   ),
   use_generation_sprites = id = '10000000-0000-0000-0000-000000000003'::uuid,
-  use_sprites_in_team_table = id = '10000000-0000-0000-0000-000000000003'::uuid,
+  pokemon_image_style = case
+    when id = '10000000-0000-0000-0000-000000000003'::uuid then 'sprites'::public.pokemon_image_style
+    else 'mixed'::public.pokemon_image_style
+  end,
   wiki_id = case
     when id = '10000000-0000-0000-0000-000000000001'::uuid then 'pokewiki'
       end;
@@ -242,8 +245,8 @@ values
       "locationSlug": "kanto-route-2",
       "members": [
         {
-          "id": 10,
-          "nickname": "Crawler"
+          "id": 15,
+          "nickname": "Driller"
         },
         {
           "id": 13,
@@ -260,8 +263,8 @@ values
           "nickname": "Sparky"
         },
         {
-          "id": 27,
-          "nickname": "Sandy"
+          "id": 75,
+          "nickname": "Roller"
         }
       ]
     }

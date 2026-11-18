@@ -1,6 +1,6 @@
-import type { Pokemon } from "@/types.ts";
+import type { Pokemon, PokemonImageStyle } from "@/types.ts";
 import { getPokemonNameById } from "@/src/services/search/pokemonSearch.ts";
-import { getSpriteUrlById } from "@/src/services/sprites.ts";
+import { getPokemonImageUrlById } from "@/src/services/sprites.ts";
 import type { SupportedLanguage } from "@/src/utils/language.ts";
 
 type PokemonDisplaySource =
@@ -16,12 +16,19 @@ export function resolvePokemonDisplay(
   pokemon: PokemonDisplaySource,
   locale: SupportedLanguage,
   generationSpritePath?: string | null,
+  imageStyle: PokemonImageStyle = "mixed",
+  artworkInMixed = false,
 ): { displayName: string; spriteUrl: string | null } {
   const pokemonId = pokemon?.id ?? null;
   const displayName =
     getPokemonNameById(pokemonId, locale) || pokemon?.name || "";
   const spriteUrl = pokemonId
-    ? getSpriteUrlById(pokemonId, generationSpritePath)
+    ? getPokemonImageUrlById(
+        pokemonId,
+        imageStyle,
+        generationSpritePath,
+        artworkInMixed,
+      )
     : null;
 
   return { displayName, spriteUrl };

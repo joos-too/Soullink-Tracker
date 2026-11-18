@@ -10,12 +10,15 @@ export default function AccountRoute() {
     handleDisplayNameChange,
     userUseGenerationSprites,
     handleGenerationSpritesToggle,
-    userUseSpritesInTeamTable,
-    handleSpritesInTeamTableToggle,
+    userPokemonImageStyle,
+    handlePokemonImageStyleChange,
     effectiveWikiId,
     handleWikiChange,
     userMultiLocaleSearch,
     handleMultiLocaleSearchToggle,
+    allowImageLoading,
+    imageLoadingAllowed,
+    handleImageLoadingChange,
   } = useAppSession();
   const navigate = useNavigate();
   const handleNavigateHome = () => navigate("/");
@@ -29,14 +32,18 @@ export default function AccountRoute() {
   return (
     <UserSettingsPage
       email={user.email}
+      allowImageLoading={
+        allowImageLoading === null ? null : imageLoadingAllowed
+      }
+      onImageLoadingChange={handleImageLoadingChange}
       displayName={userDisplayName}
       onDisplayNameChange={handleDisplayNameChange}
       onBack={handleNavigateHome}
       onLogout={handleLogout}
       useGenerationSprites={userUseGenerationSprites}
       onGenerationSpritesToggle={handleGenerationSpritesToggle}
-      useSpritesInTeamTable={userUseSpritesInTeamTable}
-      onSpritesInTeamTableToggle={handleSpritesInTeamTableToggle}
+      pokemonImageStyle={userPokemonImageStyle}
+      onPokemonImageStyleChange={handlePokemonImageStyleChange}
       wikiId={effectiveWikiId}
       onWikiChange={handleWikiChange}
       multiLocaleSearch={userMultiLocaleSearch}

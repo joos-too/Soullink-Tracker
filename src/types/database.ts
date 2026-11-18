@@ -36,39 +36,45 @@ export type Database = {
     Tables: {
       profiles: {
         Row: {
+          allow_image_loading: boolean | null;
           created_at: string;
           display_name: string;
           display_name_requires_update: boolean;
           firebase_uid: string | null;
           id: string;
+          image_consent_updated_at: string | null;
           last_login_at: string;
           multi_locale_search: boolean;
+          pokemon_image_style: Database["public"]["Enums"]["pokemon_image_style"];
           use_generation_sprites: boolean;
-          use_sprites_in_team_table: boolean;
           wiki_id: string | null;
         };
         Insert: {
+          allow_image_loading?: boolean | null;
           created_at?: string;
           display_name: string;
           display_name_requires_update?: boolean;
           firebase_uid?: string | null;
           id: string;
+          image_consent_updated_at?: string | null;
           last_login_at?: string;
           multi_locale_search?: boolean;
+          pokemon_image_style?: Database["public"]["Enums"]["pokemon_image_style"];
           use_generation_sprites?: boolean;
-          use_sprites_in_team_table?: boolean;
           wiki_id?: string | null;
         };
         Update: {
+          allow_image_loading?: boolean | null;
           created_at?: string;
           display_name?: string;
           display_name_requires_update?: boolean;
           firebase_uid?: string | null;
           id?: string;
+          image_consent_updated_at?: string | null;
           last_login_at?: string;
           multi_locale_search?: boolean;
+          pokemon_image_style?: Database["public"]["Enums"]["pokemon_image_style"];
           use_generation_sprites?: boolean;
-          use_sprites_in_team_table?: boolean;
           wiki_id?: string | null;
         };
         Relationships: [];
@@ -342,6 +348,7 @@ export type Database = {
       };
     };
     Enums: {
+      pokemon_image_style: "artwork" | "mixed" | "sprites";
       tracker_role: "owner" | "editor" | "guest";
     };
     CompositeTypes: {
@@ -476,6 +483,7 @@ export const Constants = {
   },
   public: {
     Enums: {
+      pokemon_image_style: ["artwork", "mixed", "sprites"],
       tracker_role: ["owner", "editor", "guest"],
     },
   },

@@ -1,10 +1,15 @@
-import { getSupabaseClient } from "@/src/services/backend/supabase.ts";
+import {
+  clearAuthCookies,
+  getSupabaseClient,
+  setAuthPersistence,
+} from "@/src/services/backend/supabase.ts";
 import type { SupportedLanguage } from "@/src/utils/language.ts";
 
 export interface AuthenticatedUser {
   uid: string;
   email: string | null;
   language: SupportedLanguage | null;
+  requiresPersonalization?: boolean;
 }
 
 export type AuthErrorCode =
@@ -25,6 +30,12 @@ const getUserLanguage = (metadata: unknown): SupportedLanguage | null => {
   return language === "de" || language === "en" ? language : null;
 };
 
+const requiresPersonalization = (metadata: unknown): boolean =>
+  typeof metadata === "object" &&
+  metadata !== null &&
+  (metadata as { personalization_completed?: unknown })
+    .personalization_completed === false;
+
 const toAuthenticatedUser = (
   user: {
     id?: string;
@@ -38,6 +49,7 @@ const toAuthenticatedUser = (
         uid: user.id,
         email: user.email ?? null,
         language: getUserLanguage(user.user_metadata),
+        requiresPersonalization: requiresPersonalization(user.user_metadata),
       }
     : null;
 };
@@ -86,7 +98,9 @@ export const onCurrentAuthStateChange = (
 export const signIn = async (
   email: string,
   password: string,
+  staySignedIn = false,
 ): Promise<void> => {
+  setAuthPersistence(staySignedIn);
   const { error } = await getSupabaseClient().auth.signInWithPassword({
     email: normalizeEmail(email),
     password,
@@ -103,12 +117,18 @@ export const signUp = async (
   password: string,
   displayName: string,
   language: SupportedLanguage,
+  staySignedIn = false,
 ): Promise<SignUpResult> => {
+  setAuthPersistence(staySignedIn);
   const { data, error } = await getSupabaseClient().auth.signUp({
     email: normalizeEmail(email),
     password,
     options: {
-      data: { display_name: displayName, language },
+      data: {
+        display_name: displayName,
+        language,
+        personalization_completed: false,
+      },
     },
   });
   if (error) throw error;
@@ -116,6 +136,13 @@ export const signUp = async (
   const confirmationRequired =
     !!data.user && !data.session && data.user.identities?.length !== 0;
   return { confirmationRequired };
+};
+
+export const completeCurrentUserPersonalization = async (): Promise<void> => {
+  const { error } = await getSupabaseClient().auth.updateUser({
+    data: { personalization_completed: true },
+  });
+  if (error) throw error;
 };
 
 export const synchronizeCurrentUserLanguage = async (
@@ -132,7 +159,9 @@ export const synchronizeCurrentUserLanguage = async (
 export const verifyEmailOtp = async (
   email: string,
   token: string,
+  staySignedIn = false,
 ): Promise<void> => {
+  setAuthPersistence(staySignedIn);
   const { error } = await getSupabaseClient().auth.verifyOtp({
     email: normalizeEmail(email),
     token,
@@ -144,8 +173,13 @@ export const verifyEmailOtp = async (
 export const signOutCurrentUser = async (
   scope: "local" | "global" = "local",
 ): Promise<void> => {
-  const { error } = await getSupabaseClient().auth.signOut({ scope });
-  if (error) throw error;
+  try {
+    const { error } = await getSupabaseClient().auth.signOut({ scope });
+    if (error) throw error;
+  } finally {
+    // Local credentials must be removed even if server-side revocation fails.
+    clearAuthCookies();
+  }
 };
 
 export const requestPasswordReset = async (

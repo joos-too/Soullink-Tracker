@@ -1,3 +1,4 @@
+import PageLayout from "@/src/components/layout/PageLayout";
 import React, { useState } from "react";
 import {
   getAuthErrorCode,
@@ -11,6 +12,7 @@ import {
 } from "@/src/styles/focusRing.ts";
 import { Trans, useTranslation } from "react-i18next";
 import PasswordInput from "@/src/components/auth/PasswordInput.tsx";
+import StaySignedInCheckbox from "@/src/components/auth/StaySignedInCheckbox.tsx";
 import { normalizeLanguage } from "@/src/utils/language.ts";
 
 type RegisterPageProps = {
@@ -21,6 +23,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onSwitchToLogin }) => {
   const [email, setEmail] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [password, setPassword] = useState("");
+  const [staySignedIn, setStaySignedIn] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -77,6 +80,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onSwitchToLogin }) => {
         password,
         normalizedDisplayName,
         normalizeLanguage(i18n.resolvedLanguage || i18n.language),
+        staySignedIn,
       );
       if (confirmationRequired) {
         setConfirmationEmail(email.trim());
@@ -98,7 +102,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onSwitchToLogin }) => {
 
     setOtpLoading(true);
     try {
-      await verifyEmailOtp(confirmationEmail!, trimmedOtp);
+      await verifyEmailOtp(confirmationEmail!, trimmedOtp, staySignedIn);
     } catch {
       setOtpError(t("auth.register.confirmation.error"));
     } finally {
@@ -109,7 +113,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onSwitchToLogin }) => {
   if (confirmationEmail) {
     return (
       <div className="bg-[#f0f0f0] dark:bg-gray-900 min-h-screen p-2 sm:p-4 md:p-8 text-gray-800 flex items-center justify-center">
-        <div className="w-full max-w-md">
+        <PageLayout width="auth" compactFooter>
           <div className="bg-white dark:bg-gray-800 shadow-[6px_6px_0_0_rgba(31,41,55,0.25)] dark:shadow-[6px_6px_0_0_rgba(0,0,0,0.35)] border border-gray-200 dark:border-gray-700 p-6 sm:p-8 rounded-lg">
             <header className="text-center pb-4 border-b border-gray-200 dark:border-gray-700">
               <img
@@ -190,14 +194,14 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onSwitchToLogin }) => {
               </p>
             </div>
           </div>
-        </div>
+        </PageLayout>
       </div>
     );
   }
 
   return (
     <div className="bg-[#f0f0f0] dark:bg-gray-900 min-h-screen p-2 sm:p-4 md:p-8 text-gray-800 flex items-center justify-center">
-      <div className="w-full max-w-md">
+      <PageLayout width="auth" compactFooter>
         <div className="bg-white dark:bg-gray-800 shadow-[6px_6px_0_0_rgba(31,41,55,0.25)] dark:shadow-[6px_6px_0_0_rgba(0,0,0,0.35)] border border-gray-200 dark:border-gray-700 p-6 sm:p-8 rounded-lg">
           <header className="text-center pb-4 border-b border-gray-200 dark:border-gray-700">
             <img
@@ -299,6 +303,12 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onSwitchToLogin }) => {
               />
             </div>
 
+            <StaySignedInCheckbox
+              checked={staySignedIn}
+              disabled={loading}
+              onChange={setStaySignedIn}
+            />
+
             {error && (
               <div className="text-red-500 dark:text-red-400 text-sm">
                 {error}
@@ -316,7 +326,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onSwitchToLogin }) => {
             </button>
           </form>
         </div>
-      </div>
+      </PageLayout>
     </div>
   );
 };

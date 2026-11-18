@@ -1,4 +1,21 @@
 export const de = {
+  legalNotice: {
+    contact: "Kontakt",
+    phone: "Telefon",
+    email: "E-Mail",
+  },
+  footer: {
+    github: "Auf GitHub ansehen",
+    legalNavigation: "Rechtliche Informationen",
+    legalNotice: "Impressum",
+    privacyPolicy: "Datenschutzerklärung",
+    trademarks:
+      "Pokémon und alle zugehörigen Namen und Charaktere sind Marken ihrer jeweiligen Eigentümer.",
+    copyright:
+      "© 2026 Pokémon. © 1995–2026 Nintendo / Creatures Inc. / GAME FREAK inc.",
+    disclaimer:
+      "Dies ist ein nicht kommerzielles Fanprojekt, das mit keinem dieser Unternehmen verbunden ist.",
+  },
   common: {
     appName: "Soullink Tracker",
     search: "Suchen",
@@ -248,9 +265,6 @@ export const de = {
       rulesets: "Regeln verwalten",
       resetRun: "Run zurücksetzen",
       settings: "Einstellungen",
-    },
-    footer: {
-      github: "Auf GitHub ansehen",
     },
     locations: {
       title: "Abgegraste Gebiete",
@@ -595,13 +609,6 @@ export const de = {
         description:
           "Zeige Pokémon-Sprites im Stil der jeweiligen Generation an.",
       },
-      spritesInTeamTable: {
-        title: "Sprites überall verwenden",
-        tooltipLabel: "Info Sprites überall",
-        tooltip:
-          "Verwende Sprites statt offizieller Artworks überall in der App. Respektiert die anderen Sprite-Einstellungen.",
-        description: "Zeige Sprites statt Artworks in allen Ansichten an.",
-      },
       infiniteFossils: {
         title: "Unendliche Fossile",
         tooltipLabel: "Info Unendliche Fossile",
@@ -711,6 +718,18 @@ export const de = {
     },
     sprites: {
       title: "Sprites",
+      imageStyle: {
+        title: "Pokémon-Bilder",
+        tooltip:
+          "Wähle zwischen offiziellen Artworks, klassischen Sprites oder einer gemischten Darstellung.",
+        description:
+          "Wähle den Stil, in welchem Pokémon in der gesamten App dargestellt werden.",
+        artwork: "Artworks",
+        mixed: "Gemischt",
+        sprites: "Sprites",
+        saveError:
+          "Die Auswahl ist für diese Sitzung aktiv, konnte aber nicht gespeichert werden.",
+      },
     },
     wiki: {
       title: "Wiki-Anbieter",
@@ -720,7 +739,40 @@ export const de = {
       languageEN: "EN",
     },
   },
+  personalization: {
+    title: "Personalisiere deine Erfahrung",
+    description:
+      "Wähle aus, wie der Soullink Tracker aussehen und sich verhalten soll. Du kannst diese Einstellungen jederzeit wieder ändern.",
+    allowImages: "Ich möchte externe Bilder von GitHub erlauben.",
+    imageConfirmationTitle: "Bist du sicher?",
+    continue: "Weiter zum Tracker",
+    saveError:
+      "Die Personalisierung konnte nicht abgeschlossen werden. Bitte versuche es erneut.",
+  },
+  privacy: {
+    policy: "Datenschutzerklärung",
+    settings: "Datenschutzeinstellungen",
+    notice: {
+      title: "Datenschutz und Browserspeicher",
+      description:
+        "Wir verwenden Cookies für die sichere Anmeldung und Browserspeicher, um deine Einstellungen zu speichern. Wenn du ‚Angemeldet bleiben‘ auswählst, bleiben die Anmelde-Cookies 90 Tage erhalten und werden während der Nutzung erneuert. Beim Abmelden werden die Anmelde-Cookies gelöscht. Weitere Informationen findest du in unserer <privacyLink>Datenschutzerklärung</privacyLink>.",
+      close: "Verstanden",
+    },
+    images: {
+      placeholder: "Bilder gesperrt – Einstellungen öffnen",
+      title: "Externe Bilder von GitHub",
+      description:
+        "Pokémon- und Item-Bilder werden von GitHub heruntergeladen. Dabei werden deine IP-Adresse und technische Anfragedaten an GitHub übermittelt. Die Bilder können zur Verkürzung der Ladezeiten im Cache deines Browsers gespeichert werden. Du kannst den Tracker ohne externe Bilder verwenden und deine Auswahl im Nachhinein ändern.",
+      withdrawal:
+        "Beim Ausschalten werden keine externen Bilder mehr geladen und der Bild-Cache der App wird in diesem Browser gelöscht!",
+      allow: "Externe Bilder erlauben",
+      decline: "Ohne externe Bilder fortfahren",
+      saveError:
+        "Deine Auswahl konnte nicht gespeichert werden. Bitte versuche es erneut.",
+    },
+  },
   auth: {
+    staySignedIn: "Angemeldet bleiben",
     login: {
       title: "Soullink Tracker",
       headline: "Anmeldung erforderlich",
@@ -747,7 +799,7 @@ export const de = {
       displayNameLabel: "Anzeigename",
       displayNamePlaceholder: "Trainername",
       displayNameInfo:
-        "Dieser Name ist für Mitglieder deiner Tracker sichtbar und muss nicht eindeutig sein.",
+        "Dieser Name ist für andere Nutzer sichtbar und muss nicht eindeutig sein.",
       displayNameRequired: "Bitte gib einen Anzeigenamen ein.",
       displayNameTooLong:
         "Ein Anzeigename darf höchstens 50 Zeichen enthalten.",

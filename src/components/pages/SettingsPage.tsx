@@ -1,3 +1,4 @@
+import PageLayout from "@/src/components/layout/PageLayout";
 import React, { useId, useMemo, useState } from "react";
 import {
   MAX_PLAYER_COUNT,
@@ -294,7 +295,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
 
   return (
     <div className="bg-[#f0f0f0] dark:bg-gray-900 min-h-screen text-gray-800 dark:text-gray-100 px-3 py-6 sm:py-10">
-      <div className="max-w-2xl mx-auto space-y-4">
+      <PageLayout width="account" className="space-y-4" showFooter={false}>
         <button
           onClick={onBack}
           className={`inline-flex items-center gap-2 text-sm font-semibold text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white ${focusRingClasses}`}
@@ -978,7 +979,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
             </section>
           </main>
         </div>
-      </div>
+      </PageLayout>
       <RulesetSyncModal
         isOpen={showRulesetSyncModal}
         rulesetName={rulesetLabel}
