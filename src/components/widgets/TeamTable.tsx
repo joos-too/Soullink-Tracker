@@ -187,7 +187,7 @@ const TeamTable: React.FC<TeamTableProps> = ({
         )}
       </div>
       {filterBar}
-      <div className="w-full overflow-x-auto">
+      <div className="w-full overflow-x-auto custom-scrollbar">
         <table className="w-full border-collapse min-w-225">
           <thead>
             <tr>
