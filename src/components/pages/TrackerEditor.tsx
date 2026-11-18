@@ -300,7 +300,7 @@ const TrackerEditor: React.FC<TrackerEditorProps> = ({
         </header>
         <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-[6px_6px_0_0_rgba(31,41,55,0.25)] dark:shadow-[6px_6px_0_0_rgba(0,0,0,0.35)] p-4">
           <main className="grid grid-cols-1 xl:grid-cols-[64fr_36fr] gap-6">
-            <div className="space-y-8">
+            <div className="min-w-0 space-y-8">
               <TeamTable key={`team-${trackerId}`} {...teamTableProps} />
               <TeamTable
                 key={`box-${trackerId}`}
