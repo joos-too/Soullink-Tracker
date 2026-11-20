@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import type { TrackerMeta } from "@/types";
+import type { TrackerMeta } from "@/src/types/domain";
 import HomePage from "@/src/components/pages/HomePage";
 import CreateTrackerModal from "@/src/components/modals/CreateTrackerModal";
 import {

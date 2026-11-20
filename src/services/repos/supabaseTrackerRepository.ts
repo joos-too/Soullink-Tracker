@@ -4,7 +4,7 @@ import type {
   TrackerMeta,
   TrackerRole,
   TrackerSummary,
-} from "@/types.ts";
+} from "@/src/types/domain.ts";
 import { getSupabaseClient } from "@/src/services/backend/supabase.ts";
 import {
   toPersistedTrackerState,

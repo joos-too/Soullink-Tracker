@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import type { Ruleset } from "@/types.ts";
+import type { Ruleset } from "@/src/types/domain.ts";
 import {
   focusRingCardClasses,
   focusRingClasses,

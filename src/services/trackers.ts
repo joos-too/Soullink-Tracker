@@ -18,7 +18,7 @@ import type {
   TrackerMember,
   TrackerMeta,
   TrackerRole,
-} from "@/types.ts";
+} from "@/src/types/domain.ts";
 import type { AuthenticatedUser } from "@/src/services/backend/auth.ts";
 
 export class TrackerOperationError extends Error {

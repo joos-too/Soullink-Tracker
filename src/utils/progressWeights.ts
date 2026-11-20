@@ -1,4 +1,4 @@
-import type { LevelCap, RivalCap } from "@/types";
+import type { LevelCap, RivalCap } from "@/src/types/domain";
 
 /**
  * Milestone category weights for progress bar calculation.

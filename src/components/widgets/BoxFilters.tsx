@@ -11,7 +11,7 @@ import {
 } from "react-icons/fi";
 import TypeBadge from "@/src/components/badges/TypeBadge.tsx";
 import ToggleSwitch from "@/src/components/toggles/ToggleSwitch.tsx";
-import Tooltip from "@/src/components/other/Tooltip.tsx";
+import Tooltip from "@/src/components/ui/Tooltip.tsx";
 import { focusRingClasses } from "@/src/styles/focusRing.ts";
 import { ALL_TYPE_SLUGS } from "@/src/data/pokemon";
 

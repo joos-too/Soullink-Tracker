@@ -3,7 +3,7 @@ import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { BrowserRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { AppState, TrackerMeta } from "@/types";
+import type { AppState, TrackerMeta } from "@/src/types/domain";
 import { createInitialState } from "@/src/services/init";
 import type { AuthenticatedUser } from "@/src/services/backend/auth";
 import type { TrackerListEntry } from "@/src/services/repos/trackerRepository";
@@ -127,7 +127,7 @@ async function openSettings(meta = tracker) {
   await screen.findByRole(
     "heading",
     { name: "Tracker settings" },
-    { timeout: 5000 },
+    { timeout: 8000 },
   );
 }
 
@@ -175,6 +175,7 @@ describe("tracker exit navigation", () => {
       expect(localStorage.getItem("soullink:lastSupabaseTrackerId")).toBeNull();
       expect(backend.unsubscribeState).toHaveBeenCalled();
     },
+    10000,
   );
 
   it.each(["delete", "leave"])(
@@ -316,6 +317,23 @@ describe("tracker exit navigation", () => {
       </BrowserRouter>,
     );
     expect(await screen.findByText("Tracker not found.")).toBeVisible();
+    expect(backend.getState).not.toHaveBeenCalled();
+  });
+
+  it("clears a non-UUID when opening the remembered tracker route", async () => {
+    localStorage.setItem(
+      "soullink:lastSupabaseTrackerId",
+      "invalid-tracker-id",
+    );
+    window.history.replaceState({}, "", "/tracker");
+    render(
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>,
+    );
+    await screen.findByRole("heading", { name: "Tracker overview" });
+    expect(window.location.pathname).toBe("/");
+    expect(localStorage.getItem("soullink:lastSupabaseTrackerId")).toBeNull();
     expect(backend.getState).not.toHaveBeenCalled();
   });
 

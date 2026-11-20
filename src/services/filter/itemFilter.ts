@@ -1,6 +1,6 @@
 import { ITEMS } from "@/src/data/items.ts";
 
-/** Item versions in chronological release order, as in scripts/generate-items.mjs */
+/** Item versions in chronological release order, as in scripts/pokeapi/generate-items.mjs */
 export const ITEM_VERSIONS = [
   "RBY",
   "GS",

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { TFunction } from "i18next";
-import type { ItemEntry } from "@/types";
+import type { ItemEntry } from "@/src/types/domain";
 import { groupItemEntries } from "./itemGroups.ts";
 import { summarizeEntryGroup } from "./itemDisplay.ts";
 

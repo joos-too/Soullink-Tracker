@@ -1,0 +1,146 @@
+import React from "react";
+import { Trans, useTranslation } from "react-i18next";
+import type { PokemonLink } from "@/src/types/domain.ts";
+import SpriteImage from "@/src/components/images/SpriteImage.tsx";
+import { resolvePokemonDisplay } from "@/src/services/pokemons/pokemonDisplay.ts";
+import { resolvePokemonLocationDisplay } from "@/src/services/search/locationSearch.ts";
+import { normalizeLanguage } from "@/src/utils/language.ts";
+import { getWikiUrlById, type WikiId } from "@/src/utils/wiki.ts";
+import { usePokemonImageStyle } from "@/src/contexts/PokemonImageStyleContext.tsx";
+
+interface PokemonPairCardProps {
+  pair: PokemonLink;
+  playerNames: string[];
+  playerColors: string[];
+  /** Shows a dead/lost badge, e.g. for graveyard entries */
+  status?: "dead" | "lost";
+  generationSpritePath?: string | null;
+  wikiId?: WikiId | string | null;
+  nicknamesEnabled?: boolean;
+  /** Absolutely positioned overlays, e.g. edit buttons */
+  children?: React.ReactNode;
+}
+
+/** Linked Pokémon of all players with their area, e.g. in the graveyard. */
+const PokemonPairCard: React.FC<PokemonPairCardProps> = ({
+  pair,
+  playerNames,
+  playerColors,
+  status,
+  generationSpritePath,
+  wikiId,
+  nicknamesEnabled = true,
+  children,
+}) => {
+  const { t, i18n } = useTranslation();
+  const locale = normalizeLanguage(i18n.language);
+  const imageStyle = usePokemonImageStyle();
+  const hasThreePlayers = playerNames.length >= 3;
+
+  return (
+    <div className="relative p-2 border rounded-md text-xs border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700">
+      {status && (
+        <div
+          className={`absolute left-2 top-2 rounded-full px-2 py-0.5 text-[10px] font-semibold ${status === "lost" ? "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400" : "bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400"}`}
+        >
+          {status === "lost"
+            ? t("graveyard.statusLost")
+            : t("graveyard.statusDead")}
+        </div>
+      )}
+      {children}
+      <p className="text-center font-bold text-gray-600 dark:text-gray-300 mb-1">
+        {t("graveyard.areaLabel", {
+          location:
+            resolvePokemonLocationDisplay(pair, locale) ||
+            t("common.unknownLocation"),
+        })}
+      </p>
+      <div
+        className="grid justify-items-center gap-2"
+        style={{
+          gridTemplateColumns: `repeat(${playerNames.length}, minmax(0, 1fr))`,
+        }}
+      >
+        {playerNames.map((name, index) => {
+          const member = pair.members?.[index] ?? { id: null, nickname: "" };
+          const { displayName, spriteUrl } = resolvePokemonDisplay(
+            member,
+            locale,
+            generationSpritePath,
+            imageStyle,
+          );
+          const wikiUrl =
+            displayName && member.id && wikiId
+              ? getWikiUrlById(member.id, wikiId as WikiId)
+              : null;
+
+          return (
+            <div
+              key={`${pair.id}-player-${index}`}
+              className="flex w-full min-w-0 justify-center"
+            >
+              <div
+                className={`mb-2 flex min-w-0 items-center gap-2 ${
+                  hasThreePlayers
+                    ? "flex-col text-center lg:flex-row lg:text-left"
+                    : "text-left"
+                }`}
+              >
+                {spriteUrl && (
+                  <SpriteImage
+                    src={spriteUrl}
+                    alt=""
+                    className="h-16 w-16 shrink-0 -my-3"
+                    loading="lazy"
+                  />
+                )}
+                <div
+                  className={`flex min-w-0 flex-col ${
+                    hasThreePlayers
+                      ? "items-center lg:items-start"
+                      : "items-start"
+                  }`}
+                >
+                  <p
+                    className="max-w-full break-words font-bold"
+                    style={{ color: playerColors[index] ?? "#4b5563" }}
+                  >
+                    <Trans
+                      i18nKey="graveyard.memberTitle"
+                      values={{
+                        name,
+                        pokemon: displayName || t("graveyard.unknownPokemon"),
+                      }}
+                      components={{
+                        pokemon: wikiUrl ? (
+                          <a
+                            href={wikiUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="hover:underline"
+                          />
+                        ) : (
+                          <span />
+                        ),
+                      }}
+                    />
+                  </p>
+                  {nicknamesEnabled && (
+                    <p className="max-w-full break-words text-gray-700 dark:text-gray-400">
+                      {t("graveyard.nicknameLabel", {
+                        nickname: member.nickname || t("graveyard.noNickname"),
+                      })}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+export default PokemonPairCard;

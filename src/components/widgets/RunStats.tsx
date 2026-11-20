@@ -1,5 +1,5 @@
 import React from "react";
-import type { GameVersion, LevelCap, Stats } from "@/types.ts";
+import type { GameVersion, LevelCap, Stats } from "@/src/types/domain.ts";
 import { formatBestLabel } from "@/src/utils/bestRun.ts";
 import { useTranslation } from "react-i18next";
 

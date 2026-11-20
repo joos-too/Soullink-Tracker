@@ -1,4 +1,4 @@
-import type { GameVersion } from "@/types";
+import type { GameVersion } from "@/src/types/domain";
 
 // reused Data Objects across game versions
 const GEN2_LEVELCAPS = [

@@ -1,4 +1,4 @@
-import type { Pokemon, PokemonImageStyle } from "@/types.ts";
+import type { Pokemon, PokemonImageStyle } from "@/src/types/domain.ts";
 import { getPokemonNameById } from "@/src/services/search/pokemonSearch.ts";
 import { getPokemonImageUrlById } from "@/src/services/sprites.ts";
 import type { SupportedLanguage } from "@/src/utils/language.ts";

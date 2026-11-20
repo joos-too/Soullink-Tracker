@@ -1,5 +1,5 @@
 import React, { useId, useState } from "react";
-import type { LinkEditPayload, Pokemon } from "@/types.ts";
+import type { LinkEditPayload, Pokemon } from "@/src/types/domain.ts";
 import {
   focusRingClasses,
   focusRingInputClasses,

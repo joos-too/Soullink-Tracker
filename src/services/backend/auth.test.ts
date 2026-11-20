@@ -2,12 +2,36 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   onCurrentAuthStateChange,
   completeCurrentUserPersonalization,
+  getAuthErrorCode,
   signIn,
   signOutCurrentUser,
   signUp,
   verifyEmailOtp,
   synchronizeCurrentUserLanguage,
 } from "./auth.ts";
+
+describe("user-facing auth errors", () => {
+  it.each([
+    ["email_exists", "email-already-in-use"],
+    ["user_already_exists", "email-already-in-use"],
+    ["invalid_email", "invalid-email"],
+    ["weak_password", "weak-password"],
+    ["same_password", "same-password"],
+    ["unexpected_error", "unknown"],
+  ])("maps %s to %s", (code, expected) => {
+    expect(getAuthErrorCode({ code })).toBe(expected);
+  });
+
+  it("recognizes the older same-password response and handles untyped errors", () => {
+    expect(
+      getAuthErrorCode({
+        code: "validation_failed",
+        message: "New password should be different from the old password.",
+      }),
+    ).toBe("same-password");
+    expect(getAuthErrorCode(new Error("Network unavailable"))).toBe("unknown");
+  });
+});
 
 const authMocks = vi.hoisted(() => ({
   onAuthStateChange: vi.fn(),

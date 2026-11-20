@@ -1,5 +1,5 @@
 import type { TFunction } from "i18next";
-import type { FossilEntry, ItemEntry } from "@/types";
+import type { FossilEntry, ItemEntry } from "@/src/types/domain";
 import { FOSSILS, MEGA_STONES, STONES } from "@/src/data/special-items.ts";
 import {
   getItemName,

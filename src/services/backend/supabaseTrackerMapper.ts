@@ -5,7 +5,7 @@ import type {
   TrackerMeta,
   TrackerRole,
   UserSettings,
-} from "@/types.ts";
+} from "@/src/types/domain.ts";
 import type { Database, Json } from "@/src/types/database.ts";
 import { GAME_VERSIONS } from "@/src/data/game-versions.ts";
 

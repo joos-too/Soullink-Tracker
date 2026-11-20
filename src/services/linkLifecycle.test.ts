@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { AppState, PokemonLink } from "@/types.ts";
+import type { AppState, PokemonLink } from "@/src/types/domain.ts";
 import { createInitialState } from "@/src/services/init.ts";
 import { killLink, restoreLink } from "./linkLifecycle.ts";
 

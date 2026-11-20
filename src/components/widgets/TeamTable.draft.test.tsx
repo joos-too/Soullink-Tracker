@@ -2,7 +2,7 @@ import React from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { LinkId, PokemonLink } from "@/types.ts";
+import type { LinkId, PokemonLink } from "@/src/types/domain.ts";
 import i18n from "@/src/i18n.ts";
 import TeamTable from "./TeamTable.tsx";
 

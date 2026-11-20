@@ -31,7 +31,7 @@ runs:
   using: composite
   steps:
     - name: Setup Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v7
       with:
         node-version: 22
         cache: npm
@@ -119,7 +119,7 @@ runs:
           exit 1
         fi
 
-        node scripts/verify-supabase-migrations.mjs \
+        node scripts/supabase/verify-supabase-migrations.mjs \
           --environment "$DEPLOY_ENVIRONMENT" \
           --phase before
 
@@ -132,6 +132,6 @@ runs:
           --db-url "$SUPABASE_MIGRATION_DB_URL" \
           --debug
 
-        node scripts/verify-supabase-migrations.mjs \
+        node scripts/supabase/verify-supabase-migrations.mjs \
           --environment "$DEPLOY_ENVIRONMENT" \
           --phase after

@@ -1,14 +1,53 @@
-name: Supabase E2E Tests
+name: Application tests
 
 on:
   pull_request:
     branches:
       - staging
+      - master
     types: [opened, synchronize, reopened, ready_for_review]
+  push:
+    branches:
+      - staging
+      - master
   workflow_dispatch:
   workflow_call:
 
 jobs:
+  application:
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    env:
+      VITE_SUPABASE_URL: http://127.0.0.1:54321
+      VITE_SUPABASE_ANON_KEY: bundle-test-key
+
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run prettier:check
+      - run: npm run lint
+      - run: npm run test:unit -- --maxWorkers=2 --coverage
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:bundle
+      - name: Upload application diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: application-diagnostics
+          path: |
+            coverage/
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 7
+
   e2e:
     if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     runs-on: ubuntu-latest
@@ -25,7 +64,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -45,6 +84,9 @@ jobs:
       - name: Start local Supabase
         run: supabase start
 
+      - name: Reset and seed local Supabase
+        run: npm run supabase:reset
+
       - name: Export local Supabase environment
         run: |
           {
@@ -63,8 +105,14 @@ jobs:
             )
           } >> "$GITHUB_ENV"
 
+      - name: Wait for local Auth and REST
+        run: node scripts/supabase/wait-for-local-supabase.mjs
+
+      - name: Run pgTAP
+        run: npm run supabase:test
+
       - name: Run Playwright E2E tests
-        run: npm run test:e2e
+        run: npm run test:e2e:run
 
       - name: Upload Playwright diagnostics
         if: failure()

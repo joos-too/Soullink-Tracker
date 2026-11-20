@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import type { LinkId } from "@/types.ts";
+import type { LinkId } from "@/src/types/domain.ts";
 import { isLinkId } from "@/src/services/linkIds.ts";
 
 function storageKey(trackerId: string | null | undefined): string | null {

@@ -2,7 +2,7 @@ import React from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { GraveyardPokemonLink, LinkId } from "@/types.ts";
+import type { GraveyardPokemonLink, LinkId } from "@/src/types/domain.ts";
 import i18n from "@/src/i18n.ts";
 import Graveyard from "./Graveyard.tsx";
 

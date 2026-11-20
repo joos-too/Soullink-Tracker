@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { AuthenticatedUser } from "@/src/services/backend/auth";
 import i18n from "@/src/i18n";
 import { AppSessionProvider, useAppSession } from "./AppSession";
-import SpriteImage from "@/src/components/other/SpriteImage";
+import SpriteImage from "@/src/components/images/SpriteImage";
 import AppFooter from "@/src/components/layout/AppFooter";
 
 const mocks = vi.hoisted(() => ({

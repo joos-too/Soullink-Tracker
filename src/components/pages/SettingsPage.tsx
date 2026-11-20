@@ -13,7 +13,7 @@ import type {
   TrackerMember,
   UserSettings,
   VariableRival,
-} from "@/types.ts";
+} from "@/src/types/domain.ts";
 import {
   FiArrowLeft,
   FiAlertTriangle,
@@ -37,7 +37,7 @@ import {
 import { sectionHeadingClasses } from "@/src/styles/sectionHeading.ts";
 import ToggleSwitch from "@/src/components/toggles/ToggleSwitch.tsx";
 import TriStateToggle from "@/src/components/toggles/TriStateToggle.tsx";
-import Tooltip from "@/src/components/other/Tooltip.tsx";
+import Tooltip from "@/src/components/ui/Tooltip.tsx";
 import { useTranslation } from "react-i18next";
 import { getLocalizedRivalEntry } from "@/src/services/gameLocalization.ts";
 import RulesetPicker from "@/src/components/pickers/RulesetPicker.tsx";
@@ -174,23 +174,16 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
     return result;
   }, [gameVersion]);
 
-  const versionId = gameVersion?.id;
   const localizedRivalOptions = useMemo(() => {
-    if (!versionId) return {} as Record<string, Record<string, string>>;
-    const out: Record<string, Record<string, string>> = {};
-    variableRivals.forEach((rival) => {
+    const optionsByKey: Record<string, VariableRival["options"]> = {};
+    for (const rival of variableRivals) {
       const localized = getLocalizedRivalEntry(t, rival);
-      if (
-        localized &&
-        typeof localized === "object" &&
-        (localized as any).options &&
-        (localized as any).key === rival.key
-      ) {
-        out[rival.key] = { ...(localized as any).options };
+      if (typeof localized !== "string") {
+        optionsByKey[rival.key] = localized.options;
       }
-    });
-    return out;
-  }, [variableRivals, versionId, t]);
+    }
+    return optionsByKey;
+  }, [variableRivals, t]);
 
   const selectedRuleset = useMemo(
     () => rulesets.find((entry) => entry.id === selectedRulesetId),

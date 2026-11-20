@@ -1,11 +1,11 @@
-import SpriteImage from "@/src/components/other/SpriteImage.tsx";
+import SpriteImage from "@/src/components/images/SpriteImage.tsx";
 import React, { useEffect, useId, useMemo, useRef, useState } from "react";
 import {
   getOfficialArtworkUrlById,
   getSpriteUrlById,
 } from "@/src/services/sprites.ts";
 import { getPokemonNameById } from "@/src/services/search/pokemonSearch.ts";
-import type { PokemonLink } from "@/types.ts";
+import type { PokemonLink } from "@/src/types/domain.ts";
 import { useTranslation } from "react-i18next";
 import { normalizeLanguage } from "@/src/utils/language.ts";
 import { focusRingClasses } from "@/src/styles/focusRing.ts";

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import type { TrackerMeta } from "@/types";
+import type { TrackerMeta } from "@/src/types/domain";
 import TrackerPage from "@/src/components/pages/TrackerPage";
 import { subscribeToTrackerMeta } from "@/src/services/repos/trackerRepository";
 import { useAppSession } from "./AppSession";

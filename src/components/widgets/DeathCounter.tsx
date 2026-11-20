@@ -1,5 +1,5 @@
 import React from "react";
-import type { Stats } from "@/types.ts";
+import type { Stats } from "@/src/types/domain.ts";
 import { PLAYER_COLORS } from "@/src/services/init.ts";
 import { useTranslation } from "react-i18next";
 

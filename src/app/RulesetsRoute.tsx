@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import type { Ruleset } from "@/types";
+import type { Ruleset } from "@/src/types/domain";
 import {
   saveRuleset,
   deleteRuleset,

@@ -1,7 +1,7 @@
 import type { AuthenticatedUser } from "@/src/services/backend/auth.ts";
 import { getSupabaseClient } from "@/src/services/backend/supabase.ts";
 import type { TablesUpdate } from "@/src/types/database.ts";
-import type { PokemonImageStyle } from "@/types.ts";
+import type { PokemonImageStyle } from "@/src/types/domain.ts";
 
 export class ProfileOperationError extends Error {
   readonly code = "invalid-input";

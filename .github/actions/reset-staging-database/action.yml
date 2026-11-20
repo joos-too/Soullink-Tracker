@@ -28,7 +28,7 @@ runs:
   using: composite
   steps:
     - name: Setup Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v7
       with:
         node-version: 22
         cache: npm
@@ -114,15 +114,15 @@ runs:
           exit 1
         fi
 
-        node scripts/prepare-staging-seed-reset.mjs
+        node scripts/supabase/prepare-staging-seed-reset.mjs
 
         supabase db reset \
           --db-url "$SUPABASE_MIGRATION_DB_URL" \
           --yes \
           --debug
 
-        node scripts/verify-supabase-migrations.mjs \
+        node scripts/supabase/verify-supabase-migrations.mjs \
           --environment staging \
           --phase after
 
-        node scripts/verify-staging-seed.mjs
+        node scripts/supabase/verify-staging-seed.mjs

@@ -20,7 +20,7 @@ import DarkModeToggle, {
   getDarkMode,
   setDarkMode,
 } from "@/src/components/toggles/DarkModeToggle.tsx";
-import type { TrackerMeta, TrackerSummary } from "@/types.ts";
+import type { TrackerMeta, TrackerSummary } from "@/src/types/domain.ts";
 import GameVersionBadge from "@/src/components/badges/GameVersionBadge.tsx";
 import {
   focusRingCardClasses,

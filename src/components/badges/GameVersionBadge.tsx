@@ -5,7 +5,7 @@ import {
   getLocalizedGameName,
   getLocalizedBadgeLabel,
 } from "@/src/services/gameLocalization.ts";
-import { GameVersionBadgeSegment } from "@/types.ts";
+import { GameVersionBadgeSegment } from "@/src/types/domain.ts";
 
 interface GameVersionBadgeProps {
   gameVersionId: string;
