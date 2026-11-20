@@ -5,7 +5,7 @@ import {
   type Dispatch,
   type SetStateAction,
 } from "react";
-import type { TrackerMeta, TrackerSummary } from "@/types";
+import type { TrackerMeta, TrackerSummary } from "@/src/types/domain";
 import { getDefaultDisplayName } from "@/src/services/repos/profileRepository.ts";
 import {
   subscribeToTrackerList,

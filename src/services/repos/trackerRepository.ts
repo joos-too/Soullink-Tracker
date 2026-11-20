@@ -1,4 +1,8 @@
-import type { AppState, TrackerMeta, TrackerSummary } from "@/types.ts";
+import type {
+  AppState,
+  TrackerMeta,
+  TrackerSummary,
+} from "@/src/types/domain.ts";
 import {
   getSupabaseTrackerState,
   getSupabaseTrackerStateWithTimeout,

@@ -1,6 +1,10 @@
-import SpriteImage from "@/src/components/other/SpriteImage.tsx";
+import SpriteImage from "@/src/components/images/SpriteImage.tsx";
 import React, { useEffect, useMemo, useState } from "react";
-import type { LinkEditPayload, LinkId, PokemonLink } from "@/types.ts";
+import type {
+  LinkEditPayload,
+  LinkId,
+  PokemonLink,
+} from "@/src/types/domain.ts";
 import EditPairModal from "@/src/components/modals/EditPairModal.tsx";
 import SelectEvolveModal from "@/src/components/modals/SelectEvolveModal.tsx";
 import {

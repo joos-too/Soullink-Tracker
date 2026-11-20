@@ -13,7 +13,7 @@ import type {
   TrackerMember,
   UserSettings,
   VariableRival,
-} from "@/types.ts";
+} from "@/src/types/domain.ts";
 import {
   FiArrowLeft,
   FiAlertTriangle,
@@ -37,7 +37,7 @@ import {
 import { sectionHeadingClasses } from "@/src/styles/sectionHeading.ts";
 import ToggleSwitch from "@/src/components/toggles/ToggleSwitch.tsx";
 import TriStateToggle from "@/src/components/toggles/TriStateToggle.tsx";
-import Tooltip from "@/src/components/other/Tooltip.tsx";
+import Tooltip from "@/src/components/ui/Tooltip.tsx";
 import { useTranslation } from "react-i18next";
 import { getLocalizedRivalEntry } from "@/src/services/gameLocalization.ts";
 import RulesetPicker from "@/src/components/pickers/RulesetPicker.tsx";

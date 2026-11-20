@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { FossilEntry, ItemEntry } from "@/types";
+import type { FossilEntry, ItemEntry } from "@/src/types/domain";
 import {
   groupFossilEntries,
   groupItemEntries,

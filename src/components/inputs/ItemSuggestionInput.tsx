@@ -8,7 +8,7 @@ import {
 } from "@/src/services/search/itemSearch.ts";
 import { normalizeLanguage } from "@/src/utils/language";
 import SuggestionInput from "@/src/components/inputs/SuggestionInput.tsx";
-import ItemSprite from "@/src/components/other/ItemSprite.tsx";
+import ItemSprite from "@/src/components/images/ItemSprite.tsx";
 import { useMultiLocaleSearch } from "@/src/hooks/useMultiLocaleSearch.ts";
 
 interface ItemSuggestionInputProps {

@@ -4,7 +4,7 @@ import { MemoryRouter } from "react-router-dom";
 import { beforeEach, expect, it, vi } from "vitest";
 import i18n from "@/src/i18n";
 import { PRESET_RULESETS } from "@/src/data/rulesets";
-import type { Ruleset } from "@/types";
+import type { Ruleset } from "@/src/types/domain";
 import RulesetEditorPage from "./RulesetEditorPage";
 
 const preset = PRESET_RULESETS[0];

@@ -3,7 +3,7 @@ import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { BrowserRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { AppState, TrackerMeta } from "@/types";
+import type { AppState, TrackerMeta } from "@/src/types/domain";
 import { createInitialState } from "@/src/services/init";
 import type { AuthenticatedUser } from "@/src/services/backend/auth";
 import type { TrackerListEntry } from "@/src/services/repos/trackerRepository";
@@ -320,10 +320,10 @@ describe("tracker exit navigation", () => {
     expect(backend.getState).not.toHaveBeenCalled();
   });
 
-  it("clears a legacy Firebase ID when opening the remembered tracker route", async () => {
+  it("clears a non-UUID when opening the remembered tracker route", async () => {
     localStorage.setItem(
       "soullink:lastSupabaseTrackerId",
-      "-NlegacyFirebaseId",
+      "invalid-tracker-id",
     );
     window.history.replaceState({}, "", "/tracker");
     render(

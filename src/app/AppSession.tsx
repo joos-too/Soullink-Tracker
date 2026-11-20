@@ -38,7 +38,7 @@ import { ImageConsentContext } from "@/src/contexts/ImageConsentContext";
 import { setImageCachingAllowed } from "@/src/services/imageCache";
 import ImageConsentModal from "@/src/components/modals/ImageConsentModal";
 import { useLocation } from "react-router-dom";
-import type { PokemonImageStyle } from "@/types.ts";
+import type { PokemonImageStyle } from "@/src/types/domain.ts";
 import { PokemonImageStyleContext } from "@/src/contexts/PokemonImageStyleContext.tsx";
 
 function useSession() {

@@ -1,4 +1,4 @@
-import SpriteImage from "@/src/components/other/SpriteImage.tsx";
+import SpriteImage from "@/src/components/images/SpriteImage.tsx";
 import React, { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { searchPokemonNames } from "@/src/services/search/pokemonSearch.ts";

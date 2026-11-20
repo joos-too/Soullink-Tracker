@@ -5,8 +5,8 @@ import type {
   RivalCap,
   RivalCensorMode,
   UserSettings,
-} from "@/types.ts";
-import { BadgeImage, RivalImage } from "@/src/components/other/GameImages.tsx";
+} from "@/src/types/domain.ts";
+import { BadgeImage, RivalImage } from "@/src/components/images/GameImages.tsx";
 import { FiEye, FiEyeOff, FiRefreshCw } from "react-icons/fi";
 import { useTranslation } from "react-i18next";
 import {

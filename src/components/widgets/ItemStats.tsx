@@ -1,7 +1,7 @@
 import React from "react";
-import type { Stats } from "@/types.ts";
+import type { Stats } from "@/src/types/domain.ts";
 import { PLAYER_COLORS } from "@/src/services/init.ts";
-import Tooltip from "@/src/components/other/Tooltip.tsx";
+import Tooltip from "@/src/components/ui/Tooltip.tsx";
 import { FiInfo, FiMinus, FiPlus } from "react-icons/fi";
 import { useTranslation } from "react-i18next";
 import {

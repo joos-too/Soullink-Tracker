@@ -1,5 +1,5 @@
 import type { TFunction } from "i18next";
-import type { VariableRival } from "@/types";
+import type { VariableRival } from "@/src/types/domain";
 
 const NO_TRANSLATION = "__soullink_no_translation__";
 

@@ -1,11 +1,11 @@
 import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
-  testDir: "./tests/bundle",
+  testDir: ".",
   timeout: 30_000,
   workers: 1,
   reporter: process.env.CI ? [["github"], ["html", { open: "never" }]] : "list",
-  globalSetup: "./tests/bundle/start-preview.ts",
+  globalSetup: "./start-preview.ts",
   use: {
     ...devices["Desktop Chrome"],
     baseURL: "http://127.0.0.1:4182",

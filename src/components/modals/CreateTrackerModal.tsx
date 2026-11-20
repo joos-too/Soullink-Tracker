@@ -9,11 +9,11 @@ import {
 import GameVersionPicker from "@/src/components/pickers/GameVersionPicker.tsx";
 import { useTranslation } from "react-i18next";
 import { getLocalizedGameName } from "@/src/services/gameLocalization.ts";
-import type { Ruleset } from "@/types.ts";
+import type { Ruleset } from "@/src/types/domain.ts";
 import RulesetPicker from "@/src/components/pickers/RulesetPicker.tsx";
 import { useFocusTrap } from "@/src/hooks/useFocusTrap.ts";
 import ToggleSwitch from "@/src/components/toggles/ToggleSwitch.tsx";
-import Tooltip from "@/src/components/other/Tooltip.tsx";
+import Tooltip from "@/src/components/ui/Tooltip.tsx";
 
 interface CreateTrackerModalProps {
   isOpen: boolean;

@@ -32,7 +32,7 @@ describe("PasswordResetPage", () => {
     verifyPasswordResetMock.mockReset();
   });
 
-  it("validates a Supabase recovery session without a Firebase oobCode", async () => {
+  it("validates a Supabase recovery session", async () => {
     verifyPasswordResetMock.mockResolvedValue("trainer@example.com");
 
     render(

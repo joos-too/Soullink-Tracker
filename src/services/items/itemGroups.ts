@@ -1,4 +1,4 @@
-import type { FossilEntry, ItemEntry } from "@/types";
+import type { FossilEntry, ItemEntry } from "@/src/types/domain";
 
 export interface EntryGroup<T> {
   key: string;

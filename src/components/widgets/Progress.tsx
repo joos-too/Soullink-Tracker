@@ -1,6 +1,6 @@
 import React from "react";
-import type { GameVersion, LevelCap, RivalCap } from "@/types.ts";
-import { BadgeImage } from "@/src/components/other/GameImages.tsx";
+import type { GameVersion, LevelCap, RivalCap } from "@/src/types/domain.ts";
+import { BadgeImage } from "@/src/components/images/GameImages.tsx";
 import { getLocalizedArenaLabel } from "@/src/services/gameLocalization.ts";
 import { computeWeightedProgress } from "@/src/utils/progressWeights.ts";
 import { useTranslation } from "react-i18next";

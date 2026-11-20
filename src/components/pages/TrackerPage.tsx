@@ -15,7 +15,7 @@ import type {
   RivalCensorMode,
   RivalGender,
   TrackerMeta,
-} from "@/types";
+} from "@/src/types/domain";
 import { createLinkId } from "@/src/services/linkIds.ts";
 import { killLink, restoreLink } from "@/src/services/linkLifecycle.ts";
 import {

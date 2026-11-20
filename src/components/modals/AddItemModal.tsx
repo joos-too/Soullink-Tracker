@@ -1,4 +1,4 @@
-import SpriteImage from "@/src/components/other/SpriteImage.tsx";
+import SpriteImage from "@/src/components/images/SpriteImage.tsx";
 import React, { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { STONES, MEGA_STONES } from "@/src/data/special-items.ts";
@@ -6,7 +6,7 @@ import { FiX, FiInfo } from "react-icons/fi";
 import ToggleSwitch from "@/src/components/toggles/ToggleSwitch";
 import LocationSuggestionInput from "@/src/components/inputs/LocationSuggestionInput.tsx";
 import ItemSuggestionInput from "@/src/components/inputs/ItemSuggestionInput.tsx";
-import Tooltip from "@/src/components/other/Tooltip.tsx";
+import Tooltip from "@/src/components/ui/Tooltip.tsx";
 import { useFocusTrap } from "@/src/hooks/useFocusTrap.ts";
 import {
   focusRingCardClasses,

@@ -106,7 +106,7 @@ jobs:
           } >> "$GITHUB_ENV"
 
       - name: Wait for local Auth and REST
-        run: node scripts/wait-for-local-supabase.mjs
+        run: node scripts/supabase/wait-for-local-supabase.mjs
 
       - name: Run pgTAP
         run: npm run supabase:test

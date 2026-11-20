@@ -22,10 +22,10 @@ import { requestPasswordReset } from "@/src/services/backend/auth.ts";
 import ToggleSwitch from "@/src/components/toggles/ToggleSwitch.tsx";
 import { useTranslation } from "react-i18next";
 import LanguageToggle from "@/src/components/toggles/LanguageToggle.tsx";
-import Tooltip from "@/src/components/other/Tooltip.tsx";
+import Tooltip from "@/src/components/ui/Tooltip.tsx";
 import { WIKIS, type WikiId } from "@/src/utils/wikiPreferences";
 import TriStateToggle from "@/src/components/toggles/TriStateToggle.tsx";
-import type { PokemonImageStyle } from "@/types.ts";
+import type { PokemonImageStyle } from "@/src/types/domain.ts";
 
 export interface UserPreferenceSectionsProps {
   allowImageLoading?: boolean | null;

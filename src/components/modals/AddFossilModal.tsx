@@ -1,10 +1,10 @@
-import SpriteImage from "@/src/components/other/SpriteImage.tsx";
+import SpriteImage from "@/src/components/images/SpriteImage.tsx";
 import React, { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FOSSILS } from "@/src/data/special-items.ts";
 import { FiX, FiInfo } from "react-icons/fi";
 import LocationSuggestionInput from "@/src/components/inputs/LocationSuggestionInput.tsx";
-import Tooltip from "@/src/components/other/Tooltip.tsx";
+import Tooltip from "@/src/components/ui/Tooltip.tsx";
 import { useFocusTrap } from "@/src/hooks/useFocusTrap.ts";
 import { findLocationByName } from "@/src/services/search/locationSearch.ts";
 import { normalizeLanguage } from "@/src/utils/language.ts";

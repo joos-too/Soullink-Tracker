@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { Ruleset } from "@/types";
+import type { Ruleset } from "@/src/types/domain";
 import { PRESET_RULESETS } from "@/src/data/rulesets";
 import { listenToUserRulesets } from "@/src/services/rulesets";
 

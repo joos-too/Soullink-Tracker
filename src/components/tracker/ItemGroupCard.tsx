@@ -1,5 +1,5 @@
 import React from "react";
-import ItemSprite from "@/src/components/other/ItemSprite.tsx";
+import ItemSprite from "@/src/components/images/ItemSprite.tsx";
 import { focusRingCardClasses } from "@/src/styles/focusRing.ts";
 
 export interface ItemCardRow {

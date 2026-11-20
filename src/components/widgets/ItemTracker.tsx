@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { FossilEntry, ItemEntry } from "@/types";
+import { FossilEntry, ItemEntry } from "@/src/types/domain";
 import { PLAYER_COLORS } from "@/src/services/init";
 import { normalizeLanguage } from "@/src/utils/language";
 import {
@@ -14,8 +14,8 @@ import {
 } from "react-icons/fi";
 import AddFossilModal from "@/src/components/modals/AddFossilModal.tsx";
 import AddItemModal from "@/src/components/modals/AddItemModal.tsx";
-import ItemGroupCard from "@/src/components/other/ItemGroupCard.tsx";
-import PlayerColumnHeader from "@/src/components/other/PlayerColumnHeader.tsx";
+import ItemGroupCard from "@/src/components/tracker/ItemGroupCard.tsx";
+import PlayerColumnHeader from "@/src/components/tracker/PlayerColumnHeader.tsx";
 import {
   groupFossilEntries,
   groupItemEntries,

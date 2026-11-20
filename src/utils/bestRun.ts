@@ -1,4 +1,4 @@
-import type { GameVersion, LevelCap, RivalCap } from "@/types";
+import type { GameVersion, LevelCap, RivalCap } from "@/src/types/domain";
 import { t } from "i18next";
 
 export const formatBestLabel = (

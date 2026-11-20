@@ -1,4 +1,4 @@
-import type { AppState, LinkId } from "@/types.ts";
+import type { AppState, LinkId } from "@/src/types/domain.ts";
 
 export const killLink = (
   state: AppState,

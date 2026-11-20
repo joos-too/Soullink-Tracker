@@ -1,4 +1,4 @@
-import type { AppState, Stats } from "@/types.ts";
+import type { AppState, Stats } from "@/src/types/domain.ts";
 import { GAME_VERSIONS } from "@/src/data/game-versions.ts";
 import { DEFAULT_RULES, DEFAULT_RULESET_ID } from "@/src/data/rulesets.ts";
 

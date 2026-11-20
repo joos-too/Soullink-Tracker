@@ -9,7 +9,7 @@ import {
   FiTrash2,
   FiX,
 } from "react-icons/fi";
-import type { Ruleset } from "@/types.ts";
+import type { Ruleset } from "@/src/types/domain.ts";
 import type { SaveRulesetPayload } from "@/src/services/rulesets.ts";
 import { useTranslation } from "react-i18next";
 import {

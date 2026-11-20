@@ -6,7 +6,7 @@ import {
   type Dispatch,
   type SetStateAction,
 } from "react";
-import type { AppState } from "@/types";
+import type { AppState } from "@/src/types/domain";
 import { createInitialState } from "@/src/services/init.ts";
 import {
   acceptTrackerStateSnapshot,

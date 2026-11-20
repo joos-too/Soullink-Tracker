@@ -1,6 +1,6 @@
 import { findPokemonIdByName } from "@/src/services/search/pokemonSearch.ts";
 import type { SupportedLanguage } from "@/src/utils/language";
-import type { PokemonImageStyle } from "@/types.ts";
+import type { PokemonImageStyle } from "@/src/types/domain.ts";
 
 // Map game version IDs to PokeAPI sprite generation paths
 export function getGenerationSpritePath(gameVersionId: string): string | null {

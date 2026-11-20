@@ -56,7 +56,7 @@ therefore set directly in
   defaults to 24 hours.
 - `GOTRUE_PASSWORD_MIN_LENGTH` requires at least eight characters for new
   passwords and password changes. Without it, GoTrue defaults to six. Existing
-  migrated Firebase passwords remain valid even if they are shorter.
+  passwords for previously imported accounts remain valid even if shorter.
 
 Session length comes from `JWT_EXPIRY` in `.env` (default `3600`), which the
 stock Compose file already maps to `GOTRUE_JWT_EXP`. Signing out revokes all

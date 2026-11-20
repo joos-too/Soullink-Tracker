@@ -33,7 +33,7 @@ export default defineConfig([
     },
   },
   {
-    files: ["index.tsx", "src/**/*.{js,mjs,ts,mts,jsx,tsx}"],
+    files: ["src/**/*.{js,mjs,ts,mts,jsx,tsx}"],
     languageOptions: { globals: globals.browser },
   },
   {

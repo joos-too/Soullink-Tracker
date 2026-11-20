@@ -1,6 +1,6 @@
-import SpriteImage from "@/src/components/other/SpriteImage.tsx";
+import SpriteImage from "@/src/components/images/SpriteImage.tsx";
 import React from "react";
-import type { UserSettings, VariableRival } from "@/types.ts";
+import type { UserSettings, VariableRival } from "@/src/types/domain.ts";
 import { getPokemonImageUrlForPokemonName } from "@/src/services/sprites.ts";
 import { usePokemonImageStyle } from "@/src/contexts/PokemonImageStyleContext.tsx";
 

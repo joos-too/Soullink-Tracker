@@ -55,7 +55,7 @@ requirements are documented in
 
 The app relies heavily on external data (Pokémon, items, locations, evolutions etc.), which are gatered from two main sources,
 PokéAPI and PokéWiki. To merge the live and static data from these two sources into a usable format, two scripts were
-created. These data-generation scripts live in `scripts/` and produce pre-built TypeScript datasets. These scripts read
+created. These data-generation scripts live in `scripts/pokeapi/` and produce pre-built TypeScript datasets. These scripts read
 from a local clone of the [PokeAPI/api-data](https://github.com/PokeAPI/api-data) repository via a shared static client
 (`pokeapi-static-client.mjs`) instead of making individual live HTTP requests.
 

@@ -1,7 +1,7 @@
 import { LOCATIONS } from "@/src/data/locations.ts";
 import { SupportedLanguage } from "@/src/utils/language.ts";
 import { t } from "i18next";
-import { FossilEntry, ItemEntry, PokemonLink } from "@/types.ts";
+import { FossilEntry, ItemEntry, PokemonLink } from "@/src/types/domain.ts";
 
 const DEFAULT_GAME_VERSION_ID = "gen5_bw";
 

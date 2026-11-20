@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
-import type { Stats } from "@/types.ts";
-import { LegendaryImage } from "@/src/components/other/GameImages.tsx";
+import type { Stats } from "@/src/types/domain.ts";
+import { LegendaryImage } from "@/src/components/images/GameImages.tsx";
 import { getLegendariesUpToGeneration } from "@/src/services/filter/legendaryFilter.ts";
 import { useTranslation } from "react-i18next";
 

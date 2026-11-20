@@ -5,7 +5,7 @@ import { waitForLocalSupabase } from "./wait-for-local-supabase.mjs";
 const isWindows = process.platform === "win32";
 const npmCommand = isWindows ? (process.env.ComSpec ?? "cmd.exe") : "npm";
 const config = readFileSync(
-  new URL("../supabase/config.toml", import.meta.url),
+  new URL("../../supabase/config.toml", import.meta.url),
   "utf8",
 );
 const projectId = config.match(/^project_id\s*=\s*"([\w-]+)"/m)?.[1];
@@ -13,7 +13,7 @@ const localAnonKey =
   process.env.VITE_SUPABASE_ANON_KEY ??
   (() => {
     try {
-      return readFileSync(new URL("../.env", import.meta.url), "utf8")
+      return readFileSync(new URL("../../.env", import.meta.url), "utf8")
         .match(/^VITE_SUPABASE_ANON_KEY\s*=\s*(.+)$/m)?.[1]
         ?.trim()
         .replace(/^["']|["']$/g, "");

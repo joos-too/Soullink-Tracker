@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-@config "./tailwind.config.ts";
+@config "../../config/tailwind.config.ts";
 
 @font-face {
   font-family: "Press Start 2P";

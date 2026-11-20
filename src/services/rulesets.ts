@@ -1,4 +1,4 @@
-import type { Ruleset } from "@/types";
+import type { Ruleset } from "@/src/types/domain";
 import { PRESET_RULESETS } from "@/src/data/rulesets";
 import { sanitizeRules, sanitizeTags } from "@/src/services/init.ts";
 import { getSupabaseClient } from "@/src/services/backend/supabase.ts";

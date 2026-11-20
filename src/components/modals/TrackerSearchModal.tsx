@@ -1,13 +1,13 @@
-import PokemonPairCard from "@/src/components/other/PokemonPairCard.tsx";
-import ItemGroupCard from "@/src/components/other/ItemGroupCard.tsx";
-import PlayerColumnHeader from "@/src/components/other/PlayerColumnHeader.tsx";
+import PokemonPairCard from "@/src/components/tracker/PokemonPairCard.tsx";
+import ItemGroupCard from "@/src/components/tracker/ItemGroupCard.tsx";
+import PlayerColumnHeader from "@/src/components/tracker/PlayerColumnHeader.tsx";
 import React, { useEffect, useId, useMemo, useState } from "react";
 import type {
   FossilEntry,
   GraveyardPokemonLink,
   PokemonLink,
   ItemEntry,
-} from "@/types";
+} from "@/src/types/domain";
 import { useTranslation } from "react-i18next";
 import { useFocusTrap } from "@/src/hooks/useFocusTrap.ts";
 import {

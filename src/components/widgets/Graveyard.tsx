@@ -1,11 +1,11 @@
-import PokemonPairCard from "@/src/components/other/PokemonPairCard.tsx";
+import PokemonPairCard from "@/src/components/tracker/PokemonPairCard.tsx";
 import React, { useEffect, useMemo, useState } from "react";
 import type {
   GraveyardPokemonLink,
   LinkEditPayload,
   LinkId,
   PokemonLink,
-} from "@/types.ts";
+} from "@/src/types/domain.ts";
 import { PLAYER_COLORS } from "@/src/services/init.ts";
 import { useTranslation } from "react-i18next";
 import { focusRingClasses } from "@/src/styles/focusRing.ts";

@@ -1,7 +1,7 @@
 import React from "react";
 import { Trans, useTranslation } from "react-i18next";
-import type { PokemonLink } from "@/types.ts";
-import SpriteImage from "@/src/components/other/SpriteImage.tsx";
+import type { PokemonLink } from "@/src/types/domain.ts";
+import SpriteImage from "@/src/components/images/SpriteImage.tsx";
 import { resolvePokemonDisplay } from "@/src/services/pokemons/pokemonDisplay.ts";
 import { resolvePokemonLocationDisplay } from "@/src/services/search/locationSearch.ts";
 import { normalizeLanguage } from "@/src/utils/language.ts";

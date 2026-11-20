@@ -200,9 +200,7 @@ values
     'default_solo_ruleset_en'
   );
 
--- The additional editor/guest rows and public Gen 1 tracker are Supabase-only
--- access-control fixtures. Tracker metadata and gameplay state mirror the
--- Firebase emulator fixtures.
+-- The editor and guest memberships exercise access control on the public Gen 1 tracker.
 insert into public.tracker_members (tracker_id, user_id, role, settings)
 values
   ('30000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001', 'owner', '{"rivalPreferences":{"blue":"male"}}'),

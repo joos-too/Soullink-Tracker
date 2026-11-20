@@ -1,6 +1,6 @@
 import React, { useId } from "react";
 import { FiCopy, FiSave, FiX } from "react-icons/fi";
-import type { Ruleset } from "@/types.ts";
+import type { Ruleset } from "@/src/types/domain.ts";
 import { useTranslation } from "react-i18next";
 import { focusRingClasses } from "@/src/styles/focusRing.ts";
 import { useFocusTrap } from "@/src/hooks/useFocusTrap.ts";

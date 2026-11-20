@@ -1,6 +1,6 @@
 import React, { useId, useState } from "react";
 import { focusRingClasses } from "@/src/styles/focusRing.ts";
-import type { LinkEditPayload, Pokemon } from "@/types.ts";
+import type { LinkEditPayload, Pokemon } from "@/src/types/domain.ts";
 import { useTranslation } from "react-i18next";
 import LocationSuggestionInput from "@/src/components/inputs/LocationSuggestionInput.tsx";
 import PokemonSuggestionInput from "@/src/components/inputs/PokemonSuggestionInput.tsx";

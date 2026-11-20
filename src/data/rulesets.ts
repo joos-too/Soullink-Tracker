@@ -1,4 +1,4 @@
-import type { Ruleset } from "@/types";
+import type { Ruleset } from "@/src/types/domain";
 
 export const DEFAULT_RULESET_ID = "default_duo_ruleset";
 export const DEFAULT_RULESET_ID_EN = "default_duo_ruleset_en";

@@ -6,7 +6,7 @@ import type {
   RivalCensorMode,
   Stats,
   UserSettings,
-} from "@/types.ts";
+} from "@/src/types/domain.ts";
 import Progress from "@/src/components/widgets/Progress.tsx";
 import Levelcaps from "@/src/components/widgets/Levelcaps.tsx";
 import RunStats from "@/src/components/widgets/RunStats.tsx";

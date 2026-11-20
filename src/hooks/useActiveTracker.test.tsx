@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { AppState } from "@/types";
+import type { AppState } from "@/src/types/domain";
 import { createInitialState } from "@/src/services/init";
 import { useActiveTracker } from "./useActiveTracker";
 
