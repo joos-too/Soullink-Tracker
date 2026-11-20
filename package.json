@@ -64,6 +64,7 @@
     "@types/node": "^22.19.17",
     "@types/pg": "^8.20.0",
     "@types/react": "^19.2.14",
+    "@vitest/coverage-v8": "4.1.12",
     "eslint": "^10.15.0",
     "globals": "^17.14.0",
     "husky": "^9.1.7",

@@ -111,7 +111,7 @@ rejects every non-loopback database URL before resetting or importing.
 
 `test:e2e` deliberately runs `supabase db reset` before Playwright and again afterward so the browser mutations cannot leave dirty fixtures behind. Each reset destroys and recreates all data in the local Supabase stack, applies every migration, and loads `seed.sql`; never point this workflow at staging or production. The runner also restarts the local Kong gateway and waits for Auth health because Docker Desktop can otherwise retain the replaced Auth container's old address after a reset. Start the local stack first and ensure the repository-root `.env` contains the local `VITE_SUPABASE_ANON_KEY` shown by `npm run supabase:status`.
 
-Use `npm run test:e2e:run` only when you intentionally want to rerun Playwright without resetting the fixtures. Install the browser once per machine with `npx playwright install chromium`.
+Use `npm run test:e2e:run` to run Playwright against an already prepared local stack without resetting its fixtures. CI starts a disposable stack, explicitly resets and seeds it once, waits for Auth and REST, runs pgTAP, and calls this non-resetting browser command. The workflow stops the stack after the run, including on failure. Auth browser tests use the local test mail inbox on port 54324. Install the browser once per machine with `npx playwright install chromium`.
 
 ## Creating and deploying migrations
 

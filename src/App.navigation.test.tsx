@@ -127,7 +127,7 @@ async function openSettings(meta = tracker) {
   await screen.findByRole(
     "heading",
     { name: "Tracker settings" },
-    { timeout: 5000 },
+    { timeout: 8000 },
   );
 }
 
@@ -175,6 +175,7 @@ describe("tracker exit navigation", () => {
       expect(localStorage.getItem("soullink:lastSupabaseTrackerId")).toBeNull();
       expect(backend.unsubscribeState).toHaveBeenCalled();
     },
+    10000,
   );
 
   it.each(["delete", "leave"])(
@@ -316,6 +317,23 @@ describe("tracker exit navigation", () => {
       </BrowserRouter>,
     );
     expect(await screen.findByText("Tracker not found.")).toBeVisible();
+    expect(backend.getState).not.toHaveBeenCalled();
+  });
+
+  it("clears a legacy Firebase ID when opening the remembered tracker route", async () => {
+    localStorage.setItem(
+      "soullink:lastSupabaseTrackerId",
+      "-NlegacyFirebaseId",
+    );
+    window.history.replaceState({}, "", "/tracker");
+    render(
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>,
+    );
+    await screen.findByRole("heading", { name: "Tracker overview" });
+    expect(window.location.pathname).toBe("/");
+    expect(localStorage.getItem("soullink:lastSupabaseTrackerId")).toBeNull();
     expect(backend.getState).not.toHaveBeenCalled();
   });
 

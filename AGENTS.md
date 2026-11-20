@@ -44,6 +44,9 @@ Update the Handbook for any major changes.
 - Create a database migration: `npm run supabase:migration:new -- <name>`
 - Create a production build: `npm run build`
 - Validate production bundle boundaries and run browser smoke tests with a mocked backend: `npm run test:bundle`
+- Run application unit and component tests: `npm run test:unit`
+- Run the local Supabase browser suite with seed resets before and after: `npm run test:e2e`
+- Run Playwright against an already prepared local stack without resetting it: `npm run test:e2e:run`
 - Preview the build: `npm run preview`
 - Lint the project: `npm run lint`
 - Format the repo: `npm run prettier`
@@ -124,6 +127,7 @@ Production chunk groups use Vite's `build.rolldownOptions.output.codeSplitting` 
 
 ## Validation Checklist
 
+- CI runs formatting, lint, unit coverage and production bundle smoke tests alongside a separate local Supabase job. The database job resets once before pgTAP and Playwright and stops the disposable stack afterwards. Use isolated tracker fixtures for browser mutations.
 - Run `npm run build` after meaningful code changes.
 - Run `npm run prettier:check` if formatting might be affected.
 - Run `npm run supabase:test` after changing migrations, RLS policies, grants, triggers, or RPC functions.

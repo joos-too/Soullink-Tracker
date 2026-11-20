@@ -93,6 +93,26 @@ describe("tracker editor lifecycle", () => {
     vi.useRealTimers();
   });
 
+  it("saves only the last edit after the debounce window", async () => {
+    const { result } = renderHook(() => useEditor(true, 1_000));
+    await waitFor(() => expect(result.current.dataLoaded).toBe(true));
+    vi.useFakeTimers();
+
+    act(() =>
+      result.current.setData({ ...initialState, rules: ["First edit"] }),
+    );
+    await act(() => vi.advanceTimersByTimeAsync(600));
+    const latest = { ...initialState, rules: ["Latest edit"] };
+    act(() => result.current.setData(latest));
+    await act(() => vi.advanceTimersByTimeAsync(999));
+    expect(repository.save).not.toHaveBeenCalled();
+    await act(() => vi.advanceTimersByTimeAsync(1));
+    expect(repository.save).toHaveBeenCalledExactlyOnceWith(
+      "tracker-id",
+      latest,
+    );
+  });
+
   it("flushes the last debounced edit when navigation unmounts the editor", async () => {
     const { result, unmount } = renderHook(() => useEditor());
     await waitFor(() => expect(result.current.dataLoaded).toBe(true));

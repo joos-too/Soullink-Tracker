@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  subscribeToSupabaseTrackerList,
   subscribeToSupabaseTrackerState,
   TrackerStateConflictError,
   updateSupabaseTrackerState,
@@ -16,11 +17,74 @@ const realtime = vi.hoisted(() => {
   return {
     channel,
     client: {
+      from: vi.fn(),
       rpc: vi.fn(),
       channel: vi.fn(() => channel),
       removeChannel: vi.fn(async () => "ok"),
     },
   };
+});
+
+describe("tracker list mapping", () => {
+  it("maps guest membership and normalizes summary values from PostgREST", async () => {
+    const eq = vi.fn().mockResolvedValue({
+      error: null,
+      data: [
+        {
+          role: "guest",
+          added_at: "2026-01-01T00:00:00Z",
+          trackers: {
+            id: "tracker",
+            title: "Public run",
+            created_at: "2026-01-01T00:00:00Z",
+            created_by: "owner",
+            game_version_id: "gen1_rb",
+            player_names: ["Red"],
+            is_public: true,
+            tracker_states: [
+              {
+                summary: {
+                  teamCount: "2",
+                  runs: 3,
+                  championDone: true,
+                  progressPct: "invalid",
+                },
+              },
+            ],
+          },
+        },
+      ],
+    });
+    realtime.client.from.mockReturnValue({ select: () => ({ eq }) });
+    const onList = vi.fn();
+    const unsubscribe = subscribeToSupabaseTrackerList("guest", onList);
+    try {
+      await vi.waitFor(() => expect(onList).toHaveBeenCalledOnce());
+      expect(eq).toHaveBeenCalledWith("user_id", "guest");
+      expect(onList).toHaveBeenCalledWith([
+        {
+          meta: expect.objectContaining({
+            id: "tracker",
+            isPublic: true,
+            members: {},
+            guests: { guest: expect.objectContaining({ role: "guest" }) },
+          }),
+          summary: {
+            teamCount: 2,
+            boxCount: 0,
+            graveyardCount: 0,
+            deathCount: 0,
+            runs: 3,
+            championDone: true,
+            doneCapsCount: 0,
+            progressPct: 0,
+          },
+        },
+      ]);
+    } finally {
+      unsubscribe();
+    }
+  });
 });
 
 describe("tracker state save errors", () => {
