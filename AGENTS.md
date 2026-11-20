@@ -45,6 +45,7 @@ Update the Handbook for any major changes.
 - Create a production build: `npm run build`
 - Validate production bundle boundaries and run browser smoke tests with a mocked backend: `npm run test:bundle`
 - Preview the build: `npm run preview`
+- Lint the project: `npm run lint`
 - Format the repo: `npm run prettier`
 - Check formatting: `npm run prettier:check`
 - Regenerate Pokemon datasets from PokeAPI: `npm run generate-pokemon`

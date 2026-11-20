@@ -129,14 +129,10 @@ const Levelcaps: React.FC<LevelcapsProps> = ({
       gameVersion?.defaultRivalPreferences?.[cap.rival.key] ??
       "male";
     const localizedEntry = getLocalizedRivalEntry(t, cap.rival);
-    const localizedOptions: Record<"male" | "female", string> | undefined =
-      localizedEntry &&
-      typeof localizedEntry === "object" &&
-      (localizedEntry as any).options
-        ? (localizedEntry as { options?: Record<"male" | "female", string> })
-            .options
-        : undefined;
-    const localizedName = localizedOptions?.[preference];
+    const localizedName =
+      typeof localizedEntry === "string"
+        ? undefined
+        : localizedEntry.options[preference];
     if (localizedName && localizedName.trim().length > 0) {
       return localizedName;
     }

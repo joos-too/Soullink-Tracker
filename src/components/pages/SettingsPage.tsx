@@ -174,23 +174,16 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
     return result;
   }, [gameVersion]);
 
-  const versionId = gameVersion?.id;
   const localizedRivalOptions = useMemo(() => {
-    if (!versionId) return {} as Record<string, Record<string, string>>;
-    const out: Record<string, Record<string, string>> = {};
-    variableRivals.forEach((rival) => {
+    const optionsByKey: Record<string, VariableRival["options"]> = {};
+    for (const rival of variableRivals) {
       const localized = getLocalizedRivalEntry(t, rival);
-      if (
-        localized &&
-        typeof localized === "object" &&
-        (localized as any).options &&
-        (localized as any).key === rival.key
-      ) {
-        out[rival.key] = { ...(localized as any).options };
+      if (typeof localized !== "string") {
+        optionsByKey[rival.key] = localized.options;
       }
-    });
-    return out;
-  }, [variableRivals, versionId, t]);
+    }
+    return optionsByKey;
+  }, [variableRivals, t]);
 
   const selectedRuleset = useMemo(
     () => rulesets.find((entry) => entry.id === selectedRulesetId),

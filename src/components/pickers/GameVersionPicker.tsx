@@ -24,16 +24,7 @@ function buildGroupsFromGameVersions(): Group[] {
   for (const [versionId, version] of entries) {
     const title = getGenTitle(versionId);
 
-    const sc = (version as any)?.selectionColors as
-      | Record<
-          string,
-          {
-            bgColor?: string;
-            textColor?: string;
-            borderColor?: string;
-          }
-        >
-      | undefined;
+    const sc = version.selectionColors;
     const labels = sc ? Object.keys(sc) : [versionId];
 
     const row: TileDef[] = labels.map((label) => ({
@@ -108,9 +99,7 @@ const GameVersionPicker: React.FC<GameVersionPickerProps> = ({
                     <span className="flex gap-1 w-full items-stretch rounded-md overflow-hidden">
                       {row.map((tile, tileIdx) => {
                         const version = GAME_VERSIONS[tile.versionId];
-                        const sc = (version as any)?.selectionColors?.[
-                          tile.label
-                        ];
+                        const sc = version?.selectionColors?.[tile.label];
                         const bgColor = sc?.bgColor || "#ffffff";
                         const textColor = sc?.textColor || "#111827";
                         const borderColor = sc?.borderColor || "#d1d5db";

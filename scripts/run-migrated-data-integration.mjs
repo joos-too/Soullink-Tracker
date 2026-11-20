@@ -103,7 +103,7 @@ const runMigration = (report) =>
   );
 
 let testStatus = 1;
-let cleanupStatus = 1;
+let cleanupStatus;
 try {
   console.log(
     "Resetting local Supabase for migrated-data integration tests...",

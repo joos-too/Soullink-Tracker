@@ -39,7 +39,9 @@ export function setDarkMode(enabled: boolean) {
       document.documentElement.classList.remove("dark");
       window.localStorage?.setItem("color-theme", "light");
     }
-  } catch {}
+  } catch {
+    // The theme still applies for the current session if storage is blocked.
+  }
 }
 
 interface DarkModeToggleProps {

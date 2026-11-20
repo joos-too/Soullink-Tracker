@@ -242,7 +242,9 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
           };
         }
       }
-    } catch {}
+    } catch {
+      // Fall back to the default filter if storage is blocked or invalid.
+    }
     return { types: [], playerIndex: null };
   };
 
@@ -255,7 +257,9 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
       if (boxTypeFilterKey) {
         localStorage.setItem(boxTypeFilterKey, JSON.stringify(filter));
       }
-    } catch {}
+    } catch {
+      // The filter still applies for the current session.
+    }
   };
 
   const loadBoxHideHiddenLinks = (key: string | null): boolean => {
@@ -276,7 +280,9 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
       if (boxHideHiddenLinksKey) {
         localStorage.setItem(boxHideHiddenLinksKey, String(value));
       }
-    } catch {}
+    } catch {
+      // The visibility setting still applies for the current session.
+    }
   };
 
   // Reset filter state when switching trackers
@@ -295,7 +301,9 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
     setBoxFiltersExpanded(value);
     try {
       localStorage.setItem("boxFiltersExpanded", String(value));
-    } catch {}
+    } catch {
+      // The panel still updates for the current session.
+    }
   };
 
   const filteredBox = useMemo(() => {
@@ -1271,9 +1279,11 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
           const details = Array.isArray(error.details)
             ? ` (${error.details.join(", ")})`
             : "";
-          throw new Error(`${error.message}${details}`);
+          throw new Error(`${error.message}${details}`, { cause: error });
         }
-        throw new Error("Mitglied konnte nicht hinzugefügt werden.");
+        throw new Error("Mitglied konnte nicht hinzugefügt werden.", {
+          cause: error,
+        });
       }
     },
     [activeTrackerId],
@@ -1302,9 +1312,11 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
       } catch (error) {
         if (isLeaving) setIsExiting(false);
         if (error instanceof TrackerOperationError) {
-          throw new Error(error.message);
+          throw error;
         }
-        throw new Error("Mitglied konnte nicht entfernt werden.");
+        throw new Error("Mitglied konnte nicht entfernt werden.", {
+          cause: error,
+        });
       }
     },
     [
