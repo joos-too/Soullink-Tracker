@@ -5,7 +5,7 @@ import {
   getSpriteUrlById,
 } from "@/src/services/sprites.ts";
 import { getPokemonNameById } from "@/src/services/search/pokemonSearch.ts";
-import type { PokemonLink } from "@/src/types/domain.ts";
+import type { ItemEntry, PokemonLink } from "@/src/types/domain.ts";
 import { useTranslation } from "react-i18next";
 import { normalizeLanguage } from "@/src/utils/language.ts";
 import { focusRingClasses } from "@/src/styles/focusRing.ts";
@@ -13,11 +13,19 @@ import { useFocusTrap } from "@/src/hooks/useFocusTrap.ts";
 import { getPokemonTypeSlugsById } from "@/src/services/pokemons/pokemonTypes.ts";
 import TypeBadge from "@/src/components/badges/TypeBadge.tsx";
 import { getFilteredEvolutionEntriesForPokemon } from "@/src/services/filter/evolutionMethodFilter.ts";
+import ItemGroupCard from "@/src/components/tracker/ItemGroupCard.tsx";
+import { groupItemEntries } from "@/src/services/items/itemGroups.ts";
+import {
+  getItemStatus,
+  resolveItemDisplay,
+  summarizeEntryGroup,
+} from "@/src/services/items/itemDisplay.ts";
 
 interface SelectEvolveModalProps {
   onClose: () => void;
-  onConfirm: (playerIndex: number, newName: string, newId: number) => void;
+  onConfirm: (playerIndex: number, newId: number, itemId?: string) => void;
   pair: PokemonLink;
+  items: ItemEntry[][];
   playerLabels: string[];
   maxGeneration?: number;
   gameVersionId?: string;
@@ -31,7 +39,8 @@ interface EvoInfo {
   id: number;
   name: string;
   methods: string[];
-  artworkUrl?: string | null;
+  itemSlugs: string[];
+  artworkUrl: string;
 }
 
 function mergeLocationMethods(
@@ -62,6 +71,7 @@ const SelectEvolveModal: React.FC<SelectEvolveModalProps> = ({
   onClose,
   onConfirm,
   pair,
+  items,
   playerLabels,
   maxGeneration,
   gameVersionId,
@@ -73,6 +83,8 @@ const SelectEvolveModal: React.FC<SelectEvolveModalProps> = ({
   const [selectedPlayer, setSelectedPlayer] = useState<number | null>(null);
   const [availableEvos, setAvailableEvos] = useState<EvoInfo[] | null>(null);
   const [selectedEvoId, setSelectedEvoId] = useState<number | null>(null);
+  // Undefined allows a default for a preselected evolution. Null clears it.
+  const [itemSelection, setItemSelection] = useState<string | null>();
   const [loading, setLoading] = useState(false);
   const { t, i18n } = useTranslation();
   const language = useMemo(
@@ -80,7 +92,6 @@ const SelectEvolveModal: React.FC<SelectEvolveModalProps> = ({
     [i18n.language],
   );
   const playerRadioRefs = useRef<(HTMLInputElement | null)[]>([]);
-  const evoRadioRefs = useRef<(HTMLInputElement | null)[]>([]);
   const { containerRef } = useFocusTrap(true);
   const titleId = useId();
 
@@ -129,6 +140,7 @@ const SelectEvolveModal: React.FC<SelectEvolveModalProps> = ({
     async function loadEvos() {
       setAvailableEvos(null);
       setSelectedEvoId(null);
+      setItemSelection(undefined);
       if (selectedPlayer === null) return;
       const member = pair.members?.[selectedPlayer];
       const pokemonId = member?.id;
@@ -152,7 +164,7 @@ const SelectEvolveModal: React.FC<SelectEvolveModalProps> = ({
       setLoading(true);
       try {
         const defaultUnknown = t("tracker.evolveModal.methodUnknown");
-        const infos: EvoInfo[] = await Promise.all(
+        const infos = await Promise.all(
           filteredEntries.map(async (entry) => {
             const eid = entry.id;
             const methodsForConstraints =
@@ -170,13 +182,14 @@ const SelectEvolveModal: React.FC<SelectEvolveModalProps> = ({
                 name: localizedName,
                 artworkUrl: art,
                 methods: displayMethods,
+                itemSlugs: entry.itemSlugs,
               };
             } catch (e) {
               console.warn("Data for evolution " + eid + " not found:", e);
             }
           }),
         );
-        setAvailableEvos(infos.filter(Boolean));
+        setAvailableEvos(infos.filter((info) => info !== undefined));
       } finally {
         setLoading(false);
       }
@@ -184,6 +197,41 @@ const SelectEvolveModal: React.FC<SelectEvolveModalProps> = ({
 
     if (selectedPlayer !== null) loadEvos();
   }, [selectedPlayer, pair, maxGeneration, gameVersionId, language, t]);
+
+  const selectedEvolution =
+    availableEvos?.length === 1
+      ? availableEvos[0]
+      : availableEvos?.find((ev) => ev.id === selectedEvoId);
+  const playerItems =
+    selectedPlayer === null ? [] : (items[selectedPlayer] ?? []);
+  const itemGroups = groupItemEntries(playerItems);
+  const getMatchingItemGroups = (evolution: EvoInfo) =>
+    itemGroups.filter(({ entry }) => {
+      const slug = entry.id?.replace(/^item:/, "");
+      return slug && evolution.itemSlugs.includes(slug);
+    });
+  const getDefaultItemId = (evolution: EvoInfo) =>
+    getMatchingItemGroups(evolution).find(
+      (group) => group.bagIndices.length > 0,
+    )?.entry.id;
+  const selectedItemId =
+    itemSelection === undefined && selectedEvolution
+      ? getDefaultItemId(selectedEvolution)
+      : (itemSelection ?? undefined);
+  const selectedItemUnavailable =
+    selectedItemId !== undefined &&
+    !(
+      selectedEvolution &&
+      getMatchingItemGroups(selectedEvolution).some(
+        (group) =>
+          group.entry.id === selectedItemId && group.bagIndices.length > 0,
+      )
+    );
+  const canConfirm =
+    !blockingError &&
+    !selectedItemUnavailable &&
+    selectedPlayer !== null &&
+    selectedEvolution !== undefined;
 
   const handleRadioTabNavigation = (
     event: React.KeyboardEvent<HTMLInputElement>,
@@ -204,10 +252,86 @@ const SelectEvolveModal: React.FC<SelectEvolveModalProps> = ({
 
   const handleConfirm = (e: React.SubmitEvent) => {
     e.preventDefault();
-    if (blockingError || selectedPlayer === null || selectedEvoId === null)
-      return;
-    const targetName = getPokemonNameById(selectedEvoId, language) || "";
-    onConfirm(selectedPlayer, targetName, selectedEvoId);
+    if (!canConfirm) return;
+    onConfirm(selectedPlayer, selectedEvolution.id, selectedItemId);
+  };
+
+  const renderEvolutionItems = (evolution: EvoInfo) => {
+    if (evolution.itemSlugs.length === 0) return null;
+    const matchingGroups = getMatchingItemGroups(evolution);
+    const isSelected = selectedEvolution?.id === evolution.id;
+    if (!isSelected && matchingGroups.length === 0) return null;
+
+    return (
+      <div className="ml-9 mr-2 space-y-2">
+        {matchingGroups.length === 0 && (
+          <p className="text-xs text-gray-600 dark:text-gray-400">
+            {t("tracker.evolveModal.noMatchingItems")}
+          </p>
+        )}
+        {matchingGroups.map((group) => {
+          const { id } = group.entry;
+          const { name, spriteUrl } = resolveItemDisplay(
+            group.entry,
+            language,
+            t,
+            gameVersionId,
+          );
+          const summary = summarizeEntryGroup(
+            group,
+            playerItems,
+            (entry) => getItemStatus(entry, language, t),
+            "tracker.infoPanel.itemCountUsed",
+            t,
+          );
+          const canSelect = summary.bagCount > 0 && id !== undefined;
+          const isItemSelected =
+            isSelected && canSelect && selectedItemId === id;
+          return (
+            <div key={group.key}>
+              {isItemSelected && (
+                <p className="mb-1 text-xs font-semibold text-gray-700 dark:text-gray-200">
+                  {t("tracker.evolveModal.usesOnConfirmation")}
+                </p>
+              )}
+              <ItemGroupCard
+                name={name}
+                spriteUrl={spriteUrl}
+                status={summary.status}
+                badgeCount={summary.isGrouped ? summary.bagCount : 0}
+                used={summary.usedUp}
+                dimmed={summary.bagCount === 0}
+                extraRows={summary.extraPending.map(({ index, status }) => ({
+                  key: index,
+                  status,
+                }))}
+                selected={isItemSelected}
+                onSelect={
+                  canSelect
+                    ? () => {
+                        setSelectedEvoId(evolution.id);
+                        setItemSelection(isItemSelected ? null : id);
+                      }
+                    : undefined
+                }
+              />
+            </div>
+          );
+        })}
+        {isSelected && selectedItemUnavailable && (
+          <div className="text-sm">
+            <p role="alert">{t("tracker.evolveModal.itemUnavailable")}</p>
+            <button
+              type="button"
+              onClick={() => setItemSelection(null)}
+              className={`rounded underline ${focusRingClasses}`}
+            >
+              {t("tracker.evolveModal.clearItem")}
+            </button>
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -219,7 +343,7 @@ const SelectEvolveModal: React.FC<SelectEvolveModalProps> = ({
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md max-h-[80vh] overflow-hidden"
+        className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md max-h-[80vh] overflow-hidden flex flex-col"
       >
         {/* header */}
         <div className="px-6 py-4 flex justify-between items-center border-b border-gray-100 dark:border-gray-700">
@@ -248,9 +372,12 @@ const SelectEvolveModal: React.FC<SelectEvolveModalProps> = ({
           </button>
         </div>
 
-        <form onSubmit={handleConfirm} className="px-6 pb-6">
+        <form
+          onSubmit={handleConfirm}
+          className="px-6 pb-6 flex min-h-0 flex-col"
+        >
           {/* scrollable content area; keeps header and footer visible */}
-          <div className="overflow-auto max-h-[60vh] pr-2 pt-4" tabIndex={-1}>
+          <div className="overflow-auto pr-2 pt-4" tabIndex={-1}>
             {selectedPlayer === null && (
               <div className="mb-4 text-sm text-gray-700 dark:text-gray-300">
                 {evolvablePlayers.length > 0 && (
@@ -322,7 +449,7 @@ const SelectEvolveModal: React.FC<SelectEvolveModalProps> = ({
 
                 {!loading && availableEvos && availableEvos.length > 0 && (
                   <div className="space-y-3">
-                    {availableEvos.map((ev, idx) => {
+                    {availableEvos.map((ev) => {
                       const locationPrefix = t(
                         "tracker.evolveModal.locationPrefix",
                       );
@@ -334,49 +461,50 @@ const SelectEvolveModal: React.FC<SelectEvolveModalProps> = ({
                         ? formattedMethods.join(" · ")
                         : t("tracker.evolveModal.methodUnknown");
                       return (
-                        <label
-                          key={ev.id}
-                          className={`flex items-center gap-3 cursor-pointer dark:text-gray-200 rounded-md px-2 py-1 ${focusRingClasses}`}
-                        >
-                          <input
-                            type="radio"
-                            name="evo"
-                            value={ev.id}
-                            checked={selectedEvoId === ev.id}
-                            onChange={() => setSelectedEvoId(ev.id)}
-                            tabIndex={0}
-                            ref={(el) => {
-                              evoRadioRefs.current[idx] = el;
-                            }}
-                            onKeyDown={(event) =>
-                              handleRadioTabNavigation(event, idx, evoRadioRefs)
-                            }
-                            className="h-4 w-4 accent-green-600"
-                          />
-                          <SpriteImage
-                            src={
-                              useSpritesEverywhere
-                                ? getSpriteUrlById(ev.id, generationSpritePath)
-                                : ev.artworkUrl
-                            }
-                            alt=""
-                            className="w-16 h-16 object-contain"
-                          />
-                          <div className="text-sm">
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <span>{ev.name}</span>
-                              {getPokemonTypeSlugsById(
-                                ev.id,
-                                maxGeneration,
-                              ).map((slug) => (
-                                <TypeBadge key={slug} typeSlug={slug} />
-                              ))}
+                        <div key={ev.id}>
+                          <label
+                            className={`flex items-center gap-3 cursor-pointer dark:text-gray-200 rounded-md px-2 py-1 ${focusRingClasses}`}
+                          >
+                            <input
+                              type="radio"
+                              name="evo"
+                              value={ev.id}
+                              checked={selectedEvolution?.id === ev.id}
+                              onChange={() => {
+                                setSelectedEvoId(ev.id);
+                                setItemSelection(getDefaultItemId(ev) ?? null);
+                              }}
+                              className="h-4 w-4 accent-green-600"
+                            />
+                            <SpriteImage
+                              src={
+                                useSpritesEverywhere
+                                  ? getSpriteUrlById(
+                                      ev.id,
+                                      generationSpritePath,
+                                    )
+                                  : ev.artworkUrl
+                              }
+                              alt=""
+                              className="w-16 h-16 object-contain"
+                            />
+                            <div className="text-sm">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span>{ev.name}</span>
+                                {getPokemonTypeSlugsById(
+                                  ev.id,
+                                  maxGeneration,
+                                ).map((slug) => (
+                                  <TypeBadge key={slug} typeSlug={slug} />
+                                ))}
+                              </div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400">
+                                {methodText}
+                              </div>
                             </div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">
-                              {methodText}
-                            </div>
-                          </div>
-                        </label>
+                          </label>
+                          {renderEvolutionItems(ev)}
+                        </div>
                       );
                     })}
                   </div>
@@ -405,12 +533,8 @@ const SelectEvolveModal: React.FC<SelectEvolveModalProps> = ({
             </button>
             <button
               type="submit"
-              disabled={
-                Boolean(blockingError) ||
-                selectedPlayer === null ||
-                selectedEvoId === null
-              }
-              className={`px-4 py-2 rounded-md font-semibold shadow ${selectedEvoId && !blockingError ? "bg-green-600 text-white hover:bg-green-700" : "bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"} ${focusRingClasses}`}
+              disabled={!canConfirm}
+              className={`px-4 py-2 rounded-md font-semibold shadow ${canConfirm ? "bg-green-600 text-white hover:bg-green-700" : "bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"} ${focusRingClasses}`}
             >
               {t("tracker.evolveModal.buttonConfirm")}
             </button>
