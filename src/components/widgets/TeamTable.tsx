@@ -1,6 +1,7 @@
 import SpriteImage from "@/src/components/images/SpriteImage.tsx";
 import React, { useEffect, useMemo, useState } from "react";
 import type {
+  ItemEntry,
   LinkEditPayload,
   LinkId,
   PokemonLink,
@@ -31,10 +32,17 @@ import { normalizeLanguage } from "@/src/utils/language.ts";
 interface TeamTableProps {
   title: string;
   data: PokemonLink[];
+  items: ItemEntry[][];
   playerNames: string[];
   playerColors: string[];
   onEditLink: (pairId: LinkId, payload: LinkEditPayload) => void;
-  onEvolveLink: (pairId: LinkId, playerIndex: number, newId: number) => void;
+  onEvolveLink: (
+    pairId: LinkId,
+    playerIndex: number,
+    newId: number,
+    sourceId: number,
+    itemId?: string,
+  ) => void;
   onAddToGraveyard: (pair: PokemonLink) => void;
   onDeleteLink?: (pair: PokemonLink) => void;
   onAddLink: (payload: LinkEditPayload) => void;
@@ -75,6 +83,7 @@ interface EvolutionModalSession {
 const TeamTable: React.FC<TeamTableProps> = ({
   title,
   data,
+  items,
   playerNames,
   playerColors,
   onEditLink,
@@ -517,12 +526,20 @@ const TeamTable: React.FC<TeamTableProps> = ({
       {!readOnly && evolutionSession && (
         <SelectEvolveModal
           onClose={() => setEvolutionSession(null)}
-          onConfirm={(playerIndex, _newName, newId) => {
-            if (!linkExists(evolutionSession.pairId)) return;
-            onEvolveLink(evolutionSession.pairId, playerIndex, newId);
+          onConfirm={(playerIndex, newId, itemId) => {
+            const sourceId = evolutionSession.pair.members[playerIndex]?.id;
+            if (!sourceId || !linkExists(evolutionSession.pairId)) return;
+            onEvolveLink(
+              evolutionSession.pairId,
+              playerIndex,
+              newId,
+              sourceId,
+              itemId,
+            );
             setEvolutionSession(null);
           }}
           pair={evolutionSession.pair}
+          items={items}
           playerLabels={evolutionSession.playerLabels}
           maxGeneration={pokemonGenerationLimit}
           gameVersionId={gameVersionId}

@@ -12,6 +12,11 @@ interface EvolutionMethodInfo {
   label: string;
 }
 
+// Item methods end with the item slug. Direct-use methods can put a
+// gender or time requirement between "use-item" and the item slug.
+const ITEM_METHOD_PREFIX =
+  /^(?:use-item-(?:(?:gender-\d+|time-(?:day|night|full-moon))-)?|.+?-item-)/;
+
 const getEvolutionMethods = (
   methods: unknown,
   language: SupportedLanguage,
@@ -273,6 +278,9 @@ export function getFilteredEvolutionEntriesForPokemon(
       return {
         id: entry.id,
         methods: methodsForConstraints.map((method) => method.label),
+        itemSlugs: methodsForConstraints
+          .filter(({ slug }) => ITEM_METHOD_PREFIX.test(slug))
+          .map(({ slug }) => slug.replace(ITEM_METHOD_PREFIX, "")),
       };
     })
     .filter((entry) => entry.methods.length > 0);

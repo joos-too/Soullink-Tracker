@@ -26,6 +26,27 @@ const canonicalState = {
   rivalCensorMode: "on",
 };
 
+const fireStone = {
+  id: "fire-stone",
+  locationSlug: null,
+  inBag: true,
+  used: false,
+};
+const evolutionState = {
+  ...canonicalState,
+  team: [
+    {
+      id: "40000000-0000-4000-8000-000000000001",
+      locationSlug: null,
+      members: [
+        { id: 133, nickname: "" },
+        { id: null, nickname: "" },
+      ],
+    },
+  ],
+  items: [[fireStone, fireStone], [fireStone]],
+};
+
 const trackerId = "30000000-0000-0000-0000-000000000001";
 const ownerId = "10000000-0000-0000-0000-000000000001";
 const tracker = {
@@ -84,6 +105,18 @@ for (const staySignedIn of [false, true]) {
     );
     await page.route("**/rest/v1/**", async (route) => {
       const url = new URL(route.request().url());
+      if (url.pathname.endsWith("/rpc/update_tracker_state")) {
+        await route.fulfill({
+          json: {
+            tracker_id: trackerId,
+            state: route.request().postDataJSON().p_state,
+            revision: 2,
+            schema_version: 3,
+            updated_at: tracker.created_at,
+          },
+        });
+        return;
+      }
       if (
         url.pathname.endsWith("/profiles") &&
         route.request().method() === "PATCH"
@@ -113,7 +146,7 @@ for (const staySignedIn of [false, true]) {
           : url.pathname.endsWith("/tracker_states")
             ? {
                 tracker_id: trackerId,
-                state: canonicalState,
+                state: evolutionState,
                 revision: 1,
                 schema_version: 3,
                 updated_at: tracker.created_at,
@@ -268,6 +301,28 @@ for (const staySignedIn of [false, true]) {
         ),
       ).toBe(false);
     }
+    const scriptsBeforeEvolution = requested.filter((url) =>
+      /\.js(?:\?|$)/.test(url),
+    );
+    await page.getByRole("button", { name: "Evolve", exact: true }).click();
+    const evolution = page.getByRole("dialog", { name: "Evolve Pokémon" });
+    const flareon = evolution.getByRole("radio", { name: /Flareon/ });
+    await expect(flareon).not.toBeChecked();
+    const fireStoneCard = evolution.getByRole("button", { name: /Fire Stone/ });
+    await expect(fireStoneCard).toHaveCount(0);
+    await flareon.check();
+    await expect(fireStoneCard).toHaveAttribute("aria-pressed", "true");
+    const save = page.waitForRequest("**/rpc/update_tracker_state");
+    await evolution.getByRole("button", { name: "Confirm" }).click();
+    const savedState = (await save).postDataJSON().p_state;
+    expect(savedState.team[0].members[0].id).toBe(136);
+    expect(savedState.items).toEqual([
+      [{ ...fireStone, used: true }, fireStone],
+      [fireStone],
+    ]);
+    expect(requested.filter((url) => /\.js(?:\?|$)/.test(url))).toEqual(
+      scriptsBeforeEvolution,
+    );
     const scriptsBeforeSettings = requested.filter((url) =>
       /\.js(?:\?|$)/.test(url),
     );

@@ -503,6 +503,8 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
       pairId: LinkId,
       playerIndex: number,
       newId: number,
+      sourceId: number,
+      itemId?: string,
     ) => {
       if (isReadOnly) return;
       setData((prev) => {
@@ -515,13 +517,31 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
           prev[collection].some((pair) => pair.id === pairId),
         );
         if (!currentKey) return prev;
+        const pair = prev[currentKey].find((entry) => entry.id === pairId);
+        const member = pair?.members[playerIndex];
+        if (member?.id !== sourceId) return prev;
+
+        let items = prev.items;
+        if (itemId !== undefined) {
+          const playerItems = items[playerIndex] ?? [];
+          const itemIndex = playerItems.findIndex(
+            (entry) => entry.id === itemId && entry.inBag && !entry.used,
+          );
+          if (itemIndex === -1) return prev;
+          items = [...items];
+          items[playerIndex] = playerItems.map((entry, index) =>
+            index === itemIndex ? { ...entry, used: true } : entry,
+          );
+        }
+
         return {
           ...prev,
+          items,
           [currentKey]: prev[currentKey].map((pair) => {
             if (pair.id !== pairId) return pair;
             const members = [...pair.members];
             members[playerIndex] = {
-              ...(members[playerIndex] ?? { nickname: "" }),
+              ...member,
               id: newId,
               name: "",
             };
@@ -1544,12 +1564,12 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
           teamTableProps={{
             title: t("team.teamTitle"),
             data: data.team,
+            items: data.items,
             playerNames: resolvedPlayerNames,
             playerColors,
             onEditLink: (pairId, payload) =>
               handleEditLink("team", pairId, payload),
-            onEvolveLink: (pairId, playerIndex, newId) =>
-              handleEvolveLink("team", pairId, playerIndex, newId),
+            onEvolveLink: (...args) => handleEvolveLink("team", ...args),
             canonicalLinkIds: editableLinkIds,
             onAddToGraveyard: handleAddToGraveyard,
             onAddLink: handleAddTeamPair,
@@ -1580,12 +1600,12 @@ const TrackerPage: React.FC<TrackerPageProps> = ({
           boxTableProps={{
             title: t("team.boxTitle"),
             data: filteredBox,
+            items: data.items,
             playerNames: resolvedPlayerNames,
             playerColors,
             onEditLink: (pairId, payload) =>
               handleEditLink("box", pairId, payload),
-            onEvolveLink: (pairId, playerIndex, newId) =>
-              handleEvolveLink("box", pairId, playerIndex, newId),
+            onEvolveLink: (...args) => handleEvolveLink("box", ...args),
             canonicalLinkIds: editableLinkIds,
             onAddToGraveyard: handleAddToGraveyard,
             onDeleteLink: handleDeleteLink,
