@@ -36,6 +36,8 @@ npm run supabase:types
 
 `supabase:reset` applies every migration and then `seed.sql`. Supabase Studio is available at `http://127.0.0.1:54323`, and local Auth email is available through Mailpit at `http://127.0.0.1:54324`.
 
+After upgrading the Supabase CLI, run `npm run supabase:stop` followed by `npm run supabase:start` to recreate the service containers while keeping local data volumes. Running `supabase:start` against an already running project can leave older containers in place. A mismatched Realtime image can let saves succeed while lists stay stale until reload. If Realtime reports PostgreSQL error `42P10` while subscribing, compare the running container image with the local Realtime version reported by `npx supabase services`.
+
 ### Connect the frontend to local Supabase
 
 After `npm run supabase:start`, retrieve the local frontend values with:

@@ -5,8 +5,7 @@ import { useTrackerList } from "@/src/hooks/useTrackerList.ts";
 
 const trackerRepositoryMock = vi.hoisted(() => ({
   onTrackerList: undefined as
-    | ((entries: TrackerListEntry[] | null) => void)
-    | undefined,
+    ((entries: TrackerListEntry[] | null) => void) | undefined,
   unsubscribe: vi.fn(),
   unsubscribeMeta: vi.fn(),
   onError: undefined as (() => void) | undefined,

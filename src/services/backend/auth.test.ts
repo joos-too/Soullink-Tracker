@@ -131,8 +131,7 @@ describe("auth language metadata", () => {
     [undefined, null],
   ] as const)("maps metadata language %s to %s", (metadata, expected) => {
     let authStateCallback:
-      | ((event: string, session: unknown) => void)
-      | undefined;
+      ((event: string, session: unknown) => void) | undefined;
     authMocks.onAuthStateChange.mockImplementation((callback) => {
       authStateCallback = callback;
       return { data: { subscription: { unsubscribe: vi.fn() } } };
@@ -158,8 +157,7 @@ describe("auth language metadata", () => {
 
   it("requires personalization only when registration explicitly marked it incomplete", () => {
     let authStateCallback:
-      | ((event: string, session: unknown) => void)
-      | undefined;
+      ((event: string, session: unknown) => void) | undefined;
     authMocks.onAuthStateChange.mockImplementation((callback) => {
       authStateCallback = callback;
       return { data: { subscription: { unsubscribe: vi.fn() } } };

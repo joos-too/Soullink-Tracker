@@ -4,8 +4,10 @@ import { useImageConsent } from "@/src/contexts/ImageConsentContext";
 import { useTranslation } from "react-i18next";
 import { FiImage } from "react-icons/fi";
 
-interface SpriteImageProps
-  extends Omit<React.ImgHTMLAttributes<HTMLImageElement>, "src"> {
+interface SpriteImageProps extends Omit<
+  React.ImgHTMLAttributes<HTMLImageElement>,
+  "src"
+> {
   src?: string | null;
   fallback?: React.ReactNode;
 }

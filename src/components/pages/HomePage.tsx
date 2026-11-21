@@ -596,8 +596,8 @@ const HomePage: React.FC<HomePageProps> = ({
                     : t("home.progressFallback");
                 const isGuestTracker = Boolean(
                   currentUserId &&
-                    tracker.guests?.[currentUserId] &&
-                    !tracker.members?.[currentUserId],
+                  tracker.guests?.[currentUserId] &&
+                  !tracker.members?.[currentUserId],
                 );
                 const isCompleted = summary?.championDone === true;
                 const progressPct = summary?.progressPct ?? 0;

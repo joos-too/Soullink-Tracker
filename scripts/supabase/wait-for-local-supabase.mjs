@@ -10,21 +10,30 @@ export const waitForLocalSupabase = async (localAnonKey) => {
   let lastResult = "no response";
 
   while (Date.now() < deadline) {
+    const controller = new AbortController();
+    // Keep Node alive while the probes wait for a response or time out.
+    const timeout = setTimeout(
+      () => controller.abort(new Error("Health check request timed out")),
+      2_000,
+    );
     try {
       const [auth, rest] = await Promise.all([
-        fetch(url + "/auth/v1/health", { signal: AbortSignal.timeout(2_000) }),
+        fetch(url + "/auth/v1/health", { signal: controller.signal }),
         fetch(url + "/rest/v1/trackers?select=id&limit=1", {
           headers: {
             apikey: localAnonKey,
             Authorization: "Bearer " + localAnonKey,
           },
-          signal: AbortSignal.timeout(2_000),
+          signal: controller.signal,
         }),
       ]);
       if (auth.ok && rest.ok) return;
       lastResult = "Auth " + auth.status + ", REST " + rest.status;
     } catch (error) {
       lastResult = error instanceof Error ? error.message : String(error);
+    } finally {
+      clearTimeout(timeout);
+      controller.abort();
     }
     await new Promise((resolve) => setTimeout(resolve, 500));
   }
