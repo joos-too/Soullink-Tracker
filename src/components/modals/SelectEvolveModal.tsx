@@ -210,23 +210,24 @@ const SelectEvolveModal: React.FC<SelectEvolveModalProps> = ({
       const slug = entry.id?.replace(/^item:/, "");
       return slug && evolution.itemSlugs.includes(slug);
     });
-  const getDefaultItemId = (evolution: EvoInfo) =>
-    getMatchingItemGroups(evolution).find(
+  const getDefaultItemId = (evolution: EvoInfo) => {
+    if (evolution.methods.length !== 1) return undefined;
+    return getMatchingItemGroups(evolution).find(
       (group) => group.bagIndices.length > 0,
     )?.entry.id;
+  };
   const selectedItemId =
     itemSelection === undefined && selectedEvolution
       ? getDefaultItemId(selectedEvolution)
       : (itemSelection ?? undefined);
-  const selectedItemUnavailable =
-    selectedItemId !== undefined &&
-    !(
-      selectedEvolution &&
-      getMatchingItemGroups(selectedEvolution).some(
+  const selectedItemInBag = selectedEvolution
+    ? getMatchingItemGroups(selectedEvolution).some(
         (group) =>
           group.entry.id === selectedItemId && group.bagIndices.length > 0,
       )
-    );
+    : false;
+  const selectedItemUnavailable =
+    selectedItemId !== undefined && !selectedItemInBag;
   const canConfirm =
     !blockingError &&
     !selectedItemUnavailable &&
@@ -257,13 +258,15 @@ const SelectEvolveModal: React.FC<SelectEvolveModalProps> = ({
   };
 
   const renderEvolutionItems = (evolution: EvoInfo) => {
-    if (evolution.itemSlugs.length === 0) return null;
+    if (
+      selectedEvolution?.id !== evolution.id ||
+      evolution.itemSlugs.length === 0
+    )
+      return null;
     const matchingGroups = getMatchingItemGroups(evolution);
-    const isSelected = selectedEvolution?.id === evolution.id;
-    if (!isSelected && matchingGroups.length === 0) return null;
 
     return (
-      <div className="w-[38%] max-w-32 shrink-0 space-y-2 wrap-break-word">
+      <div className="ml-9 mr-2 space-y-2">
         {matchingGroups.length === 0 && (
           <p className="text-xs text-gray-600 dark:text-gray-400">
             {t("tracker.evolveModal.noMatchingItems")}
@@ -285,40 +288,30 @@ const SelectEvolveModal: React.FC<SelectEvolveModalProps> = ({
             t,
           );
           const canSelect = summary.bagCount > 0 && id !== undefined;
-          const isItemSelected =
-            isSelected && canSelect && selectedItemId === id;
+          const isItemSelected = canSelect && selectedItemId === id;
           return (
-            <div key={group.key}>
-              {isItemSelected && (
-                <p className="mb-1 text-xs font-semibold text-gray-700 dark:text-gray-200">
-                  {t("tracker.evolveModal.usesOnConfirmation")}
-                </p>
-              )}
-              <ItemGroupCard
-                name={name}
-                spriteUrl={spriteUrl}
-                status={summary.status}
-                badgeCount={summary.isGrouped ? summary.bagCount : 0}
-                used={summary.usedUp}
-                dimmed={summary.bagCount === 0}
-                extraRows={summary.extraPending.map(({ index, status }) => ({
-                  key: index,
-                  status,
-                }))}
-                selected={isItemSelected}
-                onSelect={
-                  canSelect
-                    ? () => {
-                        setSelectedEvoId(evolution.id);
-                        setItemSelection(isItemSelected ? null : id);
-                      }
-                    : undefined
-                }
-              />
-            </div>
+            <ItemGroupCard
+              key={group.key}
+              name={name}
+              spriteUrl={spriteUrl}
+              status={summary.status}
+              badgeCount={summary.isGrouped ? summary.bagCount : 0}
+              used={summary.usedUp}
+              dimmed={summary.bagCount === 0}
+              extraRows={summary.extraPending.map(({ index, status }) => ({
+                key: index,
+                status,
+              }))}
+              selected={isItemSelected}
+              onSelect={
+                canSelect
+                  ? () => setItemSelection(isItemSelected ? null : id)
+                  : undefined
+              }
+            />
           );
         })}
-        {isSelected && selectedItemUnavailable && (
+        {selectedItemUnavailable && (
           <div className="text-sm">
             <p role="alert">{t("tracker.evolveModal.itemUnavailable")}</p>
             <button
@@ -461,9 +454,9 @@ const SelectEvolveModal: React.FC<SelectEvolveModalProps> = ({
                         ? formattedMethods.join(" · ")
                         : t("tracker.evolveModal.methodUnknown");
                       return (
-                        <div key={ev.id} className="flex items-center gap-2">
+                        <div key={ev.id}>
                           <label
-                            className={`flex min-w-0 flex-1 items-center gap-2 sm:gap-3 cursor-pointer dark:text-gray-200 rounded-md px-2 py-1 ${focusRingClasses}`}
+                            className={`flex items-center gap-3 cursor-pointer dark:text-gray-200 rounded-md px-2 py-1 ${focusRingClasses}`}
                           >
                             <input
                               type="radio"
@@ -486,10 +479,10 @@ const SelectEvolveModal: React.FC<SelectEvolveModalProps> = ({
                                   : ev.artworkUrl
                               }
                               alt=""
-                              className="size-10 shrink-0 object-contain sm:size-16"
+                              className="size-16 shrink-0 object-contain"
                             />
                             <div className="min-w-0 wrap-break-word text-sm">
-                              <div className="flex items-center gap-1.5 flex-wrap">
+                              <div className="flex flex-wrap items-center gap-1.5">
                                 <span>{ev.name}</span>
                                 {getPokemonTypeSlugsById(
                                   ev.id,

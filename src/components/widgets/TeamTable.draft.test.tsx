@@ -230,7 +230,31 @@ describe("TeamTable modal sessions", () => {
     expect(onEvolveLink).toHaveBeenCalledWith(LINK_ONE, 0, 2, 1, undefined);
   });
 
-  it("shows the player's items before an evolution is selected and lets an item select its evolution", async () => {
+  it("combines multiple level-up locations under one German label", async () => {
+    await i18n.changeLanguage("de");
+    const user = userEvent.setup();
+    render(
+      <TeamTable
+        {...createProps({
+          data: [
+            {
+              ...pair(LINK_ONE, "Route 1"),
+              members: [{ id: 133, nickname: "" }],
+            },
+          ],
+        })}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: /^Entwickeln$/ }));
+    expect(
+      await screen.findByText(
+        "Item: Blattstein · Levelaufstieg - Ort: Blütenburgwald, Ewigenwald, Ewigwald, Route 20, Schattendschungel",
+      ),
+    ).toBeVisible();
+  });
+
+  it("shows item availability only for the selected evolution and player", async () => {
     const user = userEvent.setup();
     const onEvolveLink = vi.fn();
     const inBag = { inBag: true, used: false, locationSlug: null };
@@ -247,10 +271,12 @@ describe("TeamTable modal sessions", () => {
       playerNames: ["Red", "Blue"],
       playerColors: ["#ef4444", "#3b82f6"],
       items: [
-        [{ ...inBag, id: "fire-stone" }],
+        [
+          { ...inBag, id: "fire-stone" },
+          { ...inBag, id: "thunder-stone" },
+        ],
         [
           { ...inBag, id: "item:fire-stone" },
-          { ...inBag, id: "thunder-stone" },
           { ...inBag, id: "water-stone", used: true },
         ],
       ],
@@ -265,19 +291,26 @@ describe("TeamTable modal sessions", () => {
     const vaporeon = await screen.findByRole("radio", { name: /Vaporeon/ });
     expect(vaporeon).not.toBeChecked();
     expect(screen.getByRole("button", { name: "Confirm" })).toBeDisabled();
+    const flareon = screen.getByRole("radio", { name: /Flareon/ });
+    const noItems = "No matching item in the Item Tracker.";
+    expect(screen.queryByRole("button", { name: /Fire Stone/ })).toBeNull();
+    expect(screen.queryByText("Water Stone", { exact: true })).toBeNull();
+    expect(screen.queryByText(noItems)).toBeNull();
+
+    await user.click(screen.getByRole("radio", { name: /Jolteon/ }));
+    expect(screen.getByText(noItems)).toBeVisible();
+    await user.click(vaporeon);
+    expect(screen.queryByText(noItems)).toBeNull();
     expect(screen.getByText("Water Stone", { exact: true })).toBeVisible();
     expect(screen.queryByRole("button", { name: /Water Stone/ })).toBeNull();
-    expect(screen.getByRole("button", { name: /Thunder Stone/ })).toBeVisible();
-    const flareon = screen.getByRole("radio", { name: /Flareon/ });
-    expect(flareon).not.toBeChecked();
-    const fireStone = screen.getByRole("button", { name: /Fire Stone/ });
-    await user.click(fireStone);
-    expect(flareon).toBeChecked();
-    expect(fireStone).toHaveAttribute("aria-pressed", "true");
-    await user.click(vaporeon);
-    expect(fireStone).toHaveAttribute("aria-pressed", "false");
+    expect(screen.queryByRole("button", { name: /Fire Stone/ })).toBeNull();
+
     await user.click(flareon);
-    expect(fireStone).toHaveAttribute("aria-pressed", "true");
+    expect(screen.queryByText("Water Stone", { exact: true })).toBeNull();
+    expect(screen.getByRole("button", { name: /Fire Stone/ })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
     await user.click(screen.getByRole("button", { name: "Confirm" }));
     expect(onEvolveLink).toHaveBeenCalledWith(
       LINK_ONE,
@@ -358,11 +391,53 @@ describe("TeamTable modal sessions", () => {
     expect(await screen.findByRole("radio", { name: /Raichu/ })).toBeChecked();
     const thunderStone = screen.getByRole("button", { name: /Thunder Stone/ });
     expect(thunderStone).toHaveAttribute("aria-pressed", "true");
-    expect(screen.getByText("Uses 1 on confirmation")).toBeVisible();
     await user.click(thunderStone);
     expect(thunderStone).toHaveAttribute("aria-pressed", "false");
-    expect(screen.queryByText("Uses 1 on confirmation")).toBeNull();
     await user.click(screen.getByRole("button", { name: "Confirm" }));
     expect(onEvolveLink).toHaveBeenCalledWith(LINK_ONE, 0, 26, 25, undefined);
+  });
+
+  it("requires manual item selection when an evolution has alternative methods", async () => {
+    const user = userEvent.setup();
+    const onEvolveLink = vi.fn();
+    render(
+      <TeamTable
+        {...createProps({
+          data: [
+            {
+              ...pair(LINK_ONE, "Route 1"),
+              members: [{ id: 133, nickname: "" }],
+            },
+          ],
+          items: [
+            [
+              {
+                id: "leaf-stone",
+                locationSlug: null,
+                inBag: true,
+                used: false,
+              },
+            ],
+          ],
+          onEvolveLink,
+        })}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Evolve" }));
+    await user.click(await screen.findByRole("radio", { name: /Leafeon/ }));
+    const leafStone = screen.getByRole("button", { name: /Leaf Stone/ });
+    expect(leafStone).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByRole("button", { name: "Confirm" })).toBeEnabled();
+    await user.click(leafStone);
+    expect(leafStone).toHaveAttribute("aria-pressed", "true");
+    await user.click(screen.getByRole("button", { name: "Confirm" }));
+    expect(onEvolveLink).toHaveBeenCalledWith(
+      LINK_ONE,
+      0,
+      470,
+      133,
+      "leaf-stone",
+    );
   });
 });

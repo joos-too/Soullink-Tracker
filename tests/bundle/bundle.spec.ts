@@ -309,7 +309,7 @@ for (const staySignedIn of [false, true]) {
     const flareon = evolution.getByRole("radio", { name: /Flareon/ });
     await expect(flareon).not.toBeChecked();
     const fireStoneCard = evolution.getByRole("button", { name: /Fire Stone/ });
-    await expect(fireStoneCard).toBeVisible();
+    await expect(fireStoneCard).toHaveCount(0);
     await flareon.check();
     await expect(fireStoneCard).toHaveAttribute("aria-pressed", "true");
     const save = page.waitForRequest("**/rpc/update_tracker_state");

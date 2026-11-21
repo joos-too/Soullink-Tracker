@@ -357,7 +357,6 @@ export const en = {
       noneAvailable: "No evolutions available for these Pokémon.",
       methodUnknown: "Condition unknown",
       noMatchingItems: "No matching item in the Item Tracker.",
-      usesOnConfirmation: "Uses 1 on confirmation",
       itemUnavailable: "The selected item is no longer in the bag.",
       clearItem: "Clear item selection",
       locationPrefix: "Level-Up - Location: ",
