@@ -263,7 +263,7 @@ const SelectEvolveModal: React.FC<SelectEvolveModalProps> = ({
     if (!isSelected && matchingGroups.length === 0) return null;
 
     return (
-      <div className="ml-9 mr-2 space-y-2">
+      <div className="w-[38%] max-w-32 shrink-0 space-y-2 wrap-break-word">
         {matchingGroups.length === 0 && (
           <p className="text-xs text-gray-600 dark:text-gray-400">
             {t("tracker.evolveModal.noMatchingItems")}
@@ -461,9 +461,9 @@ const SelectEvolveModal: React.FC<SelectEvolveModalProps> = ({
                         ? formattedMethods.join(" · ")
                         : t("tracker.evolveModal.methodUnknown");
                       return (
-                        <div key={ev.id}>
+                        <div key={ev.id} className="flex items-center gap-2">
                           <label
-                            className={`flex items-center gap-3 cursor-pointer dark:text-gray-200 rounded-md px-2 py-1 ${focusRingClasses}`}
+                            className={`flex min-w-0 flex-1 items-center gap-2 sm:gap-3 cursor-pointer dark:text-gray-200 rounded-md px-2 py-1 ${focusRingClasses}`}
                           >
                             <input
                               type="radio"
@@ -474,7 +474,7 @@ const SelectEvolveModal: React.FC<SelectEvolveModalProps> = ({
                                 setSelectedEvoId(ev.id);
                                 setItemSelection(getDefaultItemId(ev) ?? null);
                               }}
-                              className="h-4 w-4 accent-green-600"
+                              className="h-4 w-4 shrink-0 accent-green-600"
                             />
                             <SpriteImage
                               src={
@@ -486,9 +486,9 @@ const SelectEvolveModal: React.FC<SelectEvolveModalProps> = ({
                                   : ev.artworkUrl
                               }
                               alt=""
-                              className="w-16 h-16 object-contain"
+                              className="size-10 shrink-0 object-contain sm:size-16"
                             />
-                            <div className="text-sm">
+                            <div className="min-w-0 wrap-break-word text-sm">
                               <div className="flex items-center gap-1.5 flex-wrap">
                                 <span>{ev.name}</span>
                                 {getPokemonTypeSlugsById(
