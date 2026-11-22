@@ -1,0 +1,46 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: quarterly
+    open-pull-requests-limit: 1
+    allow:
+      - update-types:
+          - version-update:semver-patch
+          - version-update:semver-minor
+    groups:
+      npm-routine:
+        patterns: ["*"]
+      npm-security:
+        applies-to: security-updates
+        patterns: ["*"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: quarterly
+    open-pull-requests-limit: 1
+    allow:
+      - update-types:
+          - version-update:semver-patch
+          - version-update:semver-minor
+    groups:
+      actions-routine:
+        patterns: ["*"]
+      actions-security:
+        applies-to: security-updates
+        patterns: ["*"]
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: quarterly
+    open-pull-requests-limit: 1
+    allow:
+      - update-types:
+          - version-update:semver-patch
+          - version-update:semver-minor
+    groups:
+      docker-routine:
+        patterns: ["*"]
