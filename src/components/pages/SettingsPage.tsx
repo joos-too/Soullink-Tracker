@@ -126,11 +126,12 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
   rulesetDirty = false,
 }) => {
   const { t } = useTranslation();
-  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteEmail, setInviteEmail] = useState({ value: "", valid: false });
   const [inviteRole, setInviteRole] = useState<InviteRoleOption>("editor");
   const [inviteMessage, setInviteMessage] = useState<string | null>(null);
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [inviteLoading, setInviteLoading] = useState(false);
+  const inviteDisabled = inviteLoading || !inviteEmail.valid;
   const [memberActionError, setMemberActionError] = useState<string | null>(
     null,
   );
@@ -193,13 +194,14 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
 
   const handleInvite = async (event: React.SubmitEvent) => {
     event.preventDefault();
+    if (inviteDisabled) return;
     setInviteError(null);
     setInviteMessage(null);
     setInviteLoading(true);
     try {
-      await onInviteMember(inviteEmail, inviteRole);
+      await onInviteMember(inviteEmail.value, inviteRole);
       setInviteMessage(t("settings.members.inviteSuccess"));
-      setInviteEmail("");
+      setInviteEmail({ value: "", valid: false });
       setInviteRole("editor");
     } catch (err) {
       const message =
@@ -819,8 +821,11 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
                     <div className="flex min-w-0 gap-2 sm:flex-1">
                       <input
                         type="email"
-                        value={inviteEmail}
-                        onChange={(e) => setInviteEmail(e.target.value)}
+                        value={inviteEmail.value}
+                        onChange={(event) => {
+                          const { value, validity } = event.currentTarget;
+                          setInviteEmail({ value, valid: validity.valid });
+                        }}
                         required
                         placeholder="trainer@example.com"
                         className={`min-w-0 flex-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-gray-100 ${focusRingInputClasses}`}
@@ -847,8 +852,8 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
                     </div>
                     <button
                       type="submit"
-                      disabled={inviteLoading}
-                      className={`w-full shrink-0 inline-flex items-center justify-center gap-2 rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-60 sm:w-auto ${focusRingClasses}`}
+                      disabled={inviteDisabled}
+                      className={`w-full shrink-0 inline-flex items-center justify-center gap-2 rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white enabled:hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500 dark:disabled:bg-gray-600 dark:disabled:text-gray-400 sm:w-auto ${focusRingClasses}`}
                     >
                       <FiUserPlus size={16} />
                       {inviteLoading

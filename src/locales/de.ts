@@ -144,7 +144,7 @@ export const de = {
       playerPlaceholder: "Name",
       membersLabel: "Mitglieder (optional)",
       membersDescription:
-        "Füge Emails hinzu, die als Mitglieder oder Gäste auf diesen Tracker zugreifen dürfen.",
+        "Füge E-Mails hinzu, die als Mitglieder oder Gäste auf diesen Tracker zugreifen dürfen.",
       addMember: "E‑Mail",
       removeMember: "E‑Mail entfernen",
       submitting: "Erstelle…",
@@ -679,16 +679,24 @@ export const de = {
     account: {
       title: "Account",
       description:
-        "Hier findest du deine Anmeldedaten und kannst dein Passwort per Email zurücksetzen.",
+        "Verwalte deine Anmeldedaten oder ändere deinen Anzeigenamen.",
     },
-    emailLabel: "Email",
-    emailInfo:
-      "Wir senden einen Link zum Zurücksetzen deines Passworts an diese Adresse. Er ist 60 Minuten gültig.",
-    emailReadOnly: "Deine Email-Adresse kann nicht geändert werden.",
+    emailLabel: "E-Mail",
+    emailInfo: "Ändere deine E-Mail oder setze dein Passwort zurück.",
+    emailChange: {
+      edit: "E-Mail bearbeiten",
+      send: "Bestätigungslink senden",
+      sent: "Wir haben einen Bestätigungslink an {{email}} gesendet.",
+      alreadyInUse: "Diese E-Mail-Adresse wird bereits verwendet.",
+      invalidEmail: "Gib eine gültige E-Mail-Adresse ein.",
+      failed:
+        "Der Bestätigungslink konnte nicht gesendet werden. Versuche es gleich noch einmal.",
+    },
     displayName: {
       label: "Anzeigename",
-      info: "Dieser Name wird anderen Mitgliedern deiner Tracker angezeigt. Er muss nicht eindeutig sein.",
+      info: "Dieser Name wird anderen Mitgliedern deiner Tracker angezeigt.",
       save: "Anzeigenamen speichern",
+      saved: "Anzeigename gespeichert.",
       required: "Bitte gib einen Anzeigenamen ein.",
       tooLong: "Ein Anzeigename darf höchstens 50 Zeichen enthalten.",
       saveFailed: "Der Anzeigename konnte nicht gespeichert werden.",
@@ -703,7 +711,7 @@ export const de = {
     },
     messages: {
       resetEmailSent:
-        "Wir haben dir eine Email mit einem Link zum Zurücksetzen deines Passworts geschickt.",
+        "Wir haben dir eine E-Mail mit einem Link zum Zurücksetzen deines Passworts geschickt. Der Link ist 24 Stunden gültig.",
     },
     language: {
       title: "Sprache",

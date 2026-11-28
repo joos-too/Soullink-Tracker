@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="{{ if eq .Data.language `de` }}de{{ else }}en{{ end }}">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>
+      {{ if eq .Data.language "de" }}Bestätige deine neue E-Mail-Adresse{{ else
+      }}Confirm your new email address{{ end }}
+    </title>
+    <style>
+      @media only screen and (max-width: 620px) {
+        .email-shell {
+          width: 100% !important;
+        }
+
+        .email-content {
+          padding: 28px 22px !important;
+        }
+      }
+    </style>
+  </head>
+  <body
+    style="
+      margin: 0;
+      padding: 0;
+      background-color: #f0f0f0;
+      color: #1f2937;
+      font-family: Arial, Helvetica, sans-serif;
+    "
+  >
+    <div
+      style="
+        display: none;
+        max-height: 0;
+        overflow: hidden;
+        opacity: 0;
+        color: transparent;
+      "
+    >
+      {{ if eq .Data.language "de" }}Bestätige deine neue E-Mail-Adresse für den
+      Soullink Tracker.{{ else }}Confirm your new email address for Soullink
+      Tracker.{{ end }}
+    </div>
+    <table
+      role="presentation"
+      width="100%"
+      cellspacing="0"
+      cellpadding="0"
+      border="0"
+      style="background-color: #f0f0f0"
+    >
+      <tr>
+        <td align="center" style="padding: 32px 12px">
+          <table
+            role="presentation"
+            width="600"
+            cellspacing="0"
+            cellpadding="0"
+            border="0"
+            class="email-shell"
+            style="
+              width: 600px;
+              max-width: 600px;
+              background-color: #ffffff;
+              border: 1px solid #e5e7eb;
+              border-radius: 12px;
+              overflow: hidden;
+            "
+          >
+            <tr>
+              <td
+                align="center"
+                style="
+                  padding: 28px 24px 22px;
+                  background-color: #f8fafc;
+                  border-bottom: 4px solid #16a34a;
+                "
+              >
+                <img
+                  src="{{ .SiteURL }}/Soullinktracker-Logo.png"
+                  width="120"
+                  alt="Soullink Tracker"
+                  style="
+                    display: block;
+                    width: 120px;
+                    max-width: 120px;
+                    height: auto;
+                    border: 0;
+                  "
+                />
+                <div
+                  style="
+                    margin-top: 12px;
+                    color: #111827;
+                    font-size: 20px;
+                    font-weight: 700;
+                  "
+                >
+                  Soullink Tracker
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td class="email-content" style="padding: 38px 44px">
+                <h1
+                  style="
+                    margin: 0 0 18px;
+                    color: #111827;
+                    font-size: 25px;
+                    line-height: 1.3;
+                  "
+                >
+                  {{ if eq .Data.language "de" }}Neue E-Mail-Adresse
+                  bestätigen{{ else }}Confirm your new email address{{ end }}
+                </h1>
+                <p
+                  style="
+                    margin: 0 0 24px;
+                    color: #4b5563;
+                    font-size: 16px;
+                    line-height: 1.6;
+                  "
+                >
+                  {{ if eq .Data.language "de" }}Bestätige diese Adresse, um sie
+                  künftig zur Anmeldung beim Soullink Tracker zu verwenden.{{
+                  else }}Confirm this address to use it to sign in to Soullink
+                  Tracker.{{ end }}
+                </p>
+                <table
+                  role="presentation"
+                  cellspacing="0"
+                  cellpadding="0"
+                  border="0"
+                  style="margin: 0 0 26px"
+                >
+                  <tr>
+                    <td bgcolor="#16a34a" style="border-radius: 8px">
+                      <a
+                        href="{{ .ConfirmationURL }}"
+                        style="
+                          display: inline-block;
+                          padding: 13px 22px;
+                          color: #ffffff;
+                          font-size: 16px;
+                          font-weight: 700;
+                          text-decoration: none;
+                        "
+                      >
+                        {{ if eq .Data.language "de" }}Adresse bestätigen{{ else
+                        }}Confirm email address{{ end }}
+                      </a>
+                    </td>
+                  </tr>
+                </table>
+                <p
+                  style="
+                    margin: 0;
+                    color: #6b7280;
+                    font-size: 13px;
+                    line-height: 1.5;
+                  "
+                >
+                  {{ if eq .Data.language "de" }}Falls du die Änderung nicht
+                  angefordert hast, kannst du diese E-Mail ignorieren.{{ else
+                  }}If you did not request this change, you can ignore this
+                  email.{{ end }}
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td
+                align="center"
+                style="padding: 24px; background-color: #111827; color: #d1d5db"
+              >
+                <p style="margin: 0; font-size: 12px; line-height: 1.5">
+                  {{ if eq .Data.language "de" }}Diese E-Mail wurde automatisch
+                  von soullink-tracker.de versendet.<br />Bitte antworte nicht
+                  auf diese Nachricht.{{ else }}This email was sent
+                  automatically by soullink-tracker.de.<br />Please do not reply
+                  to this message.{{ end }}
+                </p>
+                <p style="margin: 8px 0 0; font-size: 12px; line-height: 1.5">
+                  <a
+                    href="https://soullink-tracker.de/legalnotice"
+                    style="color: #d1d5db"
+                    >{{ if eq .Data.language "de" }}Impressum{{ else }}Legal
+                    notice{{ end }}</a
+                  >
+                  &bull;
+                  <a
+                    href="https://soullink-tracker.de/privacypolicy"
+                    style="color: #d1d5db"
+                    >{{ if eq .Data.language "de" }}Datenschutz{{ else }}Privacy
+                    policy{{ end }}</a
+                  >
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

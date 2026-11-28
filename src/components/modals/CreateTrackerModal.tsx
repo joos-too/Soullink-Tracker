@@ -529,7 +529,7 @@ const CreateTrackerModal: React.FC<CreateTrackerModalProps> = ({
             <button
               type="submit"
               disabled={isSubmitting || !gameVersionId}
-              className="inline-flex justify-center rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-500 disabled:opacity-60"
+              className="inline-flex justify-center rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white shadow-sm enabled:hover:bg-green-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-500 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500 dark:disabled:bg-gray-600 dark:disabled:text-gray-400"
             >
               {isSubmitting
                 ? t("modals.createTracker.submitting")

@@ -162,8 +162,10 @@ site_url = "env(SUPABASE_AUTH_SITE_URL)"
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
 additional_redirect_urls = [
   "http://localhost:5173",
+  "http://localhost:5173/account",
   "http://localhost:5173/reset",
   "http://127.0.0.1:5173",
+  "http://127.0.0.1:5173/account",
   "http://127.0.0.1:5173/reset",
   "env(SUPABASE_AUTH_SITE_URL)",
   "env(SUPABASE_AUTH_RECOVERY_URL)",
@@ -228,7 +230,7 @@ web3 = 30
 enable_signup = true
 # If enabled, a user will be required to confirm any email change on both the old, and new email
 # addresses. If disabled, only the new email is required to confirm.
-double_confirm_changes = true
+double_confirm_changes = false
 # If enabled, users need to confirm their email address before signing in.
 enable_confirmations = true
 # If enabled, users will need to reauthenticate or have logged in recently to change their password.
@@ -237,8 +239,8 @@ secure_password_change = false
 max_frequency = "1s"
 # Number of characters used in the email OTP.
 otp_length = 6
-# Number of seconds before the email OTP expires (defaults to 1 hour).
-otp_expiry = 3600
+# Email OTP and verification link lifetime in seconds (24 hours).
+otp_expiry = 86400
 
 # Use a production-ready SMTP server
 # [auth.email.smtp]
@@ -257,6 +259,10 @@ content_path = "./public/auth-email-templates/confirmation.html"
 [auth.email.template.recovery]
 subject = '{{ if eq .Data.language "de" }}Setze dein Soullink Tracker Passwort zurück{{ else }}Reset your Soullink Tracker password{{ end }}'
 content_path = "./public/auth-email-templates/recovery.html"
+
+[auth.email.template.email_change]
+subject = '{{ if eq .Data.language "de" }}Bestätige deine neue E-Mail-Adresse{{ else }}Confirm your new email address{{ end }}'
+content_path = "./public/auth-email-templates/email-change.html"
 
 # Uncomment to customize notification email template
 # [auth.email.notification.password_changed]

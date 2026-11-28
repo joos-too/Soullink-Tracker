@@ -7,7 +7,7 @@ const inbox = "http://127.0.0.1:54324/api/v1";
 async function readMail(
   request: APIRequestContext,
   email: string,
-  kind: "signup" | "recovery",
+  kind: "signup" | "recovery" | "email_change",
 ) {
   const seen = new Map<string, string>();
   let matchingHtml = "";
@@ -50,7 +50,7 @@ const logout = async (page: Page) => {
   ).toBeVisible();
 };
 
-test("confirms signup, personalizes, logs out, and recovers the account by email", async ({
+test("confirms signup, personalizes, recovers the account, and changes the sign-in email", async ({
   page,
   request,
   browser,
@@ -128,4 +128,36 @@ test("confirms signup, personalizes, logs out, and recovers the account by email
   } finally {
     await freshContext.close();
   }
+
+  const newEmail = "changed-" + randomUUID() + "@example.com";
+  await page.goto("/account");
+  const currentEmailInput = page.getByLabel("Email", { exact: true });
+  await expect(currentEmailInput).toBeDisabled();
+  await page.getByRole("button", { name: "Edit email" }).click();
+  const sendConfirmation = page.getByRole("button", {
+    name: "Send confirmation link",
+  });
+  await currentEmailInput.fill(newEmail);
+  await sendConfirmation.click();
+  await expect(page.getByRole("status")).toHaveText(
+    `We sent a confirmation link to ${newEmail}.`,
+  );
+  await expect(currentEmailInput).toHaveValue(email);
+
+  const emailChange = await readMail(request, newEmail, "email_change");
+  const changeHref = emailChange.match(
+    /href="([^"]*type=email_change[^"]*)"/,
+  )?.[1];
+  if (!changeHref) throw new Error("Email change link was missing.");
+  await page.goto(changeHref.replaceAll("&amp;", "&"));
+  await expect(currentEmailInput).toHaveValue(newEmail);
+  await expect(page).toHaveURL(
+    (url) => url.pathname === "/account" && !url.hash,
+  );
+  await expect(page.getByLabel("Display name", { exact: true })).toHaveValue(
+    "New Trainer",
+  );
+
+  await logout(page);
+  await signIn(page, newEmail, newPassword);
 });
