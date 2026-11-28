@@ -328,7 +328,7 @@ function AccountActionButton({
     <button
       type="submit"
       disabled={disabled}
-      className={`inline-flex shrink-0 items-center justify-center gap-2 rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60 ${focusRingClasses}`}
+      className={`inline-flex shrink-0 items-center justify-center gap-2 rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white enabled:hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500 dark:disabled:bg-gray-600 dark:disabled:text-gray-400 ${focusRingClasses}`}
     >
       <span aria-hidden="true" className="shrink-0">
         {children}

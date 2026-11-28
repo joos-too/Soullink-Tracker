@@ -1,5 +1,6 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import i18n from "@/src/i18n.ts";
 import SettingsPage from "./SettingsPage.tsx";
@@ -73,6 +74,31 @@ describe("SettingsPage permissions", () => {
     expect(
       screen.getByRole("checkbox", { name: "Public tracker" }),
     ).toBeEnabled();
+  });
+
+  it("enables adding a member or guest only when the email is valid", async () => {
+    const user = userEvent.setup();
+    const onInviteMember = vi.fn(async () => {});
+    render(<SettingsPage {...createProps({ onInviteMember })} />);
+
+    const email = screen.getByPlaceholderText("trainer@example.com");
+    const add = screen.getByRole("button", { name: "Add", exact: true });
+    expect(add).toBeDisabled();
+    await user.type(email, "trainer");
+    expect(add).toBeDisabled();
+    await user.keyboard("{Enter}");
+    expect(onInviteMember).not.toHaveBeenCalled();
+
+    await user.type(email, "@example.com");
+    expect(add).toBeEnabled();
+    await user.selectOptions(screen.getByRole("combobox"), "guest");
+    await user.click(add);
+    expect(onInviteMember).toHaveBeenCalledExactlyOnceWith(
+      "trainer@example.com",
+      "guest",
+    );
+    expect(await screen.findByText("User added successfully.")).toBeVisible();
+    expect(add).toBeDisabled();
   });
 
   it("hides member emails and disables visibility changes for non-owners", () => {
