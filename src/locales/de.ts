@@ -681,7 +681,7 @@ export const de = {
       description:
         "Verwalte deine Anmeldedaten oder ändere deinen Anzeigenamen.",
     },
-    emailLabel: "E-mail",
+    emailLabel: "E-Mail",
     emailInfo: "Ändere deine E-Mail oder setze dein Passwort zurück.",
     emailChange: {
       edit: "E-Mail bearbeiten",
