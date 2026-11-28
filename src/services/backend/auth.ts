@@ -182,6 +182,14 @@ export const signOutCurrentUser = async (
   }
 };
 
+export const requestEmailChange = async (email: string): Promise<void> => {
+  const { error } = await getSupabaseClient().auth.updateUser(
+    { email: normalizeEmail(email) },
+    { emailRedirectTo: new URL("/account", window.location.origin).toString() },
+  );
+  if (error) throw error;
+};
+
 export const requestPasswordReset = async (
   rawEmail?: string | null,
 ): Promise<void> => {

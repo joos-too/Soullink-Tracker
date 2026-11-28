@@ -671,16 +671,23 @@ export const en = {
     account: {
       title: "Account",
       description:
-        "Here you find your login data and can reset your password via email.",
+        "Manage your email and password or change your display name.",
     },
     emailLabel: "Email",
-    emailInfo:
-      "We will send a password reset link to this address. It is valid for 24 hours.",
-    emailReadOnly: "Your email address cannot be changed.",
+    emailInfo: "Change your email address or reset your password",
+    emailChange: {
+      edit: "Edit email",
+      send: "Send confirmation link",
+      sent: "We sent a confirmation link to {{email}}.",
+      alreadyInUse: "This email address is already in use.",
+      invalidEmail: "Enter a valid email address.",
+      failed: "We couldn’t send the confirmation link. Try again in a moment.",
+    },
     displayName: {
       label: "Display name",
-      info: "This name is shown to other members of your trackers. It does not have to be unique.",
+      info: "This name is shown to other members of your trackers.",
       save: "Save display name",
+      saved: "Display name saved.",
       required: "Enter a display name.",
       tooLong: "A display name can contain at most 50 characters.",
       saveFailed: "Saving the display name failed.",
@@ -695,7 +702,7 @@ export const en = {
     },
     messages: {
       resetEmailSent:
-        "We sent you an email with a link to reset your password.",
+        "We sent you an email with a link to reset your password. The link is valid for 24 hours.",
     },
     language: {
       title: "Language",

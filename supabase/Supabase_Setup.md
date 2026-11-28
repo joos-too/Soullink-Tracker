@@ -46,17 +46,21 @@ container only if a Compose file references it, and the stock
 therefore set directly in
 [`docker-compose.auth-settings.yml`](docker-compose.auth-settings.yml):
 
-| Variable                     | Value  | Local `config.toml` equivalent       |
-| ---------------------------- | ------ | ------------------------------------ |
-| `GOTRUE_MAILER_OTP_EXP`      | `3600` | `[auth.email] otp_expiry = 3600`     |
-| `GOTRUE_PASSWORD_MIN_LENGTH` | `8`    | `[auth] minimum_password_length = 8` |
+| Variable                                    | Value   | Local `config.toml` equivalent                |
+| ------------------------------------------- | ------- | --------------------------------------------- |
+| `GOTRUE_PASSWORD_MIN_LENGTH`                | `8`     | `[auth] minimum_password_length = 8`          |
+| `GOTRUE_MAILER_SECURE_EMAIL_CHANGE_ENABLED` | `false` | `[auth.email] double_confirm_changes = false` |
 
-- `GOTRUE_MAILER_OTP_EXP` limits password-reset and signup-confirmation links
-  to 60 minutes, as stated in the account settings UI. Without it, GoTrue
-  defaults to 24 hours.
+- The local CLI sets `[auth.email] otp_expiry = 86400`. The self-hosted Auth
+  override leaves `GOTRUE_MAILER_OTP_EXP` unset, so GoTrue uses its 24-hour
+  default. Account Settings displays 24 hours in the reset confirmation.
 - `GOTRUE_PASSWORD_MIN_LENGTH` requires at least eight characters for new
   passwords and password changes. Without it, GoTrue defaults to six. Existing
   passwords for previously imported accounts remain valid even if shorter.
+- `GOTRUE_MAILER_SECURE_EMAIL_CHANGE_ENABLED=false` sends the email-change
+  confirmation link only to the new address. The link returns to `/account`
+  on the frontend. If the app uses a different origin from `SITE_URL`, add its
+  exact account URL to `ADDITIONAL_REDIRECT_URLS`.
 
 Session length comes from `JWT_EXPIRY` in `.env` (default `3600`), which the
 stock Compose file already maps to `GOTRUE_JWT_EXP`. Signing out revokes all
@@ -75,16 +79,15 @@ docker compose up -d --force-recreate auth
 Verify that all values arrived in the container:
 
 ```bash
-docker compose exec auth env | grep -E 'OTP_EXP|JWT_EXP|PASSWORD_MIN'
+docker compose exec auth env | grep -E 'JWT_EXP|PASSWORD_MIN|SECURE_EMAIL_CHANGE'
 ```
 
-The output must list `GOTRUE_MAILER_OTP_EXP=3600`, `GOTRUE_JWT_EXP=3600`, and
-`GOTRUE_PASSWORD_MIN_LENGTH=8`. Do not set these values in `.env`; without a
-Compose reference they have no effect.
+Check for `GOTRUE_MAILER_SECURE_EMAIL_CHANGE_ENABLED=false`,
+`GOTRUE_JWT_EXP=3600`, and `GOTRUE_PASSWORD_MIN_LENGTH=8`.
 
 ### Authentication email templates
 
-The branded account-confirmation and password-recovery templates live in
+The account-confirmation, password-recovery, and email-change templates live in
 `public/auth-email-templates`. Local Supabase loads them directly through
 `supabase/config.toml`. Restart the local stack after changing a template:
 
@@ -107,10 +110,10 @@ docker compose up -d --force-recreate auth
 
 The override builds the template URLs from `SITE_URL`. They must be reachable
 from the Auth container, so deploy the frontend templates first and ensure
-`SITE_URL` is the public HTTPS frontend URL. Both emails also load the app logo
+`SITE_URL` is the public HTTPS frontend URL. The emails also load the app logo
 through that URL.
 
-Both templates select German only when `auth.users.raw_user_meta_data.language`
+The templates select German only when `auth.users.raw_user_meta_data.language`
 is exactly `de`; `en`, missing values, and invalid values use English. The
 frontend stores the normalized active language during signup and synchronizes
 it whenever an authenticated user's app language differs from their Auth

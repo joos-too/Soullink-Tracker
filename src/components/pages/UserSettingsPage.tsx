@@ -1,24 +1,29 @@
 import PageLayout from "@/src/components/layout/PageLayout";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   FiAlertTriangle,
   FiArrowLeft,
-  FiCheckCircle,
+  FiEdit,
   FiExternalLink,
   FiInfo,
-  FiLock,
   FiLogOut,
   FiMail,
   FiRefreshCw,
   FiSave,
   FiUser,
+  FiX,
 } from "react-icons/fi";
 import {
   focusRingClasses,
+  focusRingInputClasses,
   focusRingRedClasses,
 } from "@/src/styles/focusRing.ts";
 import { sectionHeadingClasses } from "@/src/styles/sectionHeading.ts";
-import { requestPasswordReset } from "@/src/services/backend/auth.ts";
+import {
+  getAuthErrorCode,
+  requestEmailChange,
+  requestPasswordReset,
+} from "@/src/services/backend/auth.ts";
 import ToggleSwitch from "@/src/components/toggles/ToggleSwitch.tsx";
 import { useTranslation } from "react-i18next";
 import LanguageToggle from "@/src/components/toggles/LanguageToggle.tsx";
@@ -302,6 +307,58 @@ export function UserPreferenceSections({
   );
 }
 
+const accountActionLabels = [
+  "userSettings.displayName.save",
+  "userSettings.actions.resetPassword",
+  "userSettings.emailChange.send",
+] as const;
+
+function AccountActionButton({
+  label,
+  disabled,
+  children,
+}: {
+  label: (typeof accountActionLabels)[number];
+  disabled: boolean;
+  children: React.ReactNode;
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <button
+      type="submit"
+      disabled={disabled}
+      className={`inline-flex shrink-0 items-center justify-center gap-2 rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60 ${focusRingClasses}`}
+    >
+      <span aria-hidden="true" className="shrink-0">
+        {children}
+      </span>
+      <span className="grid">
+        {accountActionLabels.map((actionLabel) => (
+          <span
+            key={actionLabel}
+            aria-hidden={actionLabel !== label}
+            className={`col-start-1 row-start-1 ${actionLabel === label ? "" : "invisible"}`}
+          >
+            {t(actionLabel)}
+          </span>
+        ))}
+      </span>
+    </button>
+  );
+}
+
+function AccountSuccessMessage({ children }: { children: React.ReactNode }) {
+  return (
+    <p
+      role="status"
+      className="mt-2 break-words text-sm text-green-600 dark:text-green-400"
+    >
+      {children}
+    </p>
+  );
+}
+
 interface UserSettingsPageProps extends UserPreferenceSectionsProps {
   email?: string | null;
   displayName: string;
@@ -309,6 +366,8 @@ interface UserSettingsPageProps extends UserPreferenceSectionsProps {
   onBack: () => void;
   onLogout: () => void;
 }
+
+const normalizeDisplayName = (name: string) => name.trim().replace(/\s+/g, " ");
 
 const UserSettingsPage: React.FC<UserSettingsPageProps> = ({
   email,
@@ -318,21 +377,41 @@ const UserSettingsPage: React.FC<UserSettingsPageProps> = ({
   onLogout,
   ...preferenceProps
 }) => {
-  const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
-  const [message, setMessage] = useState<string | null>(null);
+  const [resetResult, setResetResult] = useState<
+    { type: "success" } | { type: "error"; message: string } | null
+  >(null);
   const [loading, setLoading] = useState(false);
   const [displayNameDraft, setDisplayNameDraft] = useState(displayName);
   const [displayNameSaving, setDisplayNameSaving] = useState(false);
+  const [displayNameSaved, setDisplayNameSaved] = useState(false);
   const [displayNameError, setDisplayNameError] = useState<string | null>(null);
+  const [newEmail, setNewEmail] = useState("");
+  const [editingEmail, setEditingEmail] = useState(false);
+  const emailInputRef = useRef<HTMLInputElement>(null);
+  const [emailChangeError, setEmailChangeError] = useState<string | null>(null);
+  const [confirmationEmail, setConfirmationEmail] = useState<string | null>(
+    null,
+  );
   const { t } = useTranslation();
+  const nextDisplayName = normalizeDisplayName(displayNameDraft);
+  const displayNameSaveDisabled =
+    displayNameSaving || nextDisplayName === normalizeDisplayName(displayName);
+  const normalizedNewEmail = newEmail.trim().toLowerCase();
+  const emailUnchanged =
+    normalizedNewEmail === (email ?? "").trim().toLowerCase();
 
   useEffect(() => {
     setDisplayNameDraft(displayName);
   }, [displayName]);
 
+  useEffect(() => {
+    if (editingEmail) emailInputRef.current?.focus();
+  }, [editingEmail]);
+
   const handleDisplayNameSave = async (event: React.SubmitEvent) => {
     event.preventDefault();
-    const nextDisplayName = displayNameDraft.trim().replace(/\s+/g, " ");
+    if (displayNameSaveDisabled) return;
+    setDisplayNameSaved(false);
     if (!nextDisplayName) {
       setDisplayNameError(t("userSettings.displayName.required"));
       return;
@@ -347,6 +426,7 @@ const UserSettingsPage: React.FC<UserSettingsPageProps> = ({
     try {
       await onDisplayNameChange(nextDisplayName);
       setDisplayNameDraft(nextDisplayName);
+      setDisplayNameSaved(true);
     } catch (error) {
       console.error("Failed to save display name", error);
       setDisplayNameError(t("userSettings.displayName.saveFailed"));
@@ -357,31 +437,64 @@ const UserSettingsPage: React.FC<UserSettingsPageProps> = ({
 
   const handlePasswordReset = async () => {
     if (!email) {
-      setStatus("error");
-      setMessage(t("userSettings.errors.noEmail"));
+      setResetResult({
+        type: "error",
+        message: t("userSettings.errors.noEmail"),
+      });
       return;
     }
 
     setLoading(true);
-    setStatus("idle");
-    setMessage(null);
+    setResetResult(null);
     try {
       await requestPasswordReset(email);
-      setStatus("success");
-      setMessage(t("userSettings.messages.resetEmailSent"));
+      setResetResult({ type: "success" });
     } catch (error) {
       const fallback =
         error instanceof Error
           ? error.message
           : t("userSettings.errors.resetFailed");
-      setStatus("error");
-      setMessage(fallback);
+      setResetResult({ type: "error", message: fallback });
     } finally {
       setLoading(false);
     }
   };
 
-  const disabled = loading || !email;
+  const toggleEmailEditing = () => {
+    setNewEmail(email ?? "");
+    setEmailChangeError(null);
+    setResetResult(null);
+    setEditingEmail(!editingEmail);
+  };
+
+  const handleEmailChange = async () => {
+    if (emailUnchanged) return;
+
+    setLoading(true);
+    setEmailChangeError(null);
+    try {
+      await requestEmailChange(normalizedNewEmail);
+      setConfirmationEmail(normalizedNewEmail);
+      setEditingEmail(false);
+    } catch (error) {
+      const code = getAuthErrorCode(error);
+      if (code === "email-already-in-use") {
+        setEmailChangeError(t("userSettings.emailChange.alreadyInUse"));
+      } else if (code === "invalid-email") {
+        setEmailChangeError(t("userSettings.emailChange.invalidEmail"));
+      } else {
+        setEmailChangeError(t("userSettings.emailChange.failed"));
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEmailSubmit = (event: React.SubmitEvent) => {
+    event.preventDefault();
+    if (loading) return;
+    void (editingEmail ? handleEmailChange() : handlePasswordReset());
+  };
 
   return (
     <div className="min-h-screen bg-[#f0f0f0] dark:bg-gray-900 text-gray-800 dark:text-gray-100 px-3 py-6 sm:py-10">
@@ -431,29 +544,36 @@ const UserSettingsPage: React.FC<UserSettingsPageProps> = ({
                     onChange={(event) => {
                       setDisplayNameDraft(event.target.value);
                       setDisplayNameError(null);
+                      setDisplayNameSaved(false);
                     }}
                     maxLength={50}
                     required
-                    className="min-w-0 flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                    className={`min-w-0 flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 ${focusRingInputClasses}`}
                   />
-                  <button
-                    type="submit"
-                    disabled={displayNameSaving}
-                    className={`inline-flex shrink-0 items-center justify-center gap-2 rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60 ${focusRingClasses}`}
+                  <AccountActionButton
+                    label="userSettings.displayName.save"
+                    disabled={displayNameSaveDisabled}
                   >
                     <FiSave />
-                    {t("userSettings.displayName.save")}
-                  </button>
+                  </AccountActionButton>
                 </div>
                 {displayNameError && (
                   <p className="mt-2 text-sm text-red-600 dark:text-red-400">
                     {displayNameError}
                   </p>
                 )}
+                {displayNameSaved && (
+                  <AccountSuccessMessage>
+                    {t("userSettings.displayName.saved")}
+                  </AccountSuccessMessage>
+                )}
               </div>
             </form>
 
-            <div className="flex items-start gap-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40 p-4">
+            <form
+              onSubmit={handleEmailSubmit}
+              className="flex items-start gap-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40 p-4"
+            >
               <FiMail className="mt-0.5 shrink-0" size={20} />
               <div className="min-w-0 flex-1">
                 <label
@@ -462,64 +582,100 @@ const UserSettingsPage: React.FC<UserSettingsPageProps> = ({
                 >
                   {t("userSettings.emailLabel")}
                 </label>
-                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                <p
+                  id="account-email-info"
+                  className="mt-1 text-sm text-gray-500 dark:text-gray-400"
+                >
                   {t("userSettings.emailInfo")}
                 </p>
                 <div className="mt-3 flex flex-col gap-2 sm:flex-row">
                   <div className="relative min-w-0 flex-1">
                     <input
+                      ref={emailInputRef}
                       id="account-email"
-                      value={email || "-"}
-                      readOnly
-                      aria-readonly="true"
-                      aria-describedby="account-email-locked"
-                      className="w-full cursor-not-allowed rounded-md border border-dashed border-gray-300 bg-gray-100 py-2 pl-3 pr-10 text-gray-500 outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                      type="email"
+                      autoComplete="email"
+                      aria-describedby="account-email-info"
+                      aria-invalid={emailChangeError ? true : undefined}
+                      disabled={!editingEmail || loading}
+                      required={editingEmail}
+                      value={editingEmail ? newEmail : (email ?? "")}
+                      placeholder="–"
+                      onChange={(event) => {
+                        setNewEmail(event.target.value);
+                        setEmailChangeError(null);
+                      }}
+                      className={`w-full rounded-md border border-gray-300 bg-white py-2 pl-3 pr-11 text-gray-900 disabled:border-dashed disabled:bg-gray-100 disabled:text-gray-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:disabled:bg-gray-800 dark:disabled:text-gray-400 ${focusRingInputClasses}`}
                     />
-                    <div className="absolute inset-y-0 right-3 flex items-center">
-                      <Tooltip
-                        side="top"
-                        content={t("userSettings.emailReadOnly")}
-                        className="h-4"
-                      >
-                        <span className="text-gray-400 dark:text-gray-500 cursor-help">
-                          <FiLock size={16} aria-hidden="true" />
-                        </span>
-                      </Tooltip>
-                    </div>
-                    <span id="account-email-locked" className="sr-only">
-                      {t("userSettings.emailReadOnly")}
-                    </span>
+                    <button
+                      type="button"
+                      onClick={toggleEmailEditing}
+                      disabled={loading}
+                      aria-label={t(
+                        editingEmail
+                          ? "common.cancel"
+                          : "userSettings.emailChange.edit",
+                      )}
+                      className={`absolute inset-y-1 right-1 inline-flex w-8 items-center justify-center rounded text-gray-600 hover:bg-gray-200 hover:text-gray-900 disabled:opacity-60 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white ${focusRingClasses}`}
+                    >
+                      {editingEmail ? (
+                        <FiX aria-hidden="true" />
+                      ) : (
+                        <FiEdit aria-hidden="true" />
+                      )}
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={handlePasswordReset}
-                    disabled={disabled}
-                    className={`inline-flex shrink-0 items-center justify-center gap-2 rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60 ${focusRingClasses}`}
+                  <AccountActionButton
+                    label={
+                      editingEmail
+                        ? "userSettings.emailChange.send"
+                        : "userSettings.actions.resetPassword"
+                    }
+                    disabled={
+                      loading || (editingEmail ? emailUnchanged : !email)
+                    }
                   >
-                    <FiRefreshCw className={loading ? "animate-spin" : ""} />
-                    {t("userSettings.actions.resetPassword")}
-                  </button>
-                </div>
-                {message && (
-                  <div
-                    className={`mt-3 flex items-start gap-2 rounded-md border px-3 py-2 text-sm leading-6 ${
-                      status === "success"
-                        ? "border-green-300 bg-green-50 text-green-800 dark:border-green-700 dark:bg-green-900/30 dark:text-green-200"
-                        : "border-red-300 bg-red-50 text-red-800 dark:border-red-700 dark:bg-red-900/30 dark:text-red-200"
-                    }`}
-                    role="status"
-                    aria-live="polite"
-                  >
-                    {status === "success" ? (
-                      <FiCheckCircle className="mt-1.25 shrink-0" />
+                    {editingEmail && !loading ? (
+                      <FiMail />
                     ) : (
-                      <FiAlertTriangle className="mt-1.25 shrink-0" />
+                      <FiRefreshCw className={loading ? "animate-spin" : ""} />
                     )}
-                    <span>{message}</span>
+                  </AccountActionButton>
+                </div>
+                {resetResult?.type === "success" && (
+                  <AccountSuccessMessage>
+                    {t("userSettings.messages.resetEmailSent")}
+                  </AccountSuccessMessage>
+                )}
+                {resetResult?.type === "error" && (
+                  <div
+                    className="mt-3 flex items-start gap-2 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm leading-6 text-red-800 dark:border-red-700 dark:bg-red-900/30 dark:text-red-200"
+                    role="status"
+                  >
+                    <FiAlertTriangle className="mt-1.25 shrink-0" />
+                    <span>{resetResult.message}</span>
                   </div>
                 )}
+                {emailChangeError && (
+                  <p
+                    role="alert"
+                    className="mt-2 text-sm text-red-600 dark:text-red-400"
+                  >
+                    {emailChangeError}
+                  </p>
+                )}
+                {!editingEmail &&
+                  !resetResult &&
+                  confirmationEmail &&
+                  confirmationEmail !== email && (
+                    <AccountSuccessMessage>
+                      {t("userSettings.emailChange.sent", {
+                        email: confirmationEmail,
+                      })}
+                    </AccountSuccessMessage>
+                  )}
               </div>
-            </div>
+            </form>
           </section>
 
           <UserPreferenceSections {...preferenceProps} />

@@ -3,6 +3,7 @@ import {
   onCurrentAuthStateChange,
   completeCurrentUserPersonalization,
   getAuthErrorCode,
+  requestEmailChange,
   signIn,
   signOutCurrentUser,
   signUp,
@@ -186,6 +187,17 @@ describe("auth language metadata", () => {
     expect(authMocks.updateUser).toHaveBeenCalledWith({
       data: { personalization_completed: true },
     });
+  });
+
+  it("requests email confirmation with a redirect back to Account Settings", async () => {
+    authMocks.updateUser.mockResolvedValue({ error: null });
+
+    await requestEmailChange(" New@Example.com ");
+
+    expect(authMocks.updateUser).toHaveBeenCalledWith(
+      { email: "new@example.com" },
+      { emailRedirectTo: `${window.location.origin}/account` },
+    );
   });
 
   it("updates mismatched language metadata and skips matching values", async () => {
